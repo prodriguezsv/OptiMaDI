@@ -77,6 +77,7 @@ else
 end
 % Update handles structure
 guidata(hObject, handles);
+
 % se obtienen las dimensiones del problema
 dimp = size(handles.LPApphandle.gui_Matrix_problem);
 dim = [dimp(1)-1, dimp(2)-1];
@@ -135,54 +136,100 @@ global Matrix_problem Order_initial;
 % recupera la especificación dada por el usuario
 All_display = get(handles.table_problem, 'data');
 Matrix_problem = All_display;
-% se verifica que la especificación este en forma estándar y canónica
-if (~isstandardform())
+% se verifica que la especificación este en forma correcta para el método
+% correspondiente
+if ~iscorrectform(handles)
     return;
 end
+   
 handles.LPApphandle.Order_initial = Order_initial; % se comparte el orden inicial
 handles.LPApphandle.setProblem(Matrix_problem, handles.LPApphandle); % se establece el problema actual
 delete(handles.Problem);
 
 % ---Funcion utilitaria: Verifica si se ha ingresado la formulación del
 % problema de manera correcta
-function iscorrect = isstandardform()
-global Matrix_problem Order_initial;
+function iscorrect = iscorrectform(handles)
+global Matrix_problem Order_initial Dimension;
 
-dim = size(Matrix_problem);
-Order_initial = zeros(1, dim(2));
+Dimension = size(Matrix_problem);
+Order_initial = zeros(1, Dimension(2));
+if ~iscanonicform()
+    iscorrect = 0;
+    return;
+end
+if ~isfactiblesolution(handles)
+    iscorrect = 0;
+    return;
+end
+if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')
+    if isdegeneratedsolution()
+        iscorrect = 0;
+        return;
+    end
+end
+iscorrect = 1;
+
+% -------
+function response = isfactiblesolution(handles)
+global Matrix_problem Dimension;
+
+% se verifica que la solución inicial sea factible
+if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')    
+    X0 = Matrix_problem(1:(Dimension(1)-1), end);
+    if any(X0 < 0)
+        errordlg('La solución inicial no es factible.','Método Simplex Primal no aplicable','modal');
+        response = 0;
+        return;
+    end
+else strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'on')
+    Rj = Matrix_problem(end, 1:(Dimension(2)-1));
+    if any(Rj < 0)
+        response = 0;
+        errordlg('La solución inicial no es factible.','Método Simplex Dual no aplicable','modal');
+        return;
+    end
+end
+response = 1;
+
+% ---------
+function response = isdegeneratedsolution()
+global Matrix_problem Dimension;
+
+% se verifica que la solución no sea degenerada
+X0 = Matrix_problem(1:(Dimension(1)-1), end);
+if any((X0 ~= 0)~= 1)
+    response = 1;
+    errordlg('La solución inicial es degenerada.','Método no aplicable','modal');
+    return;
+end
+response = 0;
+    
+    
+% ---------
+function response = iscanonicform()
+global Matrix_problem Order_initial Dimension;
+
 % se construye la matriz identidad
-identidad = eye(dim(1)-1);
+identidad = eye(Dimension(1)-1);
 % se verifica que la matriz identidad este inmersa en la especifición del
 % problema
-for i =1:(dim(1)-1)
-    iscorrect = 0;
-    for j = 1:(dim(2)-1)            
-        if identidad(:, i) == Matrix_problem(1:dim(1)-1, j)
+for i =1:(Dimension(1)-1)
+    response = 0;
+    for j = 1:(Dimension(2)-1)            
+        if identidad(:, i) == Matrix_problem(1:Dimension(1)-1, j)
             Order_initial(j) = i;
-            iscorrect = 1;
+            response = 1;
             break;
         end           
     end
-    if ~iscorrect
+    if ~response
         errordlg('La matriz no está en forma canónica.','Problema no aplicable','modal');
         return;
     end        
 end
-Order_initial(Order_initial == 0) = dim(1):dim(2); % se etiquetan las demás columnas
-% se verifica que la solución inicial sea factible
-X0 = Matrix_problem(1:(dim(1)-1), end);
-if X0 < 0
-    iscorrect = 0;
-    errordlg('La solución inicial no es factible.','Problema no aplicable','modal');
-    return;
-end
-% se verifica que la solución no sea degenerada
-if (X0 ~= 0)~= 1 
-    iscorrect = 0;
-    errordlg('La solución inicial es degenerada.','Problema no aplicable','modal');
-    return;
-end
-iscorrect = 1;
+Order_initial(Order_initial == 0) = Dimension(1):Dimension(2); % se etiquetan las demás columnas
+response = 1;
+
 
 % --- Executes on button press in pushbutton_cancel.
 function pushbutton_cancel_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>

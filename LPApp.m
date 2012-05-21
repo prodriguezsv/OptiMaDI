@@ -148,7 +148,7 @@ setProblem(Matrix_problem, handles)
 % --- Función utilitaria: obtiene las variables no básicas candidatas a
 % ser seleccionadas para convertirse en básicas según el criterio de
 % mejoramiento de la solución (coeficientes de costo relativo negativos)
-function calc_nonbasicvar(handles)
+function calc_variables(handles)
 % handles       estructura con manejadores y datos de usuario
 global Dimension Tableau Order_current;
 % Dimension     dimensiones de la especificación del problema en términos
@@ -156,23 +156,36 @@ global Dimension Tableau Order_current;
 % Tableau       Tabla del Simplex actual
 % Order_current orden actual de vectores columna de la tabla Simplex
 
-Rj = Tableau(end,1:(Dimension(2)-1)); % Recupera los coeficientes de costo reducido (Rj) de la tabla Simplex
-[Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor
-IRjneg = I(Order_current(Rj < 0));  % obtiene los indices de variables con Rj negativo
-% se construye el arreglo de cadenas de las variables no básicas
-dim2 = size(IRjneg);
-nbVar = cell(dim2(2), 1);
-for i = 1:dim2(2)
-    nbVar(i) = cellstr(strcat('X',num2str(IRjneg(i))));
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    Rj = Tableau(end,1:(Dimension(2)-1)); % Recupera los coeficientes de costo reducido (Rj) de la tabla Simplex
+    [Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor
+    IRjneg = I(Order_current(Rj < 0));  % obtiene los indices de variables con Rj negativo
+    IVar = IRjneg;
+elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+    X0 = Tableau(1:(Dimension(1)-1), end); % Recupera los valores de las variables básicas de la tabla Simplex
+    [Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor
+    IX0neg = I(X0 < 0);  % obtiene los indices de variables con Rj negativo
+    IVar =  IX0neg;
 end
 
-if ~isempty(nbVar) % en el caso que haya Rj negativos
-    [Y, p] = min(Rj(IRjneg)); %#ok<ASGLU> % obtiene el índice de variable del Rj más negativo
-    set(handles.popupmenu_selectvar, 'string', char(nbVar)); % despliega las variables no básicas en la interfaz
+% se construye el arreglo de cadenas de las variables
+dim2 = size(IVar);
+Var = cell(dim2(2), 1);
+for i = 1:dim2(2)
+    Var(i) = cellstr(strcat('X',num2str(IVar(i))));
+end
+
+if ~isempty(Var) % en el caso que haya Rj negativos
+    if strcmp(get(handles.Simplex, 'Checked'), 'on')
+        [Y, p] = min(Rj(IRjneg)); %#ok<ASGLU> % obtiene el índice de variable del Rj más negativo
+    else strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+        [Y, p] = min(IX0neg); %#ok<ASGLU> % obtiene el índice de variable del Rj más negativo
+    end
+    set(handles.popupmenu_selectvar, 'string', char(Var)); % despliega las variables no básicas en la interfaz
     set_environment('next', handles); % ajusta el ambiente
     set(handles.popupmenu_selectvar, 'value', p); % se selecciona, por omisión, la variable más negativa
     calc_ratios(handles); % se calculan las razones para aplicar el criterio de factibilidad
-else % verificar si hay Rj iguales a cero
+elseif strcmp(get(handles.Simplex, 'Checked'), 'on') % verificar si hay Rj iguales a cero
     j = 1;
     IRjeqaux = I(Rj(I(Dimension(1):(Dimension(2)-1)))==0);
     dim3 = size(IRjeqaux);
@@ -183,14 +196,14 @@ else % verificar si hay Rj iguales a cero
             j = j+1;
         end
     end
-    %IRjeq = I(Rj(I(Dimension(1):(Dimension(2)-1)))==0); % se obtiene los indices con Rj = 0
+
     dim2 = size(IRjeq);
-    nbVar = cell(dim2(2), 1);
+    Var = cell(dim2(2), 1);
     for i = 1:dim2(2)
-        nbVar(i) = cellstr(strcat('X',num2str(IRjeq(i))));
+        Var(i) = cellstr(strcat('X',num2str(IRjeq(i))));
     end
-    if ~isempty(nbVar) % en el caso que haya Rj = 0
-        set(handles.popupmenu_selectvar, 'string', char(nbVar));
+    if ~isempty(Var) % en el caso que haya Rj = 0        
+        set(handles.popupmenu_selectvar, 'string', char(Var));
         set_environment('sol_multiples', handles);
         set(handles.popupmenu_selectvar, 'value', 1);
         calc_ratios(handles);
@@ -200,21 +213,34 @@ else % verificar si hay Rj iguales a cero
     end
 end
 
+
 % --- Función utilitaria: calcula las razones del criterio de factibilidad
 function calc_ratios(handles)
 % handles   estructura con manejadores y datos de usuario
-global Tableau All_display Dimension;
+global Tableau Dimension Order_current;
 % All_display condensa los datos que se desplegarán en la interfaz
 
 var = get(handles.popupmenu_selectvar, 'string'); % se recupera la variable no básica seleccionada
 J = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2)); % se recupera el índice de variable seleccionada    
-% Se calculan las razones para la variable no básica seleccionada
-Y0 = Tableau(1:(Dimension(1)-1), end); % se recupera el vector columna asociada a la variable no básica
-Yj = Tableau(1:(Dimension(1)-1), J); % se recupera el vector de términos coeficientes
-ratios = Y0./Yj;
-% se actualiza la tabla de la interfaz
-All_display(:, 1:Dimension(2)) = Tableau;
-All_display(1:(Dimension(1)-1), end) = ratios;
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    % Se calculan las razones para la variable no básica seleccionada
+    Y0 = Tableau(1:(Dimension(1)-1), end); % se recupera el vector de términos coeficientes
+    Yj = Tableau(1:(Dimension(1)-1), J); % se recupera el vector columna asociada a la variable no básica
+    ratios = Y0./Yj;
+    All_display = zeros(Dimension(1), Dimension(2)+1);
+    % se actualiza la tabla de la interfaz
+    All_display(:, 1:Dimension(2)) = Tableau;
+    All_display(1:(Dimension(1)-1), end) = ratios;
+elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+    % Se calculan las razones para la variable básica seleccionada
+    Fi = Tableau(Order_current(J), 1:(Dimension(2)-1)); % se recupera el vector fila asociada a la variable básica
+    Rj = Tableau(end, 1:(Dimension(2)-1)); % se recupera el vector de coeficientes reducidos
+    ratios = -Rj./Fi;
+    All_display = zeros(Dimension(1)+1, Dimension(2));
+    % se actualiza la tabla de la interfaz
+    All_display(1:Dimension(1), :) = Tableau;
+    All_display(end, 1:(Dimension(2)-1)) = ratios;
+end
 set(handles.table_simplexdisplay, 'data', All_display);  
 
 % --- Executes on button press in pushbutton_next.
@@ -222,20 +248,24 @@ function pushbutton_next_Callback(hObject, eventdata, handles) %#ok<INUSL>
 % hObject    handle to pushbutton_next (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA) 
-global All_display Dimension;
+global Dimension;
 
 % se recuperan las razones para aplicar el criterio de factibilidad
 All_display = get(handles.table_simplexdisplay, 'data');
-ratios = All_display(1:(Dimension(1)-1),end);
-% se ejecuta el proceso del pivote
-simplex_primal(ratios, handles);
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    ratios = All_display(1:(Dimension(1)-1),end);
+    % se ejecuta el método simplex
+    simplex_primal(ratios, handles);
+elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')   
+    ratios = All_display(end, 1:(Dimension(2)-1));
+    simplex_dual(ratios, handles);
+end
 
-calc_nonbasicvar(handles);
+calc_variables(handles);
     
-% --- realiza el proceso del pivote para la variable no básica seleccionada
-% y la variable básica que intercambiarán roles
+% --- Se ejecuta el método simplex primal
 function simplex_primal(ratios, handles)
-global Tableau Dimension All_display;
+global Tableau;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -255,9 +285,34 @@ else
     return;
 end
 % se actualiza la tabla de la interfaz
-All_display(:, 1:Dimension(2)) = Tableau;
-All_display(1:(Dimension(1)-1), end) = zeros(Dimension(1)-1,1);
+All_display = Tableau;
 set(handles.table_simplexdisplay, 'data', All_display);
+
+% --- Se ejecuta el método simplex primal
+function simplex_dual(ratios, handles)
+global Tableau;
+
+% recupera el índice de la variable no básica seleccionada asociada a la
+% columna que ingresará a la base
+var = get(handles.popupmenu_selectvar, 'string');
+p = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
+
+% recupera el índice de la fila (o componente) del vector columna que
+% dejará la base según la razón mínima tal que sea positiva
+ratios_aux = ratios;
+ratios_aux(ratios <= 0) = Inf; 
+[C, q] = min(ratios_aux); 
+
+if C ~= Inf % si existe algún yij que cumple el criterio de factibilidad
+    pivote_process(p, q);
+else
+    errordlg('El conjunto representado por es vacío.', 'No hay solución','modal');
+    return;
+end
+% se actualiza la tabla de la interfaz
+All_display = Tableau;
+set(handles.table_simplexdisplay, 'data', All_display);
+
 
 % --- Función utilitaria: proceso del pivote sobre el elemento Ypq
 function pivote_process(p, q)
@@ -296,7 +351,7 @@ handles.gui_Problem = Problem('LPApp', handles);
 guidata(handles.output, handles);
 
 % --------------------------------------------------------------------
-function Simplex_Callback(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
+function Simplex_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to Simplex (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -304,6 +359,7 @@ function Simplex_Callback(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
 if strcmp(get(hObject, 'Checked'),'off')  
     set(hObject,'Checked','on');
 end
+set(handles.Simplex_dual,'Checked','off');
 
 % --- Executes on selection change in popupmenu_selectvar.
 function popupmenu_selectvar_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -429,16 +485,31 @@ z = Tableau_sorted(end, 1:(Dimension(1)-1))*Tableau_sorted(1:(Dimension(1)-1),:)
 R = c - z;
 Tableau(end, I) = R;
 % se actualiza la tabla de la interfaz
-All_display = zeros(Dimension(1), Dimension(2)+1);
+All_display = zeros(Dimension(1), Dimension(2));
 All_display(:, 1:Dimension(2)) = Tableau;
 set(handles.table_simplexdisplay, 'data', All_display); 
+% se rotulan las columnas y las filas de manera
+% correspondiente
+setTableauTags(handles);
+% se calculan las nuevas variables no básicas si las hay
+calc_variables(handles);
 
-% se rotulan las columnas y las filas de manera correspondiente
+
+% ----se rotulan las columnas y las filas de manera
+% correspondiente
+function setTableauTags(handles)
+global Dimension;
+
 colName = cell(Dimension(2)+1, 1);
 for i = 1:(Dimension(2)-1)
     colName(i) = cellstr(strcat('X',num2str(i)));
 end
-colName(Dimension(2)) = cellstr('Yi0'); colName(Dimension(2)+1) = cellstr('Yi0/Yij');
+colName(Dimension(2)) = cellstr('Yi0'); 
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    colName(Dimension(2)+1) = cellstr('Yi0/Yij');
+    colFormat=cell(1,Dimension(2)+1);
+    colFormat(1,Dimension(2)+1) = cellstr('rat');
+end
 set(handles.table_simplexdisplay, 'columnname', colName);
 
 rowName=cell(1,Dimension(1));
@@ -446,17 +517,19 @@ for i = 1:(Dimension(1)-1)
     rowName(1,i) = cellstr(strcat('f',num2str(i)));
 end
 rowName(Dimension(1)) = cellstr('Rj');
+
+if strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+    rowName(Dimension(1)+1) = cellstr('-Rj/Yij');
+    colFormat=cell(1,Dimension(2));
+end
 set(handles.table_simplexdisplay, 'rowname', rowName);
 
 % se especifica el formato de salida de los datos
-colFormat=cell(1,Dimension(2)+1);
-for i = 1:(Dimension(2)+1)
+for i = 1:(Dimension(2))
     colFormat(1,i) = cellstr('rat');
 end
 set(handles.table_simplexdisplay, 'columnformat', colFormat);
 
-% se calculan las nuevas variables no básicas si las hay
-calc_nonbasicvar(handles);
 
 % --- Executes when user attempts to close LPApp.
 function LPApp_CloseRequestFcn(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -496,3 +569,14 @@ function Saveproblem_Callback(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
 global Matrix_problem; %#ok<NUSED>
 
 uisave('Matrix_problem', 'LProblem');
+
+
+% --------------------------------------------------------------------
+function Simplex_dual_Callback(hObject, eventdata, handles) %#ok<DEFNU,INUSL>
+% hObject    handle to Simplex_dual (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if strcmp(get(hObject, 'Checked'),'off')  
+    set(hObject,'Checked','on');
+end
+set(handles.Simplex,'Checked','off');
