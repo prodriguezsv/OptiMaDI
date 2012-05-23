@@ -178,15 +178,16 @@ end
 if ~isempty(Var) % en el caso que haya Rj negativos
     if strcmp(get(handles.Simplex, 'Checked'), 'on')
         [Y, p] = min(Rj(IRjneg)); %#ok<ASGLU> % obtiene el índice de variable del Rj más negativo
-    else strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+    elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
         [Y, p] = min(IX0neg); %#ok<ASGLU> % obtiene el índice de variable del Rj más negativo
     end
     set(handles.popupmenu_selectvar, 'string', char(Var)); % despliega las variables no básicas en la interfaz
     set_environment('next', handles); % ajusta el ambiente
     set(handles.popupmenu_selectvar, 'value', p); % se selecciona, por omisión, la variable más negativa
     calc_ratios(handles); % se calculan las razones para aplicar el criterio de factibilidad
-elseif strcmp(get(handles.Simplex, 'Checked'), 'on') % verificar si hay Rj iguales a cero
+else % verificar si hay Rj iguales a cero
     j = 1;
+    Rj = Tableau(end,1:(Dimension(2)-1)); % Recupera los coeficientes de costo reducido (Rj) de la tabla Simplex
     IRjeqaux = I(Rj(I(Dimension(1):(Dimension(2)-1)))==0);
     dim3 = size(IRjeqaux);
     IRjeq = zeros(1, dim3(2));
@@ -202,7 +203,7 @@ elseif strcmp(get(handles.Simplex, 'Checked'), 'on') % verificar si hay Rj igual
     for i = 1:dim2(2)
         Var(i) = cellstr(strcat('X',num2str(IRjeq(i))));
     end
-    if ~isempty(Var) % en el caso que haya Rj = 0        
+    if ~isempty(Var) && strcmp(get(handles.Simplex, 'Checked'), 'on') % en el caso que haya Rj = 0        
         set(handles.popupmenu_selectvar, 'string', char(Var));
         set_environment('sol_multiples', handles);
         set(handles.popupmenu_selectvar, 'value', 1);
@@ -243,6 +244,7 @@ elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
 end
 set(handles.table_simplexdisplay, 'data', All_display);  
 
+
 % --- Executes on button press in pushbutton_next.
 function pushbutton_next_Callback(hObject, eventdata, handles) %#ok<INUSL>
 % hObject    handle to pushbutton_next (see GCBO)
@@ -275,7 +277,7 @@ q = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
 % recupera el índice de la fila (o componente) del vector columna que
 % dejará la base según la razón mínima tal que sea positiva
 ratios_aux = ratios;
-ratios_aux(ratios <= 0) = Inf; 
+ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
 [C, p] = min(ratios_aux); 
 
 if C ~= Inf % si existe algún yij que cumple el criterio de factibilidad
@@ -290,12 +292,13 @@ set(handles.table_simplexdisplay, 'data', All_display);
 
 % --- Se ejecuta el método simplex primal
 function simplex_dual(ratios, handles)
-global Tableau;
+global Tableau Order_current;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
 var = get(handles.popupmenu_selectvar, 'string');
-p = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
+p_aux = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
+p = Order_current(p_aux);
 
 % recupera el índice de la fila (o componente) del vector columna que
 % dejará la base según la razón mínima tal que sea positiva
@@ -306,7 +309,7 @@ ratios_aux(ratios <= 0) = Inf;
 if C ~= Inf % si existe algún yij que cumple el criterio de factibilidad
     pivote_process(p, q);
 else
-    errordlg('El conjunto representado por es vacío.', 'No hay solución','modal');
+    errordlg('El conjunto representado por las restricciones es vacío.', 'No hay solución','modal');
     return;
 end
 % se actualiza la tabla de la interfaz
@@ -467,7 +470,7 @@ end
 function setProblem(Problem, handles)
 % Problem especificación del problema
 % handles estructura de manejadores y datos de usuario
-global Dimension Matrix_problem Tableau Order_current Order_initial All_display;
+global Dimension Matrix_problem Tableau Order_current Order_initial;
 
 % se actualizan algunas variables globales previamente descritas
 Matrix_problem = Problem;
@@ -580,3 +583,4 @@ if strcmp(get(hObject, 'Checked'),'off')
     set(hObject,'Checked','on');
 end
 set(handles.Simplex,'Checked','off');
+

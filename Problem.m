@@ -63,6 +63,7 @@ function Problem_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to problem (see VARARGIN)
+global Dimension;
 
 % Choose default command line output for problem
 handles.output = hObject;
@@ -79,30 +80,30 @@ end
 guidata(hObject, handles);
 
 % se obtienen las dimensiones del problema
-dimp = size(handles.LPApphandle.gui_Matrix_problem);
-dim = [dimp(1)-1, dimp(2)-1];
+Dimension = size(handles.LPApphandle.gui_Matrix_problem);
+
 % se rotulan las filas y columnas de las tablas
-colName = cell(dim(2)+1, 1);
-for i = 1:dim(2)
+colName = cell(Dimension(2), 1);
+for i = 1:Dimension(2)-1
     colName(i) = cellstr(strcat('X',num2str(i)));
 end
-colName(dim(2)+1) = cellstr('Yi0');
+colName(Dimension(2)) = cellstr('Yi0');
 set(handles.table_problem, 'columnname', colName);
 
-rowName=cell(1,dim(1)+1);
-for i = 1:dim(1)
+rowName=cell(1,Dimension(1));
+for i = 1:Dimension(1)-1
     rowName(1,i) = cellstr(strcat('f',num2str(i)));
 end
-rowName(dim(1)+1) = cellstr('Z');
+rowName(Dimension(1)) = cellstr('Z');
 set(handles.table_problem, 'rowname', rowName);
 % se establece el formato de las columnas
-colFormat=cell(1,dim(2)+1);
-for i = 1:(dim(2)+1)
+colFormat=cell(1,Dimension(2));
+for i = 1:(Dimension(2))
     colFormat(1,i) = cellstr('rat');
 end
 set(handles.table_problem, 'columnformat', colFormat);
 % se configuran las columnas como editables
-colEdit = ones(1,dim(2)+1);
+colEdit = ones(1,Dimension(2));
 set(handles.table_problem, 'columneditable', (colEdit == 1));
 % se despliega la tabla para el ingreso de datos
 All_display = handles.LPApphandle.gui_Matrix_problem;
@@ -163,8 +164,7 @@ if ~isfactiblesolution(handles)
 end
 if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')
     if isdegeneratedsolution()
-        iscorrect = 0;
-        return;
+        errordlg('La solución inicial es degenerada.','Posibilidad de ciclo','modal');
     end
 end
 iscorrect = 1;
@@ -177,15 +177,15 @@ global Matrix_problem Dimension;
 if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')    
     X0 = Matrix_problem(1:(Dimension(1)-1), end);
     if any(X0 < 0)
-        errordlg('La solución inicial no es factible.','Método Simplex Primal no aplicable','modal');
+        errordlg('La solución inicial no es primal factible.','Método Simplex Primal no aplicable','modal');
         response = 0;
         return;
     end
-else strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'on')
+elseif strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'on')
     Rj = Matrix_problem(end, 1:(Dimension(2)-1));
     if any(Rj < 0)
         response = 0;
-        errordlg('La solución inicial no es factible.','Método Simplex Dual no aplicable','modal');
+        errordlg('La solución inicial no es dual factible.','Método Simplex Dual no aplicable','modal');
         return;
     end
 end
@@ -198,8 +198,7 @@ global Matrix_problem Dimension;
 % se verifica que la solución no sea degenerada
 X0 = Matrix_problem(1:(Dimension(1)-1), end);
 if any((X0 ~= 0)~= 1)
-    response = 1;
-    errordlg('La solución inicial es degenerada.','Método no aplicable','modal');
+    response = 1;    
     return;
 end
 response = 0;
@@ -223,7 +222,7 @@ for i =1:(Dimension(1)-1)
         end           
     end
     if ~response
-        errordlg('La matriz no está en forma canónica.','Problema no aplicable','modal');
+        errordlg('La matriz no está en forma canónica.','Método no aplicable','modal');
         return;
     end        
 end
