@@ -91,9 +91,13 @@ function set_environment(environmentname, handles)
 if strcmp(environmentname, 'next')
     set(handles.slider_increment, 'value', 0);
     set(handles.Saveproblem, 'enable', 'on');
-    val_switches = ['on ';'on ';'on ';'on ';'on ';'off'];
+    if strcmp(get(handles.Simplex, 'Checked'), 'on')
+        val_switches = ['on ';'on ';'on ';'on ';'on ';'off'];
+    else
+        val_switches = ['on ';'off';'on ';'on ';'on ';'off'];
+    end
 elseif strcmp(environmentname, 'sol_multiples')
-    val_switches = ['on ';'on ';'on ';'off';'on ';'on '];
+    val_switches = ['on ';'off';'on ';'off';'on ';'on '];
     set(handles.Saveproblem, 'enable', 'on');
 elseif strcmp(environmentname, 'end')
     set(handles.slider_increment, 'value', 0);
@@ -262,7 +266,7 @@ elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
     ratios = All_display(end, 1:(Dimension(2)-1));
     simplex_dual(ratios, handles);
 end
-
+setrowheaders(handles);
 calc_variables(handles);
     
 % --- Se ejecuta el método simplex primal
@@ -363,6 +367,9 @@ if strcmp(get(hObject, 'Checked'),'off')
     set(hObject,'Checked','on');
 end
 set(handles.Simplex_dual,'Checked','off');
+set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex primal)');
+set(handles.text_selectvar, 'string', 'Seleccionar variable que entra');
+set(handles.slider_increment, 'enable', 'on');
 
 % --- Executes on selection change in popupmenu_selectvar.
 function popupmenu_selectvar_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -401,7 +408,7 @@ Aux_Tableau = Tableau;
 All_display = get(handles.table_simplexdisplay, 'data');
 ratios = All_display(1:(Dimension(1)-1), end);
 ratios_aux = ratios;
-ratios_aux(ratios <= 0) = Inf; 
+ratios_aux(ratios < 0) = Inf; 
 [ratio, Y] = min(ratios_aux);  %#ok<NASGU>
 % se actualizan las variables básicas según el incremento de la variable no
 % básica
@@ -509,30 +516,37 @@ for i = 1:(Dimension(2)-1)
 end
 colName(Dimension(2)) = cellstr('Yi0'); 
 if strcmp(get(handles.Simplex, 'Checked'), 'on')
-    colName(Dimension(2)+1) = cellstr('Yi0/Yij');
-    colFormat=cell(1,Dimension(2)+1);
-    colFormat(1,Dimension(2)+1) = cellstr('rat');
+    colName(Dimension(2)+1) = cellstr('Yi0/Yij');    
 end
 set(handles.table_simplexdisplay, 'columnname', colName);
 
+setrowheaders(handles);
+
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    colFormat=cell(1,Dimension(2)+1);    
+else
+    colFormat=cell(1,Dimension(2));
+end
+% se especifica el formato de salida de los datos
+colFormat(1,:) = cellstr('rat');
+
+set(handles.table_simplexdisplay, 'columnformat', colFormat);
+
+% -------
+function setrowheaders(handles)
+global Dimension Order_current;
+
+[Z, I] = sort(Order_current); %#ok<ASGLU>
 rowName=cell(1,Dimension(1));
 for i = 1:(Dimension(1)-1)
-    rowName(1,i) = cellstr(strcat('f',num2str(i)));
+    rowName(1,i) = cellstr(strcat('X',num2str(I(i))));
 end
 rowName(Dimension(1)) = cellstr('Rj');
 
 if strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
-    rowName(Dimension(1)+1) = cellstr('-Rj/Yij');
-    colFormat=cell(1,Dimension(2));
+    rowName(Dimension(1)+1) = cellstr('-Rj/Yij');   
 end
 set(handles.table_simplexdisplay, 'rowname', rowName);
-
-% se especifica el formato de salida de los datos
-for i = 1:(Dimension(2))
-    colFormat(1,i) = cellstr('rat');
-end
-set(handles.table_simplexdisplay, 'columnformat', colFormat);
-
 
 % --- Executes when user attempts to close LPApp.
 function LPApp_CloseRequestFcn(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -545,6 +559,8 @@ function LPApp_CloseRequestFcn(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 
 try
     delete(handles.gui_Problem);
+    delete(handles.gui_Postoptimality);
+    delete(handles.gui_Sensibility);
 catch %#ok<CTCH>    
 end
 delete(hObject);
@@ -583,4 +599,44 @@ if strcmp(get(hObject, 'Checked'),'off')
     set(hObject,'Checked','on');
 end
 set(handles.Simplex,'Checked','off');
+set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex dual)');
+set(handles.text_selectvar, 'string', 'Seleccionar variable que sale');
+set(handles.slider_increment, 'enable', 'off');
 
+% ----------
+function setProblemAndTableau(Problem, NewTableau, handles)
+global Matrix_problem Tableau;
+
+set(handles.table_simplexdisplay, 'data', NewTableau);
+Tableau = NewTableau;
+Matrix_problem = Problem;
+calc_variables(handles);
+
+% --------------------------------------------------------------------
+function Postoptimality_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Postoptimality (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global Matrix_problem Tableau Order_current Order_initial;
+
+handles.gui_tableau = Tableau;
+handles.gui_Matrix_problem = Matrix_problem;
+handles.Order_current = Order_current;
+handles.Order_initial = Order_initial;
+handles.setProblemAndTableau = @setProblemAndTableau;
+handles.gui_postoptimality = Postoptimality('LPApp', handles);
+guidata(handles.output, handles);
+
+% --------------------------------------------------------------------
+function Sensibility_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Sensibility (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global Matrix_problem Tableau Order_current Order_initial;
+
+handles.gui_tableau = Tableau;
+handles.gui_Matrix_problem = Matrix_problem;
+handles.Order_current = Order_current;
+handles.Order_initial = Order_initial;
+handles.gui_sensibility = Sensibility('LPApp', handles);
+guidata(handles.output, handles);
