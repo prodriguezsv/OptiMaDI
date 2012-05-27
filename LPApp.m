@@ -91,11 +91,7 @@ function set_environment(environmentname, handles)
 if strcmp(environmentname, 'next')
     set(handles.slider_increment, 'value', 0);
     set(handles.Saveproblem, 'enable', 'on');
-    if strcmp(get(handles.Simplex, 'Checked'), 'on')
-        val_switches = ['on ';'on ';'on ';'on ';'on ';'off'];
-    else
-        val_switches = ['on ';'off';'on ';'on ';'on ';'off'];
-    end
+    val_switches = ['on ';'on ';'on ';'on ';'on ';'off'];   
 elseif strcmp(environmentname, 'sol_multiples')
     val_switches = ['on ';'off';'on ';'off';'on ';'on '];
     set(handles.Saveproblem, 'enable', 'on');
@@ -396,7 +392,7 @@ function slider_increment_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU
 % hObject    handle to slider_increment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Tableau Dimension All_display;
+global Tableau Dimension Order_initial Order_current Matrix_problem;
 
 % se recupera la variable por incrementar y el incremento
 incr = get(hObject, 'Value');
@@ -406,20 +402,44 @@ J = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
 % se actualizan los datos desplegados
 Aux_Tableau = Tableau;
 All_display = get(handles.table_simplexdisplay, 'data');
-ratios = All_display(1:(Dimension(1)-1), end);
-ratios_aux = ratios;
-ratios_aux(ratios < 0) = Inf; 
-[ratio, Y] = min(ratios_aux);  %#ok<NASGU>
-% se actualizan las variables básicas según el incremento de la variable no
-% básica
-Xb = Aux_Tableau(:,end);
-Yj = Tableau(:, J);
-Aux_Tableau(:,end) = Xb - Yj*incr/100*ratio;
-% se actualiza la tabla de la interfaz
-All_display = zeros(Dimension(1), Dimension(2)+1);
-All_display(:, 1:Dimension(2)) = Aux_Tableau;
-All_display(1:(Dimension(1)-1), end) = ratios;
-set(handles.table_simplexdisplay, 'data', All_display);
+
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    ratios = All_display(1:(Dimension(1)-1), end);
+    ratios_aux = ratios;
+    ratios_aux(ratios < 0) = Inf; 
+    [ratio, Y] = min(ratios_aux);  %#ok<NASGU>
+    % se actualizan las variables básicas según el incremento de la variable no
+    % básica
+    Xb = Aux_Tableau(:,end);
+    Yj = Tableau(:, J);
+    Aux_Tableau(:,end) = Xb - Yj*incr/100*ratio;
+    % se actualiza la tabla de la interfaz
+    All_display = zeros(Dimension(1), Dimension(2)+1);
+    All_display(:, 1:Dimension(2)) = Aux_Tableau;
+    All_display(1:(Dimension(1)-1), end) = ratios;
+    set(handles.table_simplexdisplay, 'data', All_display);
+elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+    ratios = All_display(end, 1:(Dimension(2)-1));
+    ratios_aux = ratios;    
+    Vector_nonbasic = Order_current(1:Dimension(2)-1) >= Dimension(1);
+    ratios_aux(ratios < 0 & Vector_nonbasic) = Inf;
+    ratios_aux(ratios == 0 & ~Vector_nonbasic) = Inf; 
+    [ratio, Y] = min(ratios_aux);  %#ok<NASGU>
+    % se actualizan los coeficientes de costo reducido según la
+    % actualización de la solución del dual
+    Rj = Aux_Tableau(end,:);
+    A = Matrix_problem(1:Dimension(1)-1,1:Dimension(2));
+    [Z, I] = sort(Order_initial); %#ok<ASGLU>
+    B_inverse = Tableau(:, I(1:Dimension(1)-1));
+    U = B_inverse(Order_current(J), 1:(Dimension(1)-1));
+    Aux_Tableau(end, :) = Rj + U*A*incr/100*ratio;
+    % se actualiza la tabla de la interfaz
+    All_display = zeros(Dimension(1)+1, Dimension(2));
+    All_display(1:Dimension(1), 1:Dimension(2)) = Aux_Tableau;
+    All_display(end, 1:(Dimension(2)-1)) = ratios;
+    set(handles.table_simplexdisplay, 'data', All_display);
+end
+
 
 % --- Executes during object creation, after setting all properties.
 function slider_increment_CreateFcn(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
