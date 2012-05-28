@@ -63,7 +63,6 @@ function Problem_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to problem (see VARARGIN)
-global Dimension;
 
 % Choose default command line output for problem
 handles.output = hObject;
@@ -79,22 +78,33 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
+if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
+    setheading(handles, char('X', 'f', 'Yi0', 'Z'));
+else
+    setheading(handles, char('Origen', 'Destino', 'Oferta', 'Demanda'));
+end
+% UIWAIT makes problem wait for user response (see UIRESUME)
+% uiwait(handles.Problem);
+
+function setheading(handles, headers)
+global Dimension;
+
 % se obtienen las dimensiones del problema
 Dimension = size(handles.LPApphandle.gui_Matrix_problem);
 
 % se rotulan las filas y columnas de las tablas
 colName = cell(Dimension(2), 1);
 for i = 1:Dimension(2)-1
-    colName(i) = cellstr(strcat('X',num2str(i)));
+    colName(i) = cellstr(strcat(headers(2,:),num2str(i)));
 end
-colName(Dimension(2)) = cellstr('Yi0');
+colName(Dimension(2)) = cellstr(headers(3,:));
 set(handles.table_problem, 'columnname', colName);
 
 rowName=cell(1,Dimension(1));
 for i = 1:Dimension(1)-1
-    rowName(1,i) = cellstr(strcat('f',num2str(i)));
+    rowName(1,i) = cellstr(strcat(headers(1,:),num2str(i)));
 end
-rowName(Dimension(1)) = cellstr('Z');
+rowName(Dimension(1)) = cellstr(headers(4,:));
 set(handles.table_problem, 'rowname', rowName);
 % se establece el formato de las columnas
 colFormat=cell(1,Dimension(2));
@@ -108,10 +118,6 @@ set(handles.table_problem, 'columneditable', (colEdit == 1));
 % se despliega la tabla para el ingreso de datos
 All_display = handles.LPApphandle.gui_Matrix_problem;
 set(handles.table_problem, 'data', All_display);
-
-% UIWAIT makes problem wait for user response (see UIRESUME)
-% uiwait(handles.Problem);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Problem_OutputFcn(hObject, eventdata, handles)  %#ok<INUSL>
@@ -154,16 +160,18 @@ global Matrix_problem Order_initial Dimension;
 
 Dimension = size(Matrix_problem);
 Order_initial = zeros(1, Dimension(2));
-if ~iscanonicform()
-    iscorrect = 0;
-    return;
+if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
+    if ~iscanonicform()
+        iscorrect = 0;
+        return;
+    end
 end
 if ~isfactiblesolution(handles)
     iscorrect = 0;
     return;
 end
-if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')
-    if isdegeneratedsolution()
+if strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'off')
+    if isdegeneratedsolution(handles)
         errordlg('La solución inicial es degenerada.','Posibilidad de ciclo','modal');
     end
 end
@@ -182,24 +190,42 @@ if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')
         return;
     end
 elseif strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'on')
-    Rj = Matrix_problem(end, 1:(Dimension(2)-1));
+    Rj = Matrix_problem(end, 1:(Dimension(2)-1)); %MODIFICAR
     if any(Rj < 0)
         response = 0;
         errordlg('La solución inicial no es dual factible.','Método Simplex Dual no aplicable','modal');
+        return;
+    end
+elseif strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'on')
+    oferta = Matrix_problem(1:(Dimension(1)-1), end);
+    demanda = Matrix_problem(end, 1:(Dimension(2)-1));
+    if any(oferta < 0) || any(demanda < 0)
+        response = 0;
+        errordlg('La solución inicial no será factible.','Método Simplex no aplicable','modal');
         return;
     end
 end
 response = 1;
 
 % ---------
-function response = isdegeneratedsolution()
+
+function response = isdegeneratedsolution(handles)
 global Matrix_problem Dimension;
 
 % se verifica que la solución no sea degenerada
-X0 = Matrix_problem(1:(Dimension(1)-1), end);
-if any((X0 ~= 0)~= 1)
-    response = 1;    
-    return;
+if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
+    X0 = Matrix_problem(1:(Dimension(1)-1), end);
+    if any(X0 == 0)
+        response = 1;    
+        return;
+    end
+else
+    oferta = Matrix_problem(1:(Dimension(1)-1), end);
+    demanda = Matrix_problem(end, 1:(Dimension(2)-1));
+    if any(oferta == 0) || any(demanda == 0)
+        response = 1;
+        return;
+    end
 end
 response = 0;
     
