@@ -89,17 +89,25 @@ function set_environment(environmentname, handles)
 % handles         estructura con manejadores y datos de usuario
 
 if strcmp(environmentname, 'next')
+    set(handles.Sensibility, 'enable', 'off');
+    set(handles.Postoptimality, 'enable', 'off');
     set(handles.slider_increment, 'value', 0);
     set(handles.Saveproblem, 'enable', 'on');
     val_switches = ['on ';'on ';'on ';'on ';'on ';'off'];   
 elseif strcmp(environmentname, 'sol_multiples')
+    set(handles.Sensibility, 'enable', 'on');
+    set(handles.Postoptimality, 'enable', 'on');
     val_switches = ['on ';'off';'on ';'off';'on ';'on '];
     set(handles.Saveproblem, 'enable', 'on');
 elseif strcmp(environmentname, 'end')
+    set(handles.Sensibility, 'enable', 'on');
+    set(handles.Postoptimality, 'enable', 'on');
     set(handles.slider_increment, 'value', 0);
     val_switches = ['off';'off';'on ';'off';'on '; 'off'];
     set(handles.Saveproblem, 'enable', 'on');
-elseif strcmp(environmentname, 'next_assign')    
+elseif strcmp(environmentname, 'next_assign')
+    set(handles.Sensibility, 'enable', 'off');
+    set(handles.Postoptimality, 'enable', 'off');
     setTableauTags(handles, char('Origen', 'Destino', 'Demanda', 'Oferta'));
     set(handles.panel_transportation, 'title', 'Encontrar solución inicial');
     set(handles.pushbutton_asign, 'string', 'Asignar');
@@ -370,7 +378,7 @@ elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
     ratios = All_display(end, 1:(Dimension(2)-1));
     simplex_dual(ratios, handles);
 end
-setrowheaders(handles);
+setrowheaders(handles, char('X', 'X', 'Rj', 'Yi0'));
 calc_variables(handles);
     
 % --- Se ejecuta el método simplex primal
@@ -411,7 +419,7 @@ p = Order_current(p_aux);
 % recupera el índice de la fila (o componente) del vector columna que
 % dejará la base según la razón mínima tal que sea positiva
 ratios_aux = ratios;
-ratios_aux(ratios <= 0) = Inf; 
+ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
 [C, q] = min(ratios_aux); 
 
 if C ~= Inf % si existe algún yij que cumple el criterio de factibilidad
@@ -643,7 +651,7 @@ end
 All_display = zeros(Dimension(1), Dimension(2));
 if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
     % se rotulan las columnas y las filas de manera correspondiente
-    setTableauTags(handles, char('X', 'Yi0', 'X', 'Rj'));
+    setTableauTags(handles, char('X', 'X', 'Rj', 'Yi0'));
     All_display(:, 1:Dimension(2)) = Tableau;
 else
     % se rotulan las columnas y las filas de manera correspondiente
