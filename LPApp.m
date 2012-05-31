@@ -122,9 +122,10 @@ elseif strcmp(environmentname, 'next_calc')
 elseif strcmp(environmentname, 'next_cicle')
     setTableauTags(handles, char('Origen', 'Destino', 'V', 'U'));
     set(handles.panel_transportation, 'title', 'Calcular ciclo de cambio');
+    set(handles.text_selectvar2, 'string', 'Seleccionar variable que entra');
     set(handles.pushbutton_asign, 'string', 'Buscar');
     set(handles.pushbutton_asignall, 'string', 'Buscar todo');
-    set(handles.popupmenu_selectvar2, 'Enable', 'off');
+    set(handles.popupmenu_selectvar2, 'Enable', 'on');
     set(handles.pushbutton_asign, 'Enable', 'on');
     set(handles.pushbutton_asignall, 'Enable', 'on');
     set(handles.Saveproblem, 'enable', 'on');
@@ -944,7 +945,34 @@ if (Num_assignation == 1 && Increment == -1) || (Num_assignation == Dimension(1)
             end
         end
     end
-    set_environment('next_cicle', handles);
+    set_environment('next_cicle', handles);    
+    % se construye el arreglo de cadenas de las variables    
+    count = sum(sum(T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) < 0));
+    if count ~= 0 % en el caso que haya Rj negativos
+        Var = cell(count, 1);
+        minimo = 0; indice = 0;
+        i = 1;
+        for j = 1:Dimension(1)-1
+            for k =1:Dimension(2)-1
+                if T_VarType(j, k) == 0
+                    if T_Tableau(j, k) < 0
+                        if minimo > T_Tableau(j, k)
+                            indice = count;
+                            minimo = T_Tableau(j, k);
+                        end
+                        Var(i) = cellstr(strcat('X',strcat(num2str(j),num2str(k))));
+                        i = i + 1; 
+                    end
+                end
+            end
+        end
+
+        set(handles.popupmenu_selectvar2, 'string', char(Var));
+        set(handles.popupmenu_selectvar2, 'value', indice);  
+    else
+        set(handles.popupmenu_selectvar2, 'Enable', 'off');
+        set_environment('end', handles);
+    end
 end
 All_display = T_Tableau;
 set(handles.table_simplexdisplay, 'data', All_display);
