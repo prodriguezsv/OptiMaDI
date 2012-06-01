@@ -79,7 +79,7 @@ end
 guidata(hObject, handles);
 
 if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
-    setheading(handles, char('X', 'f', 'Yi0', 'Z'));
+    setheading(handles, char('f', 'X', 'Yi0', 'Z'));
 else
     setheading(handles, char('Origen', 'Destino', 'Oferta', 'Demanda'));
 end

@@ -144,16 +144,16 @@ b = All_display_tableau(1:(dim(1)-1), end);
 Rj = All_display_tableau(end, 1:(dim(2)-1));
 if any(b < 0) && all(Rj >= 0)
     if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')
-        msgdlg('Seleccione el método Simplex dual', 'Cambie de método', 'help');
+        msgbox('Seleccione el método Simplex dual', 'Cambie de método', 'help');
     end
 elseif all(b > 0) && any(Rj < 0)
     if strcmp(get(handles.LPApphandle.Simplex_dual, 'Cheched'), 'on')
-        msgdlg('Seleccione el método Simplex primal', 'Cambie de método', 'help');
+        msgbox('Seleccione el método Simplex primal', 'Cambie de método', 'help');
     end
-else
-   handles.LPApphandle.setProblemAndTableau(get(handles.table_problem, 'data'), get(handles.table_tableau, 'data'), handles.LPApphandle);
-   delete(handles.postoptimality);
 end
+
+handles.LPApphandle.setProblemAndTableau(get(handles.table_problem, 'data'), get(handles.table_tableau, 'data'), handles.LPApphandle);
+delete(handles.postoptimality);
 
 
 % --- Executes on button press in pushbutton_restart.
