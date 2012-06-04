@@ -1197,12 +1197,12 @@ else
                             end
                         end
                     end                    
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 2
                         Num_assignation = Dimension(1)+Dimension(2)-3;
                     end
                     break;
                 else
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 2
                        if Node_Cicle(Num_cassignation, 1, 3) == -1
                             T_Tableau(Node_current(1), ind1(i)) = 1;
                             Node_Cicle(Num_assignation, 1, 3) = 1;
@@ -1231,15 +1231,21 @@ else
             Empty_dimension = 0; 
         else        
             Empty_dimension = 1;
-            T_Tableau(Node_Cicle(Num_cassignation-1, 1, 1), Node_Cicle(Num_cassignation-1, 1, 2)) = 0;
-            Node_Cicle(Num_cassignation-1, 1, 3) = 0;
+            for k = (Dimension(1)+Dimension(2)-3):-1:1;
+                if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
+                    Num_cassignation = k;
+                    break;
+                end
+            end
+            T_Tableau(Node_Cicle(Num_cassignation, 1, 1), Node_Cicle(Num_cassignation, 1, 2)) = 0;
+            Node_Cicle(Num_cassignation, 1, 3) = 0;
             for l = 1:Dimension(1)+Dimension(2)-3;
-                if Solution(l, 1, 1) == Node_Cicle(Num_cassignation-1, 1, 1) && Solution(l, 1, 2) == Node_Cicle(Num_cassignation-1, 1, 2)
+                if Solution(l, 1, 1) == Node_Cicle(Num_cassignation, 1, 1) && Solution(l, 1, 2) == Node_Cicle(Num_cassignation, 1, 2)
                     Solution_change(l) = 0;
                     break;
                 end
             end  
-            calc_nextciclevar(handles,Num_cassignation-1);
+            calc_nextciclevar(handles,Num_cassignation);
             return;
         end
     else
@@ -1281,12 +1287,12 @@ else
                             end
                         end
                     end
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
                         Num_assignation = Dimension(1)+Dimension(2)-3;
                     end                    
                     break;
                 else
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
                         if Node_Cicle(Num_cassignation, 1, 3) == -1
                             T_Tableau(ind1(i), Node_current(2)) = 1;
                             Node_Cicle(Num_assignation, 1, 3) = 1;
@@ -1314,18 +1320,24 @@ else
                     end
                 end                                
             end
-            Empty_dimension = 1;            
+            Empty_dimension = 1;   
         else
-            Empty_dimension = 0;
-            T_Tableau(Node_Cicle(Num_cassignation-1, 1, 1), Node_Cicle(Num_cassignation-1, 1, 2)) = 0;
-            Node_Cicle(Num_cassignation-1, 1, 3) = 0;
+           Empty_dimension = 0;
+           for k = (Dimension(1)+Dimension(2)-3):-1:1;
+                if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
+                    Num_cassignation = k;
+                    break;
+                end
+            end
+            T_Tableau(Node_Cicle(Num_cassignation, 1, 1), Node_Cicle(Num_cassignation, 1, 2)) = 0;
+            Node_Cicle(Num_cassignation, 1, 3) = 0;
             for l = 1:Dimension(1)+Dimension(2)-3;
-                if Solution(l, 1, 1) == Node_Cicle(Num_cassignation-1, 1, 1) && Solution(l, 1, 2) == Node_Cicle(Num_cassignation-1, 1, 2)
+                if Solution(l, 1, 1) == Node_Cicle(Num_cassignation, 1, 1) && Solution(l, 1, 2) == Node_Cicle(Num_cassignation, 1, 2)
                     Solution_change(l) = 0;
                     break;
                 end
             end  
-            calc_nextciclevar(handles,Num_cassignation-1);
+            calc_nextciclevar(handles,Num_cassignation);            
             return;
         end
     end
