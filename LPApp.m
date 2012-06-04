@@ -105,6 +105,9 @@ elseif strcmp(environmentname, 'end')
     set(handles.slider_increment, 'value', 0);
     val_switches = ['off';'off';'on ';'off';'on '; 'off'];
     set(handles.Saveproblem, 'enable', 'on');
+    set(handles.pushbutton_asign, 'Enable', 'off');
+    set(handles.pushbutton_asignall, 'Enable', 'off');
+    set(handles.pushbutton_watchsolution, 'visible', 'on');    
 elseif strcmp(environmentname, 'next_assign')
     set(handles.Sensibility, 'enable', 'off');
     set(handles.Postoptimality, 'enable', 'off');
@@ -115,18 +118,21 @@ elseif strcmp(environmentname, 'next_assign')
     set(handles.popupmenu_selectvar2, 'Enable', 'on');
     set(handles.pushbutton_asign, 'Enable', 'on');
     set(handles.pushbutton_asignall, 'Enable', 'on');
+    set(handles.pushbutton_watchsolution, 'visible', 'off');  
     set(handles.Saveproblem, 'enable', 'on');
     val_switches = ['on ';'on ';'on ';'off';'on ';'off'];   
 elseif strcmp(environmentname, 'next_calc')    
     setTableauTags(handles, char('Origen', 'Destino', 'V', 'U'));
     set(handles.panel_transportation, 'title', 'Calcular coeficientes relativos');
+    set(handles.text_selectvar2, 'string', 'Seleccionar multiplicador inicial');
     set(handles.pushbutton_asign, 'string', 'Calcular');
     set(handles.pushbutton_asignall, 'string', 'Calcular todo');   
     set(handles.popupmenu_selectvar2, 'Enable', 'on');
     set(handles.pushbutton_asign, 'Enable', 'on');
     set(handles.pushbutton_asignall, 'Enable', 'on');
+    set(handles.pushbutton_watchsolution, 'visible', 'on');
     set(handles.Saveproblem, 'enable', 'on');
-    val_switches = ['on ';'on ';'on ';'off';'on ';'off'];   
+    val_switches = ['on ';'on ';'on ';'off';'on ';'off']; 
 elseif strcmp(environmentname, 'next_cicle')
     setTableauTags(handles, char('Origen', 'Destino', 'Demanda', 'Oferta'));
     set(handles.panel_transportation, 'title', 'Calcular ciclo de cambio');
@@ -135,7 +141,7 @@ elseif strcmp(environmentname, 'next_cicle')
     set(handles.pushbutton_asignall, 'string', 'Buscar todo');
     set(handles.popupmenu_selectvar2, 'Enable', 'on');
     set(handles.pushbutton_asign, 'Enable', 'on');
-    set(handles.pushbutton_asignall, 'Enable', 'on');
+    set(handles.pushbutton_asignall, 'Enable', 'on'); 
     set(handles.Saveproblem, 'enable', 'on');
     val_switches = ['on ';'on ';'on ';'off';'on ';'off'];   
 end
@@ -297,7 +303,8 @@ set(handles.table_simplexdisplay, 'data', All_display);
 
 % ----------------
 function calc_nextassignment(handles)
-global Solution Node_current Num_assignation T_Tableau Dimension Matrix_problem T_VarType Solution_initial;
+global Solution Node_current Num_assignation T_Tableau Dimension Matrix_problem T_VarType ...
+    Solution_change Minimo Solution_initial Node_NBV;
 
 if Solution_initial == 1
     if all(Node_current==0)
@@ -337,9 +344,9 @@ if Solution_initial == 1
         else
             T_Tableau(end, Node_current(2)) = T_Tableau(end, Node_current(2)) - T_Tableau(Node_current(1), end);
             T_Tableau(Node_current(1), end) =  0;
-        end
-        T_VarType(Node_current(1), Node_current(2)) = 1;
+        end        
     end
+    T_VarType(Node_current(1), Node_current(2)) = 1;
 
     All_display = zeros(Dimension(1), Dimension(2));
     for j=1:Num_assignation
@@ -363,6 +370,69 @@ if Solution_initial == 1
         set(handles.popupmenu_selectvar2, 'value', 4);    
     end
 else
+    var = get(handles.popupmenu_selectvar2, 'string'); % se recupera la variable no básica seleccionada
+    I = str2double(var(get(handles.popupmenu_selectvar2, 'value'), 2)); % se recupera variable seleccionada 
+    J = str2double(var(get(handles.popupmenu_selectvar2, 'value'), 3)); % se recupera el índice de variable seleccionada
+    Node_BV = [I, J];
+    if all(Node_current==0)
+        Num_assignation = 1;
+        T_VarType = zeros(Dimension(1)-1, Dimension(2)-1);
+        Node_current = [Solution(Num_assignation, 1, 1), Solution(Num_assignation, 1, 2)];        
+        if Node_current(1) == Node_BV(1) && Node_current(2) == Node_BV(2)
+           Solution(Num_assignation, 1, 1) = Node_NBV(1);
+           Solution(Num_assignation, 1, 2) = Node_NBV(2);
+           Solution(Num_assignation, 1, 3) = Minimo;
+           T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), end) - Minimo;
+           T_Tableau(end, Node_current(2)) = T_Tableau(end, Node_current(2)) - Minimo;
+           Node_current = [Solution(Num_assignation, 1, 1), Solution(Num_assignation, 1, 2)];
+           T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), end) + Minimo;
+           T_Tableau(end, Node_current(2)) = T_Tableau(end, Node_current(2)) + Minimo;
+        else
+            Solution(Num_assignation, 1, 3) = Solution(Num_assignation, 1, 3) + Solution_change(Num_assignation)*Minimo;
+            T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), end) + Solution_change(Num_assignation)*Minimo;
+            T_Tableau(end, Node_current(2)) = T_Tableau(end, Node_current(2)) + Solution_change(Num_assignation)*Minimo;
+        end        
+    else
+        Num_assignation = Num_assignation+1;
+        Node_current = [Solution(Num_assignation, 1, 1), Solution(Num_assignation, 1, 2)];        
+        if Node_current(1) == Node_BV(1) && Node_current(2) == Node_BV(2)
+           Solution(Num_assignation, 1, 1) = Node_NBV(1);
+           Solution(Num_assignation, 1, 2) = Node_NBV(2);
+           Solution(Num_assignation, 1, 3) = Minimo;
+           T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), end) - Minimo;
+           T_Tableau(end, Node_current(2)) = T_Tableau(end, Node_current(2)) - Minimo;
+           Node_current = [Solution(Num_assignation, 1, 1), Solution(Num_assignation, 1, 2)];
+           T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), end) + Minimo;
+           T_Tableau(end, Node_current(2)) = T_Tableau(end, Node_current(2)) + Minimo;
+        else            
+            Solution(Num_assignation, 1, 3) = Solution(Num_assignation, 1, 3) + Solution_change(Num_assignation)*Minimo;
+            T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), end) + Solution_change(Num_assignation)*Minimo;
+            T_Tableau(end, Node_current(2)) = T_Tableau(end, Node_current(2)) + Solution_change(Num_assignation)*Minimo;
+        end        
+    end
+    T_VarType(Node_current(1), Node_current(2)) = 1;
+    
+    All_display = zeros(Dimension(1), Dimension(2));
+    for j=1:Num_assignation
+        All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = Solution(j, 1, 3);
+    end  
+    All_display(end, :) = T_Tableau(end, :);
+    All_display(:, end) = T_Tableau(:, end);
+    set(handles.table_simplexdisplay, 'data', All_display);
+    if Num_assignation == Dimension(1)+Dimension(2)-3
+        Node_current = [0, 0];
+        set_environment('next_calc', handles);
+        T_Tableau = zeros(Dimension(1), Dimension(2));
+        T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
+        % se construye el arreglo de cadenas de las variables    
+        Var = cell(4, 1);    
+        Var(1) = cellstr(strcat('U',num2str(Solution(1, 1, 1))));   
+        Var(2) = cellstr(strcat('V',num2str(Solution(1, 1, 2))));   
+        Var(3) = cellstr(strcat('U',num2str(Solution(Dimension(1)+Dimension(2)-3, 1, 1))));   
+        Var(4) = cellstr(strcat('V',num2str(Solution(Dimension(1)+Dimension(2)-3, 1, 2))));       
+        set(handles.popupmenu_selectvar2, 'string', char(Var));
+        set(handles.popupmenu_selectvar2, 'value', 4);    
+    end
 end
 
 % --- Executes on button press in pushbutton_next.
@@ -828,7 +898,8 @@ function popupmenu_selectvar2_Callback(hObject, eventdata, handles) %#ok<INUSL,D
 % hObject    handle to popupmenu_selectvar2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Node_current Solution T_Tableau Matrix_problem Dimension Num_assignation T_VarType_Aux T_VarType;
+global Node_current Solution T_Tableau Matrix_problem Dimension Num_assignation T_VarType_Aux ...
+    Solution_initial T_VarType NewSolution;
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenu_selectvar2 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenu_selectvar2
@@ -843,7 +914,11 @@ if strcmp(get(handles.pushbutton_asign, 'string'), 'Calcular')
     calc_nextmultiplier(handles);    
 elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Asignar')
     Node_current = [0,0];
-    Solution = zeros(Dimension(1)+Dimension(2)-3, 1, 3);
+    if Solution_initial == 1
+        Solution = zeros(Dimension(1)+Dimension(2)-3, 1, 3);
+    else
+        NewSolution = Solution;
+    end
     T_Tableau = Matrix_problem;
 
     % se actualiza la tabla de la interfaz
@@ -853,7 +928,7 @@ elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Asignar')
 elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Buscar')
     Num_assignation = 0;
     T_VarType_Aux = T_VarType;
-    calc_nextciclevar(handles);
+    calc_nextciclevar(handles, [0, 0]);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -874,13 +949,14 @@ function pushbutton_asign_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU
 % hObject    handle to pushbutton_asign (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global Num_assignation;
 
 if strcmp(get(hObject, 'string'), 'Calcular')    
     calc_nextmultiplier(handles);    
 elseif strcmp(get(hObject, 'string'), 'Asignar')
     calc_nextassignment(handles);
 elseif strcmp(get(hObject, 'string'), 'Buscar')
-    calc_nextciclevar(handles);
+    calc_nextciclevar(handles, Num_assignation);
 end
 
 % --- Executes on button press in pushbutton_asignall.
@@ -955,11 +1031,11 @@ if (Num_assignation == 1 && Increment == -1) || (Num_assignation == Dimension(1)
                 T_Tableau(i,j) = T_Tableau(i,j)-T_Tableau(end,j)-T_Tableau(i,end);
             end
         end
-    end
-    set_environment('next_cicle', handles);
+    end    
     % se construye el arreglo de cadenas de las variables    
     count = sum(sum(T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) < 0));
     if count ~= 0 % en el caso que haya Rj negativos
+        set_environment('next_cicle', handles);
         Var = cell(count, 1);
         minimo = 0; indice = 0;
         i = 1;
@@ -984,8 +1060,9 @@ if (Num_assignation == 1 && Increment == -1) || (Num_assignation == Dimension(1)
         set(handles.popupmenu_selectvar2, 'string', char(Var));
         set(handles.popupmenu_selectvar2, 'value', indice);  
     else
-        set(handles.popupmenu_selectvar2, 'string', char('', ''));
         set(handles.popupmenu_selectvar2, 'Enable', 'off');
+        set(handles.popupmenu_selectvar2, 'value', 1);
+        set(handles.popupmenu_selectvar2, 'string', char('', ''));
         set_environment('end', handles);
     end
 end
@@ -994,26 +1071,22 @@ set(handles.table_simplexdisplay, 'data', All_display);
 
 
 % ------------------------
-function calc_nextciclevar(handles)
-global Node_current Num_assignation T_Tableau T_VarType_Aux Node_NBV Dimension ...
-    Empty_dimension Sign_current Matrix_problem Solution_initial Solution Solution_change;
+function calc_nextciclevar(handles, Num_cassignation)
+global Node_current Num_assignation T_Tableau T_VarType_Aux Node_NBV Dimension Node_Cicle...
+    Empty_dimension Matrix_problem Solution_initial Solution Solution_change Minimo;
 
 if Num_assignation == 0
-    Solution_change = zeros(Dimension(1)+Dimension(2)-3,1);
+    Node_Cicle = zeros(Dimension(1)+Dimension(2)-2, 1, 3);    
+    Solution_change = zeros(1,Dimension(1)+Dimension(2)-3);
     T_Tableau = zeros(Dimension(1), Dimension(2));
     T_Tableau(end, 1:Dimension(2)) = Matrix_problem(end, 1:Dimension(2));
     T_Tableau(1:Dimension(1), end) = Matrix_problem(1:Dimension(1), end);
     var = get(handles.popupmenu_selectvar2, 'string'); % se recupera la variable no básica seleccionada
     I = str2double(var(get(handles.popupmenu_selectvar2, 'value'), 2)); % se recupera variable seleccionada 
     J = str2double(var(get(handles.popupmenu_selectvar2, 'value'), 3)); % se recupera el índice de variable seleccionada 
-    Node_current = [I, J];    
+    Node_current = [I, J];
     T_Tableau(Node_current(1), Node_current(2)) = 1;
-    Sign_current = 1;
-    Node_NBV = Node_current;   
-    % se especifica el formato de salida de los datos
-    %colFormat=cell(1,Dimension(2)-1);
-    %colFormat(1,:) = cellstr('+');
-    %set(handles.table_simplexdisplay, 'columnformat', colFormat);    
+    Node_NBV = Node_current;  
     ind1 = find(T_VarType_Aux(Node_current(1), :));
     dim = size(ind1);
     if ~isempty(ind1)
@@ -1027,24 +1100,24 @@ if Num_assignation == 0
             change = -1;
         end
         for i=Linf:change:Lsup
-            Num_assignation = Num_assignation + 1;            
+            Num_assignation = Num_assignation + 1;                    
             Node_current = [Node_current(1), ind1(i)];
+            Node_Cicle(Num_assignation, 1, 1) = Node_current(1); Node_Cicle(Num_assignation, 1, 2) = Node_current(2);
             T_VarType_Aux(Node_current(1), ind1(i)) = 0;
             ind2 = find(T_VarType_Aux(:, ind1(i)),1);
             if ~isempty(ind2)
-                if Sign_current == -1
-                    T_Tableau(Node_current(1), ind1(i)) = 1;
-                    Sign_current = 1;
-                    Solution_change(Num_assignation) = 1;
-                else
-                    T_Tableau(Node_current(1), ind1(i)) = -1;
-                    Sign_current = -1;
-                    Solution_change(Num_assignation) = -1;
-                end
+                T_Tableau(Node_current(1), ind1(i)) = -1;
+                Node_Cicle(Num_assignation, 1, 3) = -1;
+                for l = 1:Dimension(1)+Dimension(2)-3;
+                    if Solution(l, 1, 1) == Node_current(1) && Solution(l, 1, 2) == ind1(i)
+                        Solution_change(l) = -1;
+                        break;
+                    end
+                end                
                 break;
             else
                 T_Tableau(Node_current(1), ind1(i)) = 0;                
-            end
+            end            
         end
         Empty_dimension = 0;
     else
@@ -1062,18 +1135,18 @@ if Num_assignation == 0
             end
             for i=Linf:change:Lsup
                 Num_assignation = Num_assignation + 1;
-                Node_current = [ind1(i), Node_current(2)];   
+                Node_current = [ind1(i), Node_current(2)];
+                Node_Cicle(Num_assignation, 1, 1) = Node_current(1); Node_Cicle(Num_assignation, 1, 2) = Node_current(2);
                 T_VarType_Aux(ind1(i), Node_current(2)) = 0;
                 ind2 = find(T_VarType_Aux(ind1(i), :),1);
                 if ~isempty(ind2)
-                    if Sign_current == -1
-                        T_Tableau(ind1(i), Node_current(2)) = 1;
-                        Sign_current = 1;
-                        Solution_change(Num_assignation) = 1;
-                    else
-                        T_Tableau(ind1(i), Node_current(2)) = -1;
-                        Sign_current = -1;
-                        Solution_change(Num_assignation) = -1;
+                    T_Tableau(ind1(i), Node_current(2)) = -1;
+                    Node_Cicle(Num_assignation, 1, 3) = -1;
+                    for l = 1:Dimension(1)+Dimension(2)-3;
+                        if Solution(l, 1, 1) == ind1(i) && Solution(l, 1, 2) == Node_current(2)
+                            Solution_change(l) = -1;
+                            break;
+                        end
                     end
                     break;
                 else                    
@@ -1084,6 +1157,7 @@ if Num_assignation == 0
         end
     end        
 else
+    Node_current = [Node_Cicle(Num_cassignation, 1, 1), Node_Cicle(Num_cassignation, 1, 2)];
     if Empty_dimension == 1
         ind1 = find(T_VarType_Aux(Node_current(1), :));
         dim = size(ind1);
@@ -1097,45 +1171,76 @@ else
                 Lsup = 1;
                 change = -1;
             end
-            for i = Linf:change:Lsup
+            for i = Linf:change:Lsup                
                 Num_assignation = Num_assignation + 1;
-                Node_current = [Node_current(1), ind1(i)];   
+                Node_current = [Node_current(1), ind1(i)];
+                Node_Cicle(Num_assignation, 1, 1) = Node_current(1); Node_Cicle(Num_assignation, 1, 2) = Node_current(2);
                 T_VarType_Aux(Node_current(1), ind1(i)) = 0;
                 ind2 = find(T_VarType_Aux(:, ind1(i)),1);
-                if ~isempty(ind2)                    
-                    if Sign_current == -1
+                if ~isempty(ind2)
+                    if Node_Cicle(Num_cassignation, 1, 3) == -1
                         T_Tableau(Node_current(1), ind1(i)) = 1;
-                        Sign_current = 1;
-                        Solution_change(Num_assignation) = 1;
+                        Node_Cicle(Num_assignation, 1, 3) = 1;
+                        for l = 1:Dimension(1)+Dimension(2)-3;
+                            if Solution(l, 1, 1) == Node_current(1) && Solution(l, 1, 2) == ind1(i)
+                                Solution_change(l) = 1;
+                                break;
+                            end
+                        end
                     else
                         T_Tableau(Node_current(1), ind1(i)) = -1;
-                        Sign_current = -1;
-                        Solution_change(Num_assignation) = -1;
+                        Node_Cicle(Num_assignation, 1, 3) = -1;
+                        for l = 1:Dimension(1)+Dimension(2)-3;
+                            if Solution(l, 1, 1) == Node_current(1) && Solution(l, 1, 2) == ind1(i)
+                                Solution_change(l) = -1;
+                                break;
+                            end
+                        end
                     end                    
-                    if Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
                         Num_assignation = Dimension(1)+Dimension(2)-3;
                     end
                     break;
                 else
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2))
-                       if Sign_current == -1
-                            T_Tableau(ind1(i), Node_current(2)) = 1;
-                            Sign_current = 1;
-                            Solution_change(Num_assignation) = 1;
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
+                       if Node_Cicle(Num_cassignation, 1, 3) == -1
+                            T_Tableau(Node_current(1), ind1(i)) = 1;
+                            Node_Cicle(Num_assignation, 1, 3) = 1;
+                            for l = 1:Dimension(1)+Dimension(2)-3;
+                                if Solution(l, 1, 1) == Node_current(1) && Solution(l, 1, 2) == ind1(i)
+                                    Solution_change(l) = 1;
+                                    break;
+                                end
+                            end
                         else
-                            T_Tableau(ind1(i), Node_current(2)) = -1;
-                            Sign_current = -1;
-                            Solution_change(Num_assignation) = -1;
+                            T_Tableau(Node_current(1), ind1(i)) = -1;
+                            Node_Cicle(Num_assignation, 1, 3) = -1;
+                            for l = 1:Dimension(1)+Dimension(2)-3;
+                                if Solution(l, 1, 1) == Node_current(1) && Solution(l, 1, 2) == ind1(i)
+                                    Solution_change(l) = -1;
+                                    break;
+                                end
+                            end
                        end                       
-                       Num_assignation = Dimension(1)+Dimension(2)-3;                       
+                       Num_assignation = Dimension(1)+Dimension(2)-3;                                                
                     else
-                        T_Tableau(Node_current(1), ind1(i)) = 0;                
+                        T_Tableau(Node_current(1), ind1(i)) = 0;              
                     end                    
-                end                         
+                end
             end
-            Empty_dimension = 0;
-        else
-            
+            Empty_dimension = 0; 
+        else        
+            Empty_dimension = 1;
+            T_Tableau(Node_Cicle(Num_cassignation-1, 1, 1), Node_Cicle(Num_cassignation-1, 1, 2)) = 0;
+            Node_Cicle(Num_cassignation-1, 1, 3) = 0;
+            for l = 1:Dimension(1)+Dimension(2)-3;
+                if Solution(l, 1, 1) == Node_Cicle(Num_cassignation-1, 1, 1) && Solution(l, 1, 2) == Node_Cicle(Num_cassignation-1, 1, 2)
+                    Solution_change(l) = 0;
+                    break;
+                end
+            end  
+            calc_nextciclevar(handles,Num_cassignation-1);
+            return;
         end
     else
         ind1 = find(T_VarType_Aux(:, Node_current(2)));
@@ -1153,56 +1258,113 @@ else
             for i=Linf:change:Lsup
                 Num_assignation = Num_assignation + 1;
                 Node_current = [ind1(i), Node_current(2)];
+                Node_Cicle(Num_assignation, 1, 1) = Node_current(1); Node_Cicle(Num_assignation, 1, 2) = Node_current(2);
                 T_VarType_Aux(ind1(i), Node_current(2)) = 0;
                 ind2 = find(T_VarType_Aux(ind1(i), :),1);
                 if ~isempty(ind2)                    
-                    if Sign_current == -1
+                    if Node_Cicle(Num_cassignation, 1, 3) == -1
                         T_Tableau(ind1(i), Node_current(2)) = 1;
-                        Sign_current = 1;
-                        Solution_change(Num_assignation) = 1;
+                        Node_Cicle(Num_assignation, 1, 3) = 1;
+                        for l = 1:Dimension(1)+Dimension(2)-3;
+                            if Solution(l, 1, 1) == ind1(i) && Solution(l, 1, 2) == Node_current(2)
+                                Solution_change(l) = 1;
+                                break;
+                            end
+                        end
                     else
                         T_Tableau(ind1(i), Node_current(2)) = -1;
-                        Sign_current = -1;
-                        Solution_change(Num_assignation) = 1;
+                        Node_Cicle(Num_assignation, 1, 3) = -1;
+                        for l = 1:Dimension(1)+Dimension(2)-3;
+                            if Solution(l, 1, 1) == ind1(i) && Solution(l, 1, 2) == Node_current(2)
+                                Solution_change(l) = -1;
+                                break;
+                            end
+                        end
                     end
-                    if Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
                         Num_assignation = Dimension(1)+Dimension(2)-3;
                     end                    
                     break;
                 else
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2))
-                        if Sign_current == -1
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_assignation-1 == Num_cassignation
+                        if Node_Cicle(Num_cassignation, 1, 3) == -1
                             T_Tableau(ind1(i), Node_current(2)) = 1;
-                            Sign_current = 1;
-                            Solution_change(Num_assignation) = 1;
+                            Node_Cicle(Num_assignation, 1, 3) = 1;
+                            for l = 1:Dimension(1)+Dimension(2)-3;
+                                if Solution(l, 1, 1) == ind1(i) && Solution(l, 1, 2) == Node_current(2)
+                                    Solution_change(l) = 1;
+                                    break;
+                                end
+                            end
                         else
                             T_Tableau(ind1(i), Node_current(2)) = -1;
-                            Sign_current = -1;
-                            Solution_change(Num_assignation) = -1;
+                            Node_Cicle(Num_assignation, 1, 3) = -1;
+                            for l = 1:Dimension(1)+Dimension(2)-3;
+                                if Solution(l, 1, 1) == ind1(i) && Solution(l, 1, 2) == Node_current(2)
+                                    Solution_change(l) = -1;
+                                    break;
+                                end
+                            end                            
                        end
-                       Num_assignation = Dimension(1)+Dimension(2)-3;                  
+                       if Num_assignation == Num_cassignation
+                            Num_assignation = Dimension(1)+Dimension(2)-3;
+                       end                
                     else
                         T_Tableau(ind1(i), Node_current(2)) = 0;
                     end
                 end                                
             end
-            Empty_dimension = 1;
+            Empty_dimension = 1;            
         else
-            
+            Empty_dimension = 0;
+            T_Tableau(Node_Cicle(Num_cassignation-1, 1, 1), Node_Cicle(Num_cassignation-1, 1, 2)) = 0;
+            Node_Cicle(Num_cassignation-1, 1, 3) = 0;
+            for l = 1:Dimension(1)+Dimension(2)-3;
+                if Solution(l, 1, 1) == Node_Cicle(Num_cassignation-1, 1, 1) && Solution(l, 1, 2) == Node_Cicle(Num_cassignation-1, 1, 2)
+                    Solution_change(l) = 0;
+                    break;
+                end
+            end  
+            calc_nextciclevar(handles,Num_cassignation-1);
+            return;
         end
     end
 end
+
 if Num_assignation == Dimension(1)+Dimension(2)-3    
     Solution_initial = 0;
+    Node_current = [0, 0];
     set_environment('next_assign', handles);
     set(handles.text_selectvar2, 'string', 'Seleccionar variable que sale');
     Solution_Aux = Solution;
-    Solution_Aux(Solution_change > 0, :, :) =0;    
-    minimo = min(Solution_Aux, [], 3);
-    ind = find(Solution_Aux == minimo);
-    
+    Solution_Aux(Solution_change >= 0, :, 3) =Inf; 
+    minimo = min(Solution_Aux(:, :, 3));
+    Minimo = minimo;
+    ind = find(Solution_Aux(:, :, 3) == minimo);
+    dim = size(ind);
+    Var = cell(dim(1), 1);
+    for i = 1:dim(1)
+        Var(i) = cellstr(strcat('X',strcat(num2str(Solution(ind(i), 1, 1)), num2str(Solution(ind(i), 1, 2)))));
+    end
     set(handles.popupmenu_selectvar2, 'string', char(Var));
     set(handles.popupmenu_selectvar2, 'value', 1);      
 end
 All_display = T_Tableau;
+set(handles.table_simplexdisplay, 'data', All_display);
+
+
+% --- Executes on button press in pushbutton_watchsolution.
+function pushbutton_watchsolution_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to pushbutton_watchsolution (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global Solution Matrix_problem Dimension ;
+
+ObjectiveValue = 0;
+All_display = zeros(Dimension(1),Dimension(2));
+for j=1:Dimension(1)+Dimension(2)-3
+    All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = Solution(j, 1, 3);
+    ObjectiveValue = ObjectiveValue + Solution(j, 1, 3)*Matrix_problem(Solution(j, 1, 1), Solution(j, 1, 2));
+end 
+All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
 set(handles.table_simplexdisplay, 'data', All_display);
