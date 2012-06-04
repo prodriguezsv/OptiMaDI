@@ -973,7 +973,9 @@ global Solution Node_current Num_assignation T_Tableau Dimension ...
 
 if all(Node_current==0)    
     T_Tableau = zeros(Dimension(1), Dimension(2));
-    T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);    
+    T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
+    T_Tableau(end, :) = NaN;
+    T_Tableau(:, end) = NaN;
     set_environment('next_calc', handles);    
     var = get(handles.popupmenu_selectvar2, 'string'); % se recupera la variable no básica seleccionada
     V = var(get(handles.popupmenu_selectvar2, 'value'), 1); % se recupera variable seleccionada 
@@ -1013,14 +1015,14 @@ if all(Node_current==0)
     end
 else
     Num_assignation = Num_assignation + Increment;  
-    if Node_current(1) == Solution(Num_assignation, 1, 1)       
+    if isnan(T_Tableau(end, Solution(Num_assignation, 1, 2)))
         T_Tableau(end, Solution(Num_assignation, 1, 2)) = T_Tableau(Solution(Num_assignation, 1, 1), ...
             Solution(Num_assignation, 1, 2))-T_Tableau(Solution(Num_assignation, 1, 1), end);
         T_Tableau(Solution(Num_assignation, 1, 1),Solution(Num_assignation, 1, 2)) = 0;  
-    else
+    else        
         T_Tableau(Solution(Num_assignation, 1, 1), end) = T_Tableau(Solution(Num_assignation, 1, 1), ...
             Solution(Num_assignation, 1, 2))-T_Tableau(end, Solution(Num_assignation, 1, 2));
-        T_Tableau(Solution(Num_assignation, 1, 1),Solution(Num_assignation, 1, 2)) = 0;
+        T_Tableau(Solution(Num_assignation, 1, 1),Solution(Num_assignation, 1, 2)) = 0;        
     end
     Node_current = [Solution(Num_assignation, 1, 1), Solution(Num_assignation, 1, 2)];           
 end
@@ -1197,12 +1199,12 @@ else
                             end
                         end
                     end                    
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 2
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
                         Num_assignation = Dimension(1)+Dimension(2)-3;
                     end
                     break;
                 else
-                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 2
+                    if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
                        if Node_Cicle(Num_cassignation, 1, 3) == -1
                             T_Tableau(Node_current(1), ind1(i)) = 1;
                             Node_Cicle(Num_assignation, 1, 3) = 1;
