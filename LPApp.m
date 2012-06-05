@@ -1242,7 +1242,11 @@ else
                        Num_assignation = Dimension(1)+Dimension(2)-3;                                                
                     else
                         T_Tableau(Node_current(1), ind1(i)) = 0;              
-                    end                    
+                    end
+                    if Num_assignation == Num_cassignation
+                        Num_assignation = Dimension(1)+Dimension(2)-3;
+                    end 
+                    break;
                 end
             end
             Empty_dimension = 0; 
@@ -1327,11 +1331,12 @@ else
                                     Solution_change(l) = -1;
                                     break;
                                 end
-                            end                            
-                       end
+                            end
+                        end                       
                        if Num_assignation == Num_cassignation
                             Num_assignation = Dimension(1)+Dimension(2)-3;
-                       end                
+                       end 
+                       break;
                     else
                         T_Tableau(ind1(i), Node_current(2)) = 0;
                     end
