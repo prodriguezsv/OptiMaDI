@@ -361,13 +361,11 @@ if Solution_initial == 1
         T_Tableau = zeros(Dimension(1), Dimension(2));
         T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
         % se construye el arreglo de cadenas de las variables    
-        Var = cell(4, 1);    
-        Var(1) = cellstr(strcat('U',num2str(Solution(1, 1, 1))));   
-        Var(2) = cellstr(strcat('V',num2str(Solution(1, 1, 2))));   
-        Var(3) = cellstr(strcat('U',num2str(Solution(Dimension(1)+Dimension(2)-3, 1, 1))));   
-        Var(4) = cellstr(strcat('V',num2str(Solution(Dimension(1)+Dimension(2)-3, 1, 2))));       
+        Var = cell(2, 1);    
+        Var(1) = cellstr(strcat('U',num2str(1)));   
+        Var(2) = cellstr(strcat('V',num2str(Dimension(2)-1)));           
         set(handles.popupmenu_selectvar2, 'string', char(Var));
-        set(handles.popupmenu_selectvar2, 'value', 4);    
+        set(handles.popupmenu_selectvar2, 'value', 2);
     end
 else
     var = get(handles.popupmenu_selectvar2, 'string'); % se recupera la variable no básica seleccionada
@@ -420,18 +418,16 @@ else
     All_display(:, end) = T_Tableau(:, end);
     set(handles.table_simplexdisplay, 'data', All_display);
     if Num_assignation == Dimension(1)+Dimension(2)-3
-        Node_current = [0, 0];
+        Node_current = [0, 0];        
         set_environment('next_calc', handles);
         T_Tableau = zeros(Dimension(1), Dimension(2));
         T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
         % se construye el arreglo de cadenas de las variables    
-        Var = cell(4, 1);    
-        Var(1) = cellstr(strcat('U',num2str(Solution(1, 1, 1))));   
-        Var(2) = cellstr(strcat('V',num2str(Solution(1, 1, 2))));   
-        Var(3) = cellstr(strcat('U',num2str(Solution(Dimension(1)+Dimension(2)-3, 1, 1))));   
-        Var(4) = cellstr(strcat('V',num2str(Solution(Dimension(1)+Dimension(2)-3, 1, 2))));       
+        Var = cell(2, 1);    
+        Var(1) = cellstr(strcat('U',num2str(1)));   
+        Var(2) = cellstr(strcat('V',num2str(Dimension(2)-1)));           
         set(handles.popupmenu_selectvar2, 'string', char(Var));
-        set(handles.popupmenu_selectvar2, 'value', 4);    
+        set(handles.popupmenu_selectvar2, 'value', 2);    
     end
 end
 
@@ -907,10 +903,11 @@ global Node_current Solution T_Tableau Matrix_problem Dimension Num_assignation 
 % se calculan las nuevas variables no básicas si las hay
 if strcmp(get(handles.pushbutton_asign, 'string'), 'Calcular')
     Node_current = [0, 0];
+    Num_assignation = 0;
     set_environment('next_calc', handles);
     T_Tableau = zeros(Dimension(1), Dimension(2));
     T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
-  
+    T_VarType_Aux = T_VarType;
     calc_nextmultiplier(handles);    
 elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Asignar')
     Node_current = [0,0];
@@ -968,10 +965,12 @@ function pushbutton_asignall_Callback(hObject, eventdata, handles) %#ok<INUSD,DE
 
 % ----------------
 function calc_nextmultiplier(handles)
-global Solution Node_current Num_assignation T_Tableau Dimension ...
-    T_VarType_Aux T_VarType Increment Matrix_problem;
+global Node_current Num_assignation T_Tableau Dimension ...
+    T_VarType_Aux T_VarType By_dimension Matrix_problem;
 
-if all(Node_current==0)    
+if all(Node_current==0)
+    T_VarType_Aux = T_VarType;
+     Num_assignation = 0;
     T_Tableau = zeros(Dimension(1), Dimension(2));
     T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
     T_Tableau(end, :) = NaN;
@@ -980,53 +979,69 @@ if all(Node_current==0)
     var = get(handles.popupmenu_selectvar2, 'string'); % se recupera la variable no básica seleccionada
     V = var(get(handles.popupmenu_selectvar2, 'value'), 1); % se recupera variable seleccionada 
     I = str2double(var(get(handles.popupmenu_selectvar2, 'value'), 2)); % se recupera el índice de variable seleccionada 
-    if strcmp(V, 'U')        
+    if strcmp(V, 'U')  
+        By_dimension = 0;
         T_Tableau(I, end) = 0; % Asignacion inicial
-        if I == 1            
-            T_Tableau(end, Solution(1, 1, 2)) = T_Tableau(1, Solution(1, 1, 2))-T_Tableau(1, end);
-            T_Tableau(1, Solution(1, 1, 2)) = 0;
-            Increment = 1;
-            Num_assignation = 1;
-            Node_current = [1, Solution(1, 1, 2)];           
-        else
-            Num_assignation = Dimension(1)+Dimension(2)-3;
-            T_Tableau(end, Solution(Num_assignation, 1, 2)) = T_Tableau(Dimension(1)-1, ...
-                Solution(Num_assignation, 1, 2))-T_Tableau(Dimension(1)-1, end);
-            T_Tableau(Dimension(1)-1, Solution(Num_assignation, 1, 2)) = 0;
-            Increment = -1;            
-            Node_current = [Dimension(1)-1, Solution(Num_assignation, 1, 2)];           
+        ind1 = find(T_VarType_Aux(I, :));
+        dim1 = size(ind1);
+        for i=1:dim1(2)
+            Num_assignation = Num_assignation + 1;                    
+            Node_current = [I, ind1(i)];
+            T_VarType_Aux(I, ind1(i)) = 0;
+            T_Tableau(end, Node_current(2)) = T_Tableau(I, Node_current(2))-T_Tableau(I, end);
+            T_Tableau(I, Node_current(2)) = 0;         
         end
-    elseif strcmp(V, 'V')        
+    elseif strcmp(V, 'V')
+        By_dimension = 1;
         T_Tableau(end, I) = 0; % Asignacion inicial
-        if I == Solution(1, 1, 2)            
-            T_Tableau(1, end) = T_Tableau(1, Solution(1, 1, 2))-T_Tableau(end, Solution(1, 1, 2));
-            T_Tableau(1, Solution(1, 1, 2)) = 0;
-            Increment = 1;
-            Num_assignation = 1;
-            Node_current = [1, Solution(1, 1, 2)];           
-        else
-            Num_assignation = Dimension(1)+Dimension(2)-3;
-            T_Tableau(Solution(Num_assignation, 1, 1), end) = T_Tableau(Solution(Num_assignation, 1, 1), ...
-                Solution(Num_assignation, 1, 2))-T_Tableau(end, Solution(Num_assignation, 1, 2));
-            T_Tableau(Solution(Num_assignation, 1, 1), Solution(Num_assignation, 1, 2)) = 0;
-            Increment = -1;            
-            Node_current = [Dimension(1)-1, Solution(Num_assignation, 1, 2)];           
-        end 
+        ind1 = find(T_VarType_Aux(:, I));
+        dim1 = size(ind1);
+        for i=1:dim1(1)
+            Num_assignation = Num_assignation + 1;                    
+            Node_current = [ind1(i), I];
+            T_VarType_Aux(ind1(i), I) = 0;
+            T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), I)-T_Tableau(end, I);
+            T_Tableau(Node_current(1), I) = 0;
+        end        
     end
-else
-    Num_assignation = Num_assignation + Increment;  
-    if isnan(T_Tableau(end, Solution(Num_assignation, 1, 2)))
-        T_Tableau(end, Solution(Num_assignation, 1, 2)) = T_Tableau(Solution(Num_assignation, 1, 1), ...
-            Solution(Num_assignation, 1, 2))-T_Tableau(Solution(Num_assignation, 1, 1), end);
-        T_Tableau(Solution(Num_assignation, 1, 1),Solution(Num_assignation, 1, 2)) = 0;  
-    else        
-        T_Tableau(Solution(Num_assignation, 1, 1), end) = T_Tableau(Solution(Num_assignation, 1, 1), ...
-            Solution(Num_assignation, 1, 2))-T_Tableau(end, Solution(Num_assignation, 1, 2));
-        T_Tableau(Solution(Num_assignation, 1, 1),Solution(Num_assignation, 1, 2)) = 0;        
-    end
-    Node_current = [Solution(Num_assignation, 1, 1), Solution(Num_assignation, 1, 2)];           
+else    
+    if By_dimension == 1
+        for i = 1:Dimension(1)-1
+            if ~isnan(T_Tableau(i, end))
+                ind1 = find(T_VarType_Aux(i, :));
+                dim1 = size(ind1);
+                if ~isempty(ind1)                    
+                    for j = 1:dim1(2)
+                        Num_assignation = Num_assignation + 1;                    
+                        Node_current = [i, ind1(j)];
+                        T_VarType_Aux(i, ind1(j)) = 0;
+                        T_Tableau(end, Node_current(2)) = T_Tableau(i, Node_current(2))-T_Tableau(i, end);
+                        T_Tableau(i, Node_current(2)) = 0;
+                    end
+                end
+            end
+        end
+        By_dimension = 0;
+    else
+        for i = 1:Dimension(2)-1
+            if ~isnan(T_Tableau(end, i))
+                ind1 = find(T_VarType_Aux(:,i));
+                dim1 = size(ind1);
+                if ~isempty(ind1)
+                    for j = 1:dim1(2)
+                        Num_assignation = Num_assignation + 1;                    
+                        Node_current = [ind1(j), i];
+                        T_VarType_Aux(ind1(j), i) = 0;
+                        T_Tableau(Node_current(1), end) = T_Tableau(Node_current(1), i)-T_Tableau(end, i);
+                        T_Tableau(Node_current(1), i) = 0;
+                    end
+                end
+            end
+        end
+        By_dimension = 1;
+    end         
 end
-if (Num_assignation == 1 && Increment == -1) || (Num_assignation == Dimension(1)+Dimension(2)-3 && Increment == 1)
+if (Num_assignation == Dimension(1)+Dimension(2)-3)
     for i = 1:Dimension(1)-1
         for j = 1:Dimension(2)-1
             if T_VarType(i,j) ~= 1
@@ -1231,9 +1246,9 @@ else
                 end
             end
             Empty_dimension = 0; 
-        else        
-            Empty_dimension = 1;
-            for k = (Dimension(1)+Dimension(2)-3):-1:1;
+        else
+            Empty_dimension = 0;
+            for k = (Dimension(1)+Dimension(2)-3):-1:1;                
                 if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
                     Num_cassignation = k;
                     break;
@@ -1324,7 +1339,7 @@ else
             end
             Empty_dimension = 1;   
         else
-           Empty_dimension = 0;
+           Empty_dimension = 1;
            for k = (Dimension(1)+Dimension(2)-3):-1:1;
                 if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
                     Num_cassignation = k;
