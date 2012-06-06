@@ -1217,6 +1217,7 @@ else
                     if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
                         Num_assignation = Dimension(1)+Dimension(2)-3;
                     end
+                    Empty_dimension = 0; 
                     break;
                 else
                     if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
@@ -1239,19 +1240,29 @@ else
                                 end
                             end
                        end                       
-                       Num_assignation = Dimension(1)+Dimension(2)-3;                                                
+                       if Num_assignation-1 == Num_cassignation %%%%
+                            Num_assignation = Dimension(1)+Dimension(2)-3;%%%%
+                       end%%%%
+                       Empty_dimension = 0; 
+                       break;%%%%
                     else
                         T_Tableau(Node_current(1), ind1(i)) = 0;              
-                    end
-                    if Num_assignation == Num_cassignation
-                        Num_assignation = Dimension(1)+Dimension(2)-3;
-                    end 
+                        if ~((i == Lsup && change == -1) || (i == Linf && change == 1))
+                            Empty_dimension = 0;
+                        end
+                    end                     
+                end
+            end  
+        else
+            Empty_dimension = 0;
+            T_Tableau(Node_current(1), Node_current(2)) = 0;
+            Node_Cicle(Num_assignation, 1, 3) = 0;
+            for l = 1:Dimension(1)+Dimension(2)-3;
+                if Solution(l, 1, 1) == Node_current(1) && Solution(l, 1, 2) == Node_current(2)
+                    Solution_change(l) = 0;
                     break;
                 end
             end
-            Empty_dimension = 0; 
-        else
-            Empty_dimension = 0;
             for k = (Dimension(1)+Dimension(2)-3):-1:1;                
                 if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
                     Num_cassignation = k;
@@ -1310,7 +1321,8 @@ else
                     end
                     if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
                         Num_assignation = Dimension(1)+Dimension(2)-3;
-                    end                    
+                    end 
+                    Empty_dimension = 1; 
                     break;
                 else
                     if (Node_NBV(1) == Node_current(1) || Node_NBV(2) == Node_current(2)) && Num_cassignation > 1
@@ -1333,18 +1345,29 @@ else
                                 end
                             end
                         end                       
-                       if Num_assignation == Num_cassignation
+                       if Num_assignation-1 == Num_cassignation
                             Num_assignation = Dimension(1)+Dimension(2)-3;
-                       end 
+                       end
+                       Empty_dimension = 1; 
                        break;
                     else
                         T_Tableau(ind1(i), Node_current(2)) = 0;
+                        if ~((i == Lsup && change == -1) || (i == Linf && change == 1))
+                            Empty_dimension = 1;
+                        end
                     end
                 end                                
-            end
-            Empty_dimension = 1;   
+            end  
         else
            Empty_dimension = 1;
+           T_Tableau(Node_current(1), Node_current(2)) = 0;
+           Node_Cicle(Num_assignation, 1, 3) = 0;
+           for l = 1:Dimension(1)+Dimension(2)-3;
+                if Solution(l, 1, 1) == Node_current(1) && Solution(l, 1, 2) == Node_current(2)
+                    Solution_change(l) = 0;
+                    break;
+                end
+           end
            for k = (Dimension(1)+Dimension(2)-3):-1:1;
                 if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
                     Num_cassignation = k;
