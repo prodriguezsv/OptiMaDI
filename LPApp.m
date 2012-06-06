@@ -453,7 +453,7 @@ calc_variables(handles);
     
 % --- Se ejecuta el método simplex primal
 function simplex_primal(ratios, handles)
-global Tableau;
+global Tableau Order_current Dimension;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -463,6 +463,8 @@ q = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
 % recupera el índice de la fila (o componente) del vector columna que
 % dejará la base según la razón mínima tal que sea positiva
 ratios_aux = ratios;
+Basic_Var = Order_current < Dimension(1);
+ratios_aux(Basic_Var) = Inf;
 ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
 [C, p] = min(ratios_aux); 
 
@@ -478,7 +480,7 @@ set(handles.table_simplexdisplay, 'data', All_display);
 
 % --- Se ejecuta el método simplex primal
 function simplex_dual(ratios, handles)
-global Tableau Order_current;
+global Tableau Order_current Dimension;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -489,6 +491,8 @@ p = Order_current(p_aux);
 % recupera el índice de la fila (o componente) del vector columna que
 % dejará la base según la razón mínima tal que sea positiva
 ratios_aux = ratios;
+Basic_Var = Order_current < Dimension(1);
+ratios_aux(Basic_Var) = Inf;
 ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
 [C, q] = min(ratios_aux); 
 
