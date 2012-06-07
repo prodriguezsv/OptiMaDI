@@ -87,26 +87,33 @@ varargout{1} = handles.output;
 function set_environment(environmentname, handles)
 % environmentname especifica el tipo de ambiente por configurar
 % handles         estructura con manejadores y datos de usuario
+global Variables_ind;
 
 if strcmp(environmentname, 'next')
+    Variables_ind = 0;
     set(handles.Sensibility, 'enable', 'off');
     set(handles.Postoptimality, 'enable', 'off');
     set(handles.slider_increment, 'value', 0);
     set(handles.Saveproblem, 'enable', 'on');
+    set(handles.popupmenu_selectvar3, 'Enable', 'on');
     val_switches = ['on ';'on ';'on ';'on ';'on ';'off'];   
 elseif strcmp(environmentname, 'sol_multiples')
     set(handles.Sensibility, 'enable', 'on');
     set(handles.Postoptimality, 'enable', 'on');
     val_switches = ['on ';'off';'on ';'off';'on ';'on '];
+    set(handles.popupmenu_selectvar3, 'Enable', 'on');
     set(handles.Saveproblem, 'enable', 'on');
 elseif strcmp(environmentname, 'end')
-    set(handles.Sensibility, 'enable', 'on');
-    set(handles.Postoptimality, 'enable', 'on');
+    if strcmp(get(handles.Simplex_transportation,'Checked'), 'off')
+        set(handles.Sensibility, 'enable', 'on');
+        set(handles.Postoptimality, 'enable', 'on');
+    end
     set(handles.slider_increment, 'value', 0);
     val_switches = ['off';'off';'on ';'off';'on '; 'off'];
     set(handles.Saveproblem, 'enable', 'on');
     set(handles.pushbutton_asign, 'Enable', 'off');
     set(handles.pushbutton_asignall, 'Enable', 'off');
+    set(handles.popupmenu_selectvar3, 'Enable', 'off');
     set(handles.pushbutton_watchsolution, 'visible', 'on');    
 elseif strcmp(environmentname, 'next_assign')
     set(handles.Sensibility, 'enable', 'off');
@@ -209,7 +216,7 @@ if strcmp(get(handles.Simplex, 'Checked'), 'on')
 elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
     X0 = Tableau(1:(Dimension(1)-1), end); % Recupera los valores de las variables básicas de la tabla Simplex
     [Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor
-    IX0neg = I(X0 < 0);  % obtiene los indices de variables con Rj negativo
+    IX0neg = I(X0 < 0);  % obtiene los indices de variables con valores negativos
     IVar =  IX0neg;
 end
 
@@ -279,12 +286,32 @@ global Tableau Dimension Order_current;
 % All_display condensa los datos que se desplegarán en la interfaz
 
 var = get(handles.popupmenu_selectvar, 'string'); % se recupera la variable no básica seleccionada
-J = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2)); % se recupera el índice de variable seleccionada    
+dim = size(var(get(handles.popupmenu_selectvar, 'value'), :));
+J = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2:dim(2))); % se recupera el índice de variable seleccionada
 if strcmp(get(handles.Simplex, 'Checked'), 'on')
     % Se calculan las razones para la variable no básica seleccionada
     Y0 = Tableau(1:(Dimension(1)-1), end); % se recupera el vector de términos coeficientes
     Yj = Tableau(1:(Dimension(1)-1), J); % se recupera el vector columna asociada a la variable no básica
     ratios = Y0./Yj;
+    ratios_aux = ratios;
+    [Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor    
+    ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
+    [C, p] = min(ratios_aux); %#ok<NASGU>
+    if C ~= Inf
+        ind = find(ratios_aux == C);
+        dim = size(ind);
+        % se construye el arreglo de cadenas de las variables    
+        Var = cell(dim(1), 1);
+        for i = 1:dim(1)
+            Var(i) = cellstr(strcat('X',num2str(I(ind(i)))));
+        end
+        set(handles.popupmenu_selectvar3, 'string', char(Var));
+        set(handles.popupmenu_selectvar3, 'value', 1);
+    else
+        set(handles.popupmenu_selectvar3, 'string', char(' ', ' '));
+        set(handles.popupmenu_selectvar3, 'value', 1);
+    end
+    
     All_display = zeros(Dimension(1), Dimension(2)+1);
     % se actualiza la tabla de la interfaz
     All_display(:, 1:Dimension(2)) = Tableau;
@@ -294,6 +321,25 @@ elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
     Fi = Tableau(Order_current(J), 1:(Dimension(2)-1)); % se recupera el vector fila asociada a la variable básica
     Rj = Tableau(end, 1:(Dimension(2)-1)); % se recupera el vector de coeficientes reducidos
     ratios = -Rj./Fi;
+    ratios_aux = ratios;
+    Basic_Var = Order_current < Dimension(1);
+    ratios_aux(Basic_Var) = Inf;
+    ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
+    [C, p] = min(ratios_aux); %#ok<NASGU>
+    if C ~= Inf
+        ind = find(ratios_aux == C);
+        dim = size(ind);
+        % se construye el arreglo de cadenas de las variables    
+        Var = cell(dim(2), 1);
+        for i = 1:dim(2)
+            Var(i) = cellstr(strcat('X',num2str(ind(i))));
+        end
+        set(handles.popupmenu_selectvar3, 'string', char(Var));
+        set(handles.popupmenu_selectvar3, 'value', 1);
+    else
+        set(handles.popupmenu_selectvar3, 'string', char(' ', ' '));
+        set(handles.popupmenu_selectvar3, 'value', 1);
+    end
     All_display = zeros(Dimension(1)+1, Dimension(2));
     % se actualiza la tabla de la interfaz
     All_display(1:Dimension(1), :) = Tableau;
@@ -306,6 +352,13 @@ function calc_nextassignment(handles)
 global Solution Node_current Num_assignation T_Tableau Dimension Matrix_problem T_VarType ...
     Solution_change Minimo Solution_initial Node_NBV;
 
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    colFormat=cell(1,Dimension(2)+1);    
+else
+    colFormat=cell(1,Dimension(2));
+end
+colFormat(1,:) = cellstr('rat');
+set(handles.table_simplexdisplay, 'columnformat', colFormat);
 if Solution_initial == 1
     if all(Node_current==0)
         Num_assignation = 1;
@@ -349,14 +402,18 @@ if Solution_initial == 1
     T_VarType(Node_current(1), Node_current(2)) = 1;
 
     All_display = zeros(Dimension(1), Dimension(2));
-    for j=1:Num_assignation
+    ObjectiveValue = 0;
+    for j=1:Num_assignation        
         All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = Solution(j, 1, 3);
+        ObjectiveValue = ObjectiveValue + Solution(j, 1, 3)*Matrix_problem(Solution(j, 1, 1), Solution(j, 1, 2));
     end  
     All_display(end, :) = T_Tableau(end, :);
-    All_display(:, end) = T_Tableau(:, end);
+    All_display(:, end) = T_Tableau(:, end);   
+    All_display(Dimension(1), Dimension(2)) = ObjectiveValue;    
     set(handles.table_simplexdisplay, 'data', All_display);
+    
     if Num_assignation == Dimension(1)+Dimension(2)-3
-        Node_current = [0, 0];
+        Node_current = [0, 0];        
         set_environment('next_calc', handles);
         T_Tableau = zeros(Dimension(1), Dimension(2));
         T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
@@ -411,11 +468,14 @@ else
     T_VarType(Node_current(1), Node_current(2)) = 1;
     
     All_display = zeros(Dimension(1), Dimension(2));
+    ObjectiveValue = 0;
     for j=1:Num_assignation
         All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = Solution(j, 1, 3);
+        ObjectiveValue = ObjectiveValue + Solution(j, 1, 3)*Matrix_problem(Solution(j, 1, 1), Solution(j, 1, 2));
     end  
     All_display(end, :) = T_Tableau(end, :);
     All_display(:, end) = T_Tableau(:, end);
+    All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
     set(handles.table_simplexdisplay, 'data', All_display);
     if Num_assignation == Dimension(1)+Dimension(2)-3
         Node_current = [0, 0];        
@@ -436,39 +496,33 @@ function pushbutton_next_Callback(hObject, eventdata, handles) %#ok<INUSL>
 % hObject    handle to pushbutton_next (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA) 
-global Dimension;
 
-% se recuperan las razones para aplicar el criterio de factibilidad
-All_display = get(handles.table_simplexdisplay, 'data');
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
-    ratios = All_display(1:(Dimension(1)-1),end);
+if strcmp(get(handles.Simplex, 'Checked'), 'on')   
     % se ejecuta el método simplex
-    simplex_primal(ratios, handles);
+    simplex_primal(handles);
 elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')   
-    ratios = All_display(end, 1:(Dimension(2)-1));
-    simplex_dual(ratios, handles);
+    simplex_dual(handles);
 end
 setrowheaders(handles, char('X', 'X', 'Rj', 'Yi0'));
 calc_variables(handles);
     
 % --- Se ejecuta el método simplex primal
-function simplex_primal(ratios, handles)
-global Tableau Order_current Dimension;
+function simplex_primal(handles)
+global Tableau Order_current;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
 var = get(handles.popupmenu_selectvar, 'string');
-q = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
-
+dim = size(var(get(handles.popupmenu_selectvar, 'value'), :));
+q = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2:dim(2)));
 % recupera el índice de la fila (o componente) del vector columna que
 % dejará la base según la razón mínima tal que sea positiva
-ratios_aux = ratios;
-Basic_Var = Order_current < Dimension(1);
-ratios_aux(Basic_Var) = Inf;
-ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
-[C, p] = min(ratios_aux); 
+var = get(handles.popupmenu_selectvar3, 'string');
+dim = size(var(get(handles.popupmenu_selectvar3, 'value'), :));
+p_aux = str2double(var(get(handles.popupmenu_selectvar3, 'value'), 2:dim(2)));
+p = Order_current(p_aux);
 
-if C ~= Inf % si existe algún yij que cumple el criterio de factibilidad
+if ~isnan(p) % si existe algún yij que cumple el criterio de factibilidad
     pivote_process(p, q);
 else
     errordlg('El conjunto representado por las restricciones no es acotado.', 'El valor objetivo decrece sin limite','modal');
@@ -479,24 +533,23 @@ All_display = Tableau;
 set(handles.table_simplexdisplay, 'data', All_display);
 
 % --- Se ejecuta el método simplex primal
-function simplex_dual(ratios, handles)
-global Tableau Order_current Dimension;
+function simplex_dual(handles)
+global Tableau Order_current;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
 var = get(handles.popupmenu_selectvar, 'string');
-p_aux = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
+dim = size(var(get(handles.popupmenu_selectvar, 'value'), :));
+p_aux = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2:dim(2)));
 p = Order_current(p_aux);
 
 % recupera el índice de la fila (o componente) del vector columna que
 % dejará la base según la razón mínima tal que sea positiva
-ratios_aux = ratios;
-Basic_Var = Order_current < Dimension(1);
-ratios_aux(Basic_Var) = Inf;
-ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
-[C, q] = min(ratios_aux); 
+var = get(handles.popupmenu_selectvar3, 'string');
+dim = size(var(get(handles.popupmenu_selectvar3, 'value'), :));
+q = str2double(var(get(handles.popupmenu_selectvar3, 'value'), 2:dim(2)));
 
-if C ~= Inf % si existe algún yij que cumple el criterio de factibilidad
+if ~isnan(q) % si existe algún yij que cumple el criterio de factibilidad
     pivote_process(p, q);
 else
     errordlg('El conjunto representado por las restricciones es vacío.', 'No hay solución','modal');
@@ -558,6 +611,7 @@ set(handles.panel_enhancement, 'visible', 'on');
 set(handles.panel_transportation, 'visible', 'off');
 set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex primal)');
 set(handles.text_selectvar, 'string', 'Seleccionar variable que entra');
+set(handles.text_selectvar3, 'string', 'Seleccionar variable que sale');
 
 % --- Executes on selection change in popupmenu_selectvar.
 function popupmenu_selectvar_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -840,6 +894,7 @@ set(handles.panel_enhancement, 'visible', 'on');
 set(handles.panel_transportation, 'visible', 'off');
 set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex dual)');
 set(handles.text_selectvar, 'string', 'Seleccionar variable que sale');
+set(handles.text_selectvar3, 'string', 'Seleccionar variable que entra');
 
 % ----------
 function setProblemAndTableau(Problem, NewTableau, handles)
@@ -972,6 +1027,8 @@ function calc_nextmultiplier(handles)
 global Node_current Num_assignation T_Tableau Dimension ...
     T_VarType_Aux T_VarType By_dimension Matrix_problem;
 
+colFormat(1,:) = cellstr('rat');
+set(handles.table_simplexdisplay, 'columnformat', colFormat);
 if all(Node_current==0)
     T_VarType_Aux = T_VarType;
      Num_assignation = 0;
@@ -1096,6 +1153,13 @@ function calc_nextciclevar(handles, Num_cassignation)
 global Node_current Num_assignation T_Tableau T_VarType_Aux Node_NBV Dimension Node_Cicle...
     Empty_dimension Matrix_problem Solution_initial Solution Solution_change Minimo;
 
+if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    colFormat=cell(1,Dimension(2)+1);    
+else
+    colFormat=cell(1,Dimension(2));
+end
+colFormat(1,:) = cellstr('rat');
+set(handles.table_simplexdisplay, 'columnformat', colFormat);
 if Num_assignation == 0
     Node_Cicle = zeros(Dimension(1)+Dimension(2)-2, 1, 3);    
     Solution_change = zeros(1,Dimension(1)+Dimension(2)-3);
@@ -1419,13 +1483,60 @@ function pushbutton_watchsolution_Callback(hObject, eventdata, handles) %#ok<INU
 % hObject    handle to pushbutton_watchsolution (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Solution Matrix_problem Dimension ;
+global Solution Matrix_problem Dimension Variables_ind;
 
-ObjectiveValue = 0;
-All_display = zeros(Dimension(1),Dimension(2));
-for j=1:Dimension(1)+Dimension(2)-3
-    All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = Solution(j, 1, 3);
-    ObjectiveValue = ObjectiveValue + Solution(j, 1, 3)*Matrix_problem(Solution(j, 1, 1), Solution(j, 1, 2));
-end 
-All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
+if Variables_ind == 0
+    if strcmp(get(handles.Simplex, 'Checked'), 'on')
+        colFormat=cell(1,Dimension(2)+1);    
+    else
+        colFormat=cell(1,Dimension(2));
+    end
+    % se especifica el formato de salida de los datos
+    colFormat(1,:) = cellstr('rat');
+    set(handles.table_simplexdisplay, 'columnformat', colFormat);
+    ObjectiveValue = 0;
+    All_display = zeros(Dimension(1),Dimension(2));
+    for j=1:Dimension(1)+Dimension(2)-3        
+        All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = Solution(j, 1, 3);
+        ObjectiveValue = ObjectiveValue + Solution(j, 1, 3)*Matrix_problem(Solution(j, 1, 1), Solution(j, 1, 2));
+    end
+    All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
+    Variables_ind = 1;
+else
+    if strcmp(get(handles.Simplex, 'Checked'), 'on')
+        colFormat=cell(1,Dimension(2)+1);    
+    else
+        colFormat=cell(1,Dimension(2));
+    end
+    colFormat(1,:) = cellstr('char');
+    set(handles.table_simplexdisplay, 'columnformat', colFormat);
+    All_display = cell(Dimension(1),Dimension(2));
+    for j=1:Dimension(1)+Dimension(2)-3
+        All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = cellstr(strcat('X', strcat(num2str(Solution(j, 1, 1)), num2str(Solution(j, 1, 2)))));
+    end
+    Variables_ind = 0;
+end
 set(handles.table_simplexdisplay, 'data', All_display);
+
+
+% --- Executes on selection change in popupmenu_selectvar3.
+function popupmenu_selectvar3_Callback(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
+% hObject    handle to popupmenu_selectvar3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu_selectvar3 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu_selectvar3
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu_selectvar3_CreateFcn(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
+% hObject    handle to popupmenu_selectvar3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

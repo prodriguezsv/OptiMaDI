@@ -61,7 +61,7 @@ end
 
 
 % --- Executes just before Sensibility is made visible.
-function Sensibility_OpeningFcn(hObject, ~, handles, varargin)
+function Sensibility_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -166,7 +166,7 @@ All_display(dim(2):(dim(2)+dim(1)-2), 3) = maxbk;
 set(handles.table_invariableInterval, 'data', All_display);
 
 % --- Outputs from this function are returned to the command line.
-function varargout = Sensibility_OutputFcn(~, ~, handles) 
+function varargout = Sensibility_OutputFcn(hObject, eventdata, handles)  %#ok<INUSL>
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB

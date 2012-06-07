@@ -61,7 +61,7 @@ end
 
 
 % --- Executes just before Postoptimo is made visible.
-function Postoptimality_OpeningFcn(hObject, ~, handles, varargin) 
+function Postoptimality_OpeningFcn(hObject, eventdata, handles, varargin)  %#ok<INUSL>
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -123,7 +123,7 @@ set(handles.table_tableau, 'data', handles.LPApphandle.gui_tableau);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = Postoptimality_OutputFcn(~, ~, handles)  
+function varargout = Postoptimality_OutputFcn(hObject, eventdata, handles)   %#ok<INUSL>
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -134,7 +134,7 @@ varargout{1} = handles.output;
 
 
 % --- Executes on button press in pushbutton_loadproblem.
-function pushbutton_loadproblem_Callback(hObject, ~, handles) %#ok<INUSL,DEFNU>
+function pushbutton_loadproblem_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to pushbutton_loadproblem (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -157,7 +157,7 @@ delete(handles.postoptimality);
 
 
 % --- Executes on button press in pushbutton_restart.
-function pushbutton_restart_Callback(~, ~, handles) %#ok<DEFNU>
+function pushbutton_restart_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to pushbutton_restart (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA
@@ -166,7 +166,7 @@ set(handles.table_problem, 'data', handles.LPApphandle.gui_Matrix_problem)
 set(handles.table_tableau, 'data', handles.LPApphandle.gui_tableau)
 
 % --- Executes when entered data in editable cell(s) in table_problem.
-function table_problem_CellEditCallback(~, eventdata, handles) %#ok<DEFNU>
+function table_problem_CellEditCallback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to table_problem (see GCBO)
 % eventdata  structure with the following fields (see UITABLE)
 %	Indices: row and column indices of the cell(s) edited
