@@ -295,7 +295,7 @@ if strcmp(get(handles.Simplex, 'Checked'), 'on')
     ratios = Y0./Yj;
     ratios_aux = ratios;
     [Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor    
-    ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
+    ratios_aux(ratios < 0 | isnan(ratios) | Yj < 0) = Inf; 
     [C, p] = min(ratios_aux); %#ok<NASGU>
     if C ~= Inf
         ind = find(ratios_aux == C);
@@ -324,7 +324,7 @@ elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
     ratios_aux = ratios;
     Basic_Var = Order_current < Dimension(1);
     ratios_aux(Basic_Var) = Inf;
-    ratios_aux(ratios < 0 | isnan(ratios)) = Inf; 
+    ratios_aux(ratios < 0 | isnan(ratios) | Fi < 0) = Inf; 
     [C, p] = min(ratios_aux); %#ok<NASGU>
     if C ~= Inf
         ind = find(ratios_aux == C);
