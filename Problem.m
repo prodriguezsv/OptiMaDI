@@ -179,7 +179,7 @@ iscorrect = 1;
 
 % -------
 function response = isfactiblesolution(handles)
-global Matrix_problem Dimension;
+global Matrix_problem Dimension Order_initial;
 
 % se verifica que la solución inicial sea factible
 if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')    
@@ -190,7 +190,13 @@ if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')
         return;
     end
 elseif strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'on')
-    Rj = Matrix_problem(end, 1:(Dimension(2)-1)); %MODIFICAR
+    % se convierte la última en términos de Rj =cj - zj
+    [Y, I] = sort(Order_initial); %#ok<ASGLU>
+    Tableau_sorted = Matrix_problem(:, I);
+    c = Tableau_sorted(end,:);
+    z = Tableau_sorted(end, 1:(Dimension(1)-1))*Tableau_sorted(1:(Dimension(1)-1),:);
+
+    Rj = c - z;    
     if any(Rj < 0)
         response = 0;
         errordlg('La solución inicial no es dual factible.','Método Simplex Dual no aplicable','modal');

@@ -145,10 +145,12 @@ Rj = All_display_tableau(end, 1:(dim(2)-1));
 if any(b < 0) && all(Rj >= 0)
     if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')
         msgbox('Seleccione el método Simplex dual', 'Cambie de método', 'help');
+        return;
     end
 elseif all(b > 0) && any(Rj < 0)
     if strcmp(get(handles.LPApphandle.Simplex_dual, 'Cheched'), 'on')
         msgbox('Seleccione el método Simplex primal', 'Cambie de método', 'help');
+        return;
     end
 end
 
