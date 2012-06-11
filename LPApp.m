@@ -263,6 +263,7 @@ if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
             calc_ratios(handles);
         else % no hay Soluciones multiples, no hay más opciones
             set(handles.popupmenu_selectvar, 'string', char('',''));
+            set(handles.popupmenu_selectvar3, 'string', char('',''));
             set_environment('end', handles);
         end
     end
@@ -324,7 +325,7 @@ elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
     ratios_aux = ratios;
     Basic_Var = Order_current < Dimension(1);
     ratios_aux(Basic_Var) = Inf;
-    ratios_aux(ratios < 0 | isnan(ratios) | Fi < 0) = Inf; 
+    ratios_aux(ratios < 0 | isnan(ratios) | Fi > 0) = Inf; 
     [C, p] = min(ratios_aux); %#ok<NASGU>
     if C ~= Inf
         ind = find(ratios_aux == C);
@@ -520,9 +521,9 @@ q = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2:dim(2)));
 var = get(handles.popupmenu_selectvar3, 'string');
 dim = size(var(get(handles.popupmenu_selectvar3, 'value'), :));
 p_aux = str2double(var(get(handles.popupmenu_selectvar3, 'value'), 2:dim(2)));
-p = Order_current(p_aux);
 
-if ~isnan(p) % si existe algún yij que cumple el criterio de factibilidad
+if ~isnan(p_aux) % si existe algún yij que cumple el criterio de factibilidad
+    p = Order_current(p_aux);
     pivote_process(p, q);
 else
     errordlg('El conjunto representado por las restricciones no es acotado.', 'El valor objetivo decrece sin limite','modal');
