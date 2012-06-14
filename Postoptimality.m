@@ -211,7 +211,9 @@ elseif column == dim(2) && row ~= dim(1)
     bprime = All_display_problem(1:(dim(1)-1), end);
     b = All_display_problem(1:(dim(1)-1), end);
     b(row) = eventdata.PreviousData;
+    [C, I] = sort(Order_current); %#ok<ASGLU>
+    T_OrderedTableau = All_display_problem(end, I);    
     All_display_tableau(1:(dim(1)-1), end) = All_display_tableau(1:(dim(1)-1), end)+All_display_tableau(1:(dim(1)-1), Basic_vector_initial==1)*(bprime-b);
-    All_display_tableau(end, end) = All_display_problem(end, Basic_vector==1)*All_display_tableau(1:(dim(1)-1), end);
+    All_display_tableau(end, end) = -T_OrderedTableau(end, 1:(dim(1)-1))*All_display_tableau(1:(dim(1)-1), end);
 end
 set(handles.table_tableau, 'data', All_display_tableau);
