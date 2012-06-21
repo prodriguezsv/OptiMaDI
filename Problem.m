@@ -165,6 +165,14 @@ if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
         iscorrect = 0;
         return;
     end
+else
+    oferta = Matrix_problem(1:(Dimension(1)-1), end);
+    demanda = Matrix_problem(end, 1:(Dimension(2)-1));
+    if sum(oferta)~= sum(demanda)
+        errordlg('El problema no está balanceado.','Problema no balanceado','modal');
+        iscorrect = 0;
+        return;
+    end
 end
 if ~isfactiblesolution(handles)
     iscorrect = 0;
