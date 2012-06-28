@@ -1090,7 +1090,7 @@ else
                 ind1 = find(T_VarType_Aux(:,i));
                 dim1 = size(ind1);
                 if ~isempty(ind1)
-                    for j = 1:dim1(2)
+                    for j = 1:dim1(1)
                         Num_assignation = Num_assignation + 1;                    
                         Node_current = [ind1(j), i];
                         T_VarType_Aux(ind1(j), i) = 0;
@@ -1123,7 +1123,7 @@ if (Num_assignation == Dimension(1)+Dimension(2)-3)
                 if T_VarType(j, k) == 0
                     if T_Tableau(j, k) < 0
                         if minimo > T_Tableau(j, k)
-                            indice = count;
+                            indice = i;
                             minimo = T_Tableau(j, k);
                             Node_current = [j, k];
                         end
@@ -1212,10 +1212,10 @@ if Num_assignation == 0
         if ~isempty(ind1)
             if Node_current(1) < ind1(1)
                 Linf = 1;
-                Lsup = dim(2);
+                Lsup = dim(1);
                 change = 1;
             else
-                Linf = dim(2);
+                Linf = dim(1);
                 Lsup = 1;
                 change = -1;
             end
@@ -1316,7 +1316,7 @@ else
                        break;%%%%
                     else
                         T_Tableau(Node_current(1), ind1(i)) = 0;              
-                        if ~((i == Lsup && change == -1) || (i == Linf && change == 1))
+                        if ~(i == Lsup)
                             Empty_dimension = 0;
                         end
                     end                     
@@ -1346,7 +1346,7 @@ else
                     break;
                 end
             end  
-            calc_nextciclevar(handles,Num_cassignation);
+            calc_nextciclevar(handles,Num_cassignation-1);
             return;
         end
     else
@@ -1355,10 +1355,10 @@ else
         if ~isempty(ind1)
             if Node_current(1) < ind1(1)
                 Linf = 1;
-                Lsup = dim(2);
+                Lsup = dim(1);
                 change = 1;
             else
-                Linf = dim(2);
+                Linf = dim(1);
                 Lsup = 1;
                 change = -1;
             end
@@ -1421,7 +1421,7 @@ else
                        break;
                     else
                         T_Tableau(ind1(i), Node_current(2)) = 0;
-                        if ~((i == Lsup && change == -1) || (i == Linf && change == 1))
+                        if ~(i == Lsup)
                             Empty_dimension = 1;
                         end
                     end
@@ -1451,7 +1451,7 @@ else
                     break;
                 end
             end  
-            calc_nextciclevar(handles,Num_cassignation);            
+            calc_nextciclevar(handles,Num_cassignation-1);            
             return;
         end
     end
