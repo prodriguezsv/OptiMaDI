@@ -153,7 +153,7 @@ if ~iscorrectform(handles)
 end
 
 %AGREGADO(27/12/2016)
-if handles.LPApphandle.Method ~= 3
+if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
     if ~iscanonicform()
         handles.LPApphandle.istwophases = 1;
         handles.LPApphandle.whatphase = 1;
@@ -201,17 +201,40 @@ if handles.LPApphandle.Method == 3
         iscorrect = 0;
         return;
     end
+    if all(Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1) == 0)
+        errordlg('El problema no tiene una función objetivo definida.','Método de transporte','modal');
+        iscorrect = 0;
+        return;
+    end
+        
+elseif rank(full(Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1))) ~= Dimension(1)-1
+   errordlg('El problema tiene restricciones redundantes.','Método Simplex','modal');
+   iscorrect = 0;
+   return;
+end
+
+if handles.LPApphandle.Method == 2    
+    if ~iscanonicform()
+        iscorrect = 0;
+        return;
+    end
 end
 
 if ~isfactiblesolution(handles)
     iscorrect = 0;
     return;
 end
-if handles.LPApphandle.Method ~= 2
-    if isdegeneratedsolution(handles)
-        errordlg('La solución inicial es degenerada.','Posibilidad de ciclo','modal');
+
+if isdegeneratedsolution(handles)
+    if handles.LPApphandle.Method == 3
+        errordlg('La oferta (demanda) de algún origen (destino) es cero.','Origen o destino inútil','modal');
+        iscorrect = 0;
+        return;
+    else
+        errordlg('La solución inicial es degenerada.','Método simplex','modal');
     end
 end
+
 iscorrect = 1;
 
 % -------
