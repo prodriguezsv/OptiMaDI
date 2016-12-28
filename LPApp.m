@@ -1,4 +1,4 @@
-% Copyright 2011 2012 M.Sc. Porfirio Armando Rodríguez
+% Copyright 2011 2012 2016 M.Sc. Porfirio Armando Rodríguez
 
 % This file is part of LPApp
 % LPApp is free software: you can redistribute it and/or modify
@@ -55,6 +55,7 @@ else
 end
 % End initialization code - DO NOT EDIT
 
+
 % --- Executes just before LPApp is made visible.
 function LPApp_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 % This function has no output args, see OutputFcn.
@@ -65,6 +66,8 @@ function LPApp_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 
 % Choose default command line output for LPApp
 handles.output = hObject;
+
+handles.Method = 0;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -104,7 +107,7 @@ elseif strcmp(environmentname, 'sol_multiples')
     set(handles.popupmenu_selectvar3, 'Enable', 'on');
     set(handles.Saveproblem, 'enable', 'on');
 elseif strcmp(environmentname, 'end')
-    if strcmp(get(handles.Simplex_transportation,'Checked'), 'off')
+    if handles.Method ~= 3
         set(handles.Sensibility, 'enable', 'on');
         set(handles.Postoptimality, 'enable', 'on');
     end
@@ -167,21 +170,6 @@ set(handles.pushbutton_next, 'Enable', val_switches(4,:));
 set(handles.pushbutton_modify, 'Enable', val_switches(5,:));
 set(handles.pushbutton_multiplesolution, 'Enable', val_switches(6,:));
 
-
-% --- Executes during object creation, after setting all properties.
-function table_simplexdisplay_CreateFcn(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
-% hObject    handle to table_simplexdisplay (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc
-    set(hObject,'BackgroundColor','white');
-else
-    set(hObject,'BackgroundColor',get(0,'defaultUicontrolBackgroundColor'));
-end
-
 % --- Executes on button press in pushbutton_start.
 function pushbutton_start_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to pushbutton_start (see GCBO)
@@ -192,8 +180,23 @@ global Matrix_problem Order_initial;
 % Order_initial     orden inicial de vectores columna de la tabla Simplex, el orden de la
 % matrix identidad primero y luego los demás vectores
 
+%AGREGADO(27/12/2016)
+if handles.istwophases == 1 && handles.isinit_secondphase ~= 1
+    handles.whatphase = 1;
+    Matrix_problem = handles.First_Matrix_problem;
+    handles.Order_initial = handles.First_Order_initial;    
+elseif handles.istwophases == 1 && handles.isinit_secondphase == 1
+    handles.isinit_secondphase = 0;
+    Matrix_problem = handles.gui_Matrix_problem;
+else
+    handles.Order_initial = Order_initial;
+end
+
+guidata(handles.output, handles);
+%AGREGADO(27/12/2016)
+
 % Configura la tabla inicial del Método Simplex
-handles.Order_initial = Order_initial;
+% handles.Order_initial = Order_initial;
 setProblem(Matrix_problem, handles)
 
 
@@ -202,25 +205,25 @@ setProblem(Matrix_problem, handles)
 % mejoramiento de la solución (coeficientes de costo relativo negativos)
 function calc_variables(handles)
 % handles       estructura con manejadores y datos de usuario
-global Dimension Tableau Order_current Solution_initial;
+global Dimension Tableau Order_current Solution_initial Matrix_problem;
 % Dimension     dimensiones de la especificación del problema en términos
 % del número de ecuaciones y variables
 % Tableau       Tabla del Simplex actual
 % Order_current orden actual de vectores columna de la tabla Simplex
 
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
+if handles.Method == 1
     Rj = Tableau(end,1:(Dimension(2)-1)); % Recupera los coeficientes de costo reducido (Rj) de la tabla Simplex
     [Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor
     IRjneg = I(Order_current(Rj < 0));  % obtiene los indices de variables con Rj negativo
     IVar = IRjneg;
-elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+elseif handles.Method == 2
     X0 = Tableau(1:(Dimension(1)-1), end); % Recupera los valores de las variables básicas de la tabla Simplex
     [Y, I] = sort(Order_current); %#ok<ASGLU> % obtiene los indices de variables ordenados de menor a mayor
     IX0neg = I(X0 < 0);  % obtiene los indices de variables con valores negativos
     IVar =  IX0neg;
 end
 
-if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
+if handles.Method ~= 3
     % se construye el arreglo de cadenas de las variables
     dim2 = size(IVar);
     Var = cell(dim2(2), 1);
@@ -229,9 +232,9 @@ if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
     end
 
     if ~isempty(Var) % en el caso que haya Rj negativos
-        if strcmp(get(handles.Simplex, 'Checked'), 'on')
+        if handles.Method == 1
             [Y, p] = min(Rj(IRjneg)); %#ok<ASGLU> % obtiene el índice de variable del Rj más negativo
-        elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+        elseif handles.Method == 2
             [Y, p] = min(IX0neg); %#ok<ASGLU> % obtiene el índice de variable del Rj más negativo
         end
         set(handles.popupmenu_selectvar, 'string', char(Var)); % despliega las variables no básicas en la interfaz
@@ -256,16 +259,50 @@ if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
         for i = 1:dim2(2)
             Var(i) = cellstr(strcat('X',num2str(IRjeq(i))));
         end
-        if ~isempty(Var) && strcmp(get(handles.Simplex, 'Checked'), 'on') % en el caso que haya Rj = 0        
+        
+        %MODIFICADO(27/12/2016)            
+        maximo = max(find(Order_current < Dimension(1))); %#ok<MXFND>
+        if ~isempty(Var) && handles.Method == 1 && ...
+                (((handles.istwophases == 1 && handles.whatphase == 1)  && ...
+                    maximo > Dimension(2)-handles.maxcanon_vector-2) || ...
+                    handles.istwophases == 0 || (handles.istwophases == 1 && ... 
+                    handles.whatphase == 2)) % en el caso que haya Rj = 0        
             set(handles.popupmenu_selectvar, 'string', char(Var));
             set_environment('sol_multiples', handles);
             set(handles.popupmenu_selectvar, 'value', 1);
             calc_ratios(handles);
-        else % no hay Soluciones multiples, no hay más opciones
+            msgbox('El proceso ha encontrado una solución óptima. Haga clic en "Solucion múltiple" para encontrar otra.','Método simplex','modal');
+        else % No hay Soluciones múltiples, no hay más opciones
+            if (handles.istwophases == 1 && handles.whatphase == 1) 
+                if Tableau(end, end) == 0 && maximo <= Dimension(2)-handles.maxcanon_vector-2
+                    msgbox('La primera fase ha terminado. Haga clic en "Iniciar" para la segunda fase.','Método simplex de dos fases','modal');
+                    %Matrix_problem = zeros(size(handles.Orig_Matrix_problem));
+                    Matrix_problem = Tableau(:, 1:Dimension(2)-handles.maxcanon_vector-2);
+                    Matrix_problem(:, Dimension(2)-handles.maxcanon_vector-1) = Tableau(:,Dimension(2)-handles.maxcanon_vector);
+                    Matrix_problem(end, :) = handles.Orig_Matrix_problem(end, :);
+                    Order_current = Order_current(1:Dimension(2)-handles.maxcanon_vector-2);                    
+                    Order_current(Dimension(2)-handles.maxcanon_vector-1) = Dimension(2)-handles.maxcanon_vector-1;
+                    Order_current(Order_current > Dimension(1)-1) = Dimension(1):Dimension(2)-handles.maxcanon_vector-1;
+                    handles.gui_Matrix_problem = Matrix_problem;
+                    handles.Order_initial = Order_current;
+                    handles.whatphase = 2;
+                    handles.isinit_secondphase = 1;
+                    guidata(handles.output, handles);
+                    %setProblem(Matrix_problem, handles)
+                    %return;
+                else
+                    msgbox('La primera fase ha terminado. El problema original no tiene solución','Método simplex de dos fases','modal');
+                end
+            elseif (handles.istwophases == 1 && handles.whatphase == 2)
+                msgbox('La segunda fase ha terminado. Se ha encontrado una solución óptima','Método simplex de dos fases','modal');
+            else
+                msgbox('Se ha encontrado una solución óptima','Método simplex','modal');
+            end
             set(handles.popupmenu_selectvar, 'string', char('',''));
             set(handles.popupmenu_selectvar3, 'string', char('',''));
             set_environment('end', handles);
         end
+        %MODIFICADO(27/12/2016)
     end
 else
     % se construye el arreglo de cadenas de las variables    
@@ -289,7 +326,7 @@ global Tableau Dimension Order_current;
 var = get(handles.popupmenu_selectvar, 'string'); % se recupera la variable no básica seleccionada
 dim = size(var(get(handles.popupmenu_selectvar, 'value'), :));
 J = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2:dim(2))); % se recupera el índice de variable seleccionada
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
+if handles.Method == 1
     % Se calculan las razones para la variable no básica seleccionada
     Y0 = Tableau(1:(Dimension(1)-1), end); % se recupera el vector de términos coeficientes
     Yj = Tableau(1:(Dimension(1)-1), J); % se recupera el vector columna asociada a la variable no básica
@@ -317,7 +354,7 @@ if strcmp(get(handles.Simplex, 'Checked'), 'on')
     % se actualiza la tabla de la interfaz
     All_display(:, 1:Dimension(2)) = Tableau;
     All_display(1:(Dimension(1)-1), end) = ratios;
-elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+elseif handles.Method == 2
     % Se calculan las razones para la variable básica seleccionada
     Fi = Tableau(Order_current(J), 1:(Dimension(2)-1)); % se recupera el vector fila asociada a la variable básica
     Rj = Tableau(end, 1:(Dimension(2)-1)); % se recupera el vector de coeficientes reducidos
@@ -353,7 +390,7 @@ function calc_nextassignment(handles)
 global Solution Node_current Num_assignation T_Tableau Dimension Matrix_problem T_VarType ...
     Solution_change Minimo Solution_initial Node_NBV;
 
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
+if handles.Method == 1
     colFormat=cell(1,Dimension(2)+1);    
 else
     colFormat=cell(1,Dimension(2));
@@ -414,6 +451,7 @@ if Solution_initial == 1
     set(handles.table_simplexdisplay, 'data', All_display);
     
     if Num_assignation == Dimension(1)+Dimension(2)-3
+        msgbox('Se ha encontrado una nueva solución.','Cálculo de nueva solución.','modal');
         Node_current = [0, 0];        
         set_environment('next_calc', handles);
         T_Tableau = zeros(Dimension(1), Dimension(2));
@@ -479,7 +517,8 @@ else
     All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
     set(handles.table_simplexdisplay, 'data', All_display);
     if Num_assignation == Dimension(1)+Dimension(2)-3
-        Node_current = [0, 0];        
+        msgbox('Se ha encontrado una nueva solución.','Cálculo de nueva solución.','modal');
+        Node_current = [0, 0]; 
         set_environment('next_calc', handles);
         T_Tableau = zeros(Dimension(1), Dimension(2));
         T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
@@ -498,10 +537,10 @@ function pushbutton_next_Callback(hObject, eventdata, handles) %#ok<INUSL>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA) 
 
-if strcmp(get(handles.Simplex, 'Checked'), 'on')   
+if handles.Method == 1   
     % se ejecuta el método simplex
     simplex_primal(handles);
-elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')   
+elseif handles.Method == 2  
     simplex_dual(handles);
 end
 setrowheaders(handles, char('X', 'X', 'Rj', 'Yi0'));
@@ -509,7 +548,7 @@ calc_variables(handles);
     
 % --- Se ejecuta el método simplex primal
 function simplex_primal(handles)
-global Tableau Order_current;
+global Tableau Order_current operations;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -522,11 +561,15 @@ var = get(handles.popupmenu_selectvar3, 'string');
 dim = size(var(get(handles.popupmenu_selectvar3, 'value'), :));
 p_aux = str2double(var(get(handles.popupmenu_selectvar3, 'value'), 2:dim(2)));
 
-if ~isnan(p_aux) % si existe algún yij que cumple el criterio de factibilidad
+if ~isnan(p_aux) % si existe algún yij que cumple el criterio de factibilidad 
     p = Order_current(p_aux);
     pivote_process(p, q);
+    %AGREGADO(27/12/2016)
+    set(handles.listbox_operations, 'string', operations);
+    guidata(handles.output, handles);
+    %AGREGADO(27/12/201
 else
-    errordlg('El conjunto representado por las restricciones no es acotado.', 'El valor objetivo decrece sin limite','modal');
+    msgbox('El conjunto representado por las restricciones no es acotado.', 'El valor objetivo decrece sin limite','modal');
     return;
 end
 % se actualiza la tabla de la interfaz
@@ -535,7 +578,7 @@ set(handles.table_simplexdisplay, 'data', All_display);
 
 % --- Se ejecuta el método simplex primal
 function simplex_dual(handles)
-global Tableau Order_current;
+global Tableau Order_current operations;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -552,8 +595,12 @@ q = str2double(var(get(handles.popupmenu_selectvar3, 'value'), 2:dim(2)));
 
 if ~isnan(q) % si existe algún yij que cumple el criterio de factibilidad
     pivote_process(p, q);
+    %AGREGADO(27/12/2016)
+    set(handles.listbox_operations, 'string', operations);
+    guidata(handles.output, handles);
+    %AGREGADO(27/12/2016)
 else
-    errordlg('El conjunto representado por las restricciones es vacío.', 'No hay solución','modal');
+    msgbox('El conjunto representado por las restricciones es vacío.', 'No hay solución','modal');
     return;
 end
 % se actualiza la tabla de la interfaz
@@ -563,12 +610,26 @@ set(handles.table_simplexdisplay, 'data', All_display);
 
 % --- Función utilitaria: proceso del pivote sobre el elemento Ypq
 function pivote_process(p, q)
-global Tableau Order_current Dimension;
+global Tableau Order_current Dimension operations;
 
 % Ecuaciones de pivote
 Ypq = Tableau(p, q);
 fp = Tableau(p, :); % recupera la fila p actual
 fp = fp/Ypq;
+
+%AGREGADO(27/12/2016)
+[num, den] = numden(sym(1/Ypq, 'r'));
+fraction = double([num, den]);
+pivote_operation = sprintf('Se efectuaron las siguientes operaciones de pivoteo:\r');
+operations = pivote_operation;
+if fraction(2) == 1
+    pivote_operation = sprintf('f%d <= (%d) x f%d', p, fraction(1), p);
+else
+    pivote_operation = sprintf('f%d <= (%d/%d) x f%d', p, fraction(1), fraction(2), p);
+end
+operations = char(operations, pivote_operation);
+%AGREGADO(27/12/2016)
+
 Tableau(p, :) = fp; % se actualiza la fila p en la tabla del Simplex
 % se actualizan las demás filas
 for i = 1:Dimension(1)
@@ -576,6 +637,18 @@ for i = 1:Dimension(1)
         fi = Tableau(i, :);
         Yiq = Tableau(i, q);
         fi = fi - fp*Yiq;
+        
+        %AGREGADO(27/12/2016)
+        [num, den] = numden(sym(Yiq/Ypq, 'r'));
+        fraction = double([num, den]);
+        if fraction(2) == 1
+            pivote_operation = sprintf('f%d  <= f%d - (%d) x f%d', i, i, fraction(1), p);
+        else
+            pivote_operation = sprintf('f%d  <= f%d - (%d/%d) x f%d', i, i, fraction(1), fraction(2), p);
+        end
+        operations = char(operations, pivote_operation);
+        %AGREGADO(27/12/2016)
+        
         Tableau(i, :) = fi; % fila p actualizada
     end
 end
@@ -593,26 +666,20 @@ global Matrix_problem;
 
 % abre ventana para modificar la especificación del problema
 handles.setProblem = @setProblem; % se comparte manejador de función
-handles.gui_Matrix_problem = Matrix_problem; % se comparte la especificación de problema actual
+%handles.gui_Matrix_problem = Matrix_problem; % se comparte la especificación de problema actual
+
+%AGREGADO(27/12/2016)
+if handles.istwophases == 1
+    handles.gui_Matrix_problem = handles.Orig_Matrix_problem;
+    handles.isinit_secondphase = 0;
+else
+    handles.gui_Matrix_problem = Matrix_problem; % se comparte la especificación de problema actual
+end
+%AGREGADO(27/12/2016)
+
 handles.gui_Problem = Problem('LPApp', handles);
 guidata(handles.output, handles);
 
-% --------------------------------------------------------------------
-function Simplex_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
-% hObject    handle to Simplex (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-if strcmp(get(hObject, 'Checked'),'off')  
-    set(hObject,'Checked','on');
-end
-set(handles.Simplex_dual,'Checked','off');
-set(handles.Simplex_transportation,'Checked','off');
-set(handles.panel_enhancement, 'visible', 'on');
-set(handles.panel_transportation, 'visible', 'off');
-set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex primal)');
-set(handles.text_selectvar, 'string', 'Seleccionar variable que entra');
-set(handles.text_selectvar3, 'string', 'Seleccionar variable que sale');
 
 % --- Executes on selection change in popupmenu_selectvar.
 function popupmenu_selectvar_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -650,7 +717,7 @@ J = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
 Aux_Tableau = Tableau;
 All_display = get(handles.table_simplexdisplay, 'data');
 
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
+if handles.Method == 1
     ratios = All_display(1:(Dimension(1)-1), end);
     ratios_aux = ratios;
     ratios_aux(ratios < 0) = Inf; 
@@ -665,7 +732,7 @@ if strcmp(get(handles.Simplex, 'Checked'), 'on')
     All_display(:, 1:Dimension(2)) = Aux_Tableau;
     All_display(1:(Dimension(1)-1), end) = ratios;
     set(handles.table_simplexdisplay, 'data', All_display);
-elseif strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+elseif handles.Method == 2
     ratios = All_display(end, 1:(Dimension(2)-1));
     ratios_aux = ratios;    
     Vector_nonbasic = Order_current(1:Dimension(2)-1) >= Dimension(1);
@@ -706,59 +773,21 @@ function pushbutton_multiplesolution_Callback(hObject, eventdata, handles) %#ok<
 % handles    structure with handles and user data (see GUIDATA)
 pushbutton_next_Callback(hObject, eventdata, handles)
 
-% --- se ejecuta al seleccionar la opción "Nuevo poblema" del menú "Archivo"
-function Newproblem_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
-% hObject    handle to Newproblem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% ventana de dialogo en donde se solicita las dimensiones del problema
-if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
-    prompt = {'Número de ecuaciones:','Número de variables:'};
-    dlg_title = 'Dimensiones del problema';
-    num_lines = 1;
-    def = {'1','2'};
-else
-    prompt = {'Número de origenes:','Número de destinos:'};
-    dlg_title = 'Dimensiones del problema';
-    num_lines = 1;
-    def = {'2','2'};
-end
-
-answer = inputdlg(prompt,dlg_title,num_lines,def);
-
-% se verifica que las dimensiones del problema sean consistentes (m < n)
-if ~isempty(answer)
-    user_entry1 = str2double(cellstr(answer{1}));
-    user_entry2 = str2double(cellstr(answer{2}));
-
-    while (1)
-        if (isnan(user_entry1) || user_entry1 < 1) || (isnan(user_entry2) || user_entry2 < 2) || user_entry1 > user_entry2
-            answer = inputdlg(prompt,dlg_title,num_lines,def);
-            user_entry1 = str2double(cellstr(answer{1}));
-            user_entry2 = str2double(cellstr(answer{2}));
-        else
-            break;
-        end
-    end
-    % se abre la ventana para introducir la especificación del problema
-    handles.gui_Matrix_problem = zeros(user_entry1+1, user_entry2+1); % se comparte la especificación del problema
-    handles.setProblem = @setProblem; % se comparte el manejador de función    
-    handles.gui_Problem = Problem('LPApp', handles);
-    guidata(handles.output, handles);
-end
 
 % --- actualiza la especificación del problema
 function setProblem(Problem, handles)
 % Problem especificación del problema
 % handles estructura de manejadores y datos de usuario
-global Dimension Matrix_problem Tableau Order_current Order_initial Node_current Solution T_Tableau;
+global Dimension Matrix_problem Tableau Order_current Order_initial Node_current Solution T_Tableau Num_assignation;
 
 % se actualizan algunas variables globales previamente descritas
 Matrix_problem = Problem;
 Dimension = size(Matrix_problem);
+%AGREGADO(27/12/2016)
+set(handles.listbox_operations, 'string', '');
+%AGREGADO(27/12/2016)
 
-if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
+if handles.Method ~= 3
     Order_initial = handles.Order_initial;
     Order_current = Order_initial;
     Tableau = Matrix_problem; 
@@ -771,19 +800,25 @@ if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
 
     R = c - z;
     Tableau(end, I) = R;
+    %AGREGADO(27/12/2016)
+    set(handles.listbox_operations, 'string', ...
+        char('La fila de costos unitarios se ha convertido en costos relativos:', 'r <= c - z'));
+    %AGREGADO(27/12/2016)
 else
     Node_current = [0,0];
+    Num_assignation = 0;
     Solution = zeros(Dimension(1)+Dimension(2)-3, 1, 3);
     T_Tableau = Matrix_problem;
 end
 % se actualiza la tabla de la interfaz
 All_display = zeros(Dimension(1), Dimension(2));
-if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
+if handles.Method ~= 3
     % se rotulan las columnas y las filas de manera correspondiente
     setTableauTags(handles, char('X', 'X', 'Rj', 'Yi0'));
     All_display(:, 1:Dimension(2)) = Tableau;
 else
     % se rotulan las columnas y las filas de manera correspondiente
+    set(handles.text_selectvar2, 'string', 'Seleccionar variable inicial');
     setTableauTags(handles, char('Origen', 'Destino', 'Demanda', 'Oferta'));
     All_display(:, 1:Dimension(2)) = T_Tableau;
 end
@@ -802,14 +837,14 @@ for i = 1:(Dimension(2)-1)
     colName(i) = cellstr(strcat(headers(2,:),num2str(i)));
 end
 colName(Dimension(2)) = cellstr(headers(4,:)); 
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
+if handles.Method == 1
     colName(Dimension(2)+1) = cellstr('Yi0/Yij');    
 end
 set(handles.table_simplexdisplay, 'columnname', colName);
 
 setrowheaders(handles, headers);
 
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
+if handles.Method == 1
     colFormat=cell(1,Dimension(2)+1);    
 else
     colFormat=cell(1,Dimension(2));
@@ -826,7 +861,7 @@ global Dimension Order_current;
 [Z, I] = sort(Order_current); %#ok<ASGLU>
 rowName=cell(1,Dimension(1));
 for i = 1:(Dimension(1)-1)
-    if strcmp(get(handles.Simplex_transportation, 'Checked'), 'off')
+    if handles.Method ~= 3
         rowName(1,i) = cellstr(strcat(headers(1,:),num2str(I(i))));
     else
         rowName(1,i) = cellstr(strcat(headers(1,:),num2str(i)));
@@ -834,7 +869,7 @@ for i = 1:(Dimension(1)-1)
 end
 rowName(Dimension(1)) = cellstr(headers(3,:));
 
-if strcmp(get(handles.Simplex_dual, 'Checked'), 'on')
+if handles.Method == 2
     rowName(Dimension(1)+1) = cellstr('-Rj/Yij');   
 end
 set(handles.table_simplexdisplay, 'rowname', rowName);
@@ -862,40 +897,66 @@ function Loadproblem_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-[filename, Y, Z] = uigetfile('*.mat', 'Selecciona un nombre de archivo válido'); %#ok<ASGLU,NASGU>
+[filename, Y, Z] = uigetfile('*.mat', 'Selecciona un nombre de archivo válido'); %#ok<NASGU>
 if filename ~= 0
-    S = load(filename);
-    handles.setProblem = @setProblem;    
-    handles.gui_Matrix_problem = S.Matrix_problem;
-    handles.gui_Problem = Problem('LPApp', handles);
-    guidata(handles.output, handles);
+    S = load([Y, filename]);
+    
+    %AGREGADO(27/12/2016)
+    handles.istwophases = 0;
+    handles.whatphase = 1;
+    handles.isinit_secondphase = 0;
+    if (isfield(S, 'Method'))
+        if S.Method == 3            
+            set(handles.panel_enhancement, 'visible', 'off');
+            set(handles.panel_transportation, 'visible', 'on');
+            handles.Method = 3;                       
+        elseif S.Method == 1            
+            handles.Method = 1;
+            set(handles.panel_enhancement, 'visible', 'on');
+            set(handles.panel_transportation, 'visible', 'off');
+            set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex primal)');
+            set(handles.text_selectvar, 'string', 'Seleccionar variable que entra');
+            set(handles.text_selectvar3, 'string', 'Seleccionar variable que sale');                        
+        elseif S.Method == 2            
+            handles.Method = 2;
+            set(handles.panel_enhancement, 'visible', 'on');
+            set(handles.panel_transportation, 'visible', 'off');
+            set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex dual)');
+            set(handles.text_selectvar, 'string', 'Seleccionar variable que entra');
+            set(handles.text_selectvar3, 'string', 'Seleccionar variable que sale');                     
+        end
+        handles.setProblem = @setProblem;    
+        handles.gui_Matrix_problem = S.Matrix_problem;
+        handles.gui_Problem = Problem('LPApp', handles);
+        guidata(handles.output, handles);
+    else
+        errordlg('El problema no es compatible con la versión actual', 'Problema no compatible');
+    end
+    %MODIFICADO(27/12/2016)
 end
 
 % --------------------------------------------------------------------
-function Saveproblem_Callback(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
+function Saveproblem_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to Saveproblem (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Matrix_problem; %#ok<NUSED>
+global Matrix_problem;
 
-uisave('Matrix_problem', 'LProblem');
-
-
-% --------------------------------------------------------------------
-function Simplex_dual_Callback(hObject, eventdata, handles) %#ok<DEFNU,INUSL>
-% hObject    handle to Simplex_dual (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if strcmp(get(hObject, 'Checked'),'off')  
-    set(hObject,'Checked','on');
+%AGREGADO(27/12/2016)
+if handles.Method == 3
+    Method = 3; %#ok<NASGU>
+elseif handles.Method == 1
+    Method = 1; %#ok<NASGU>
+    Matrix_problem = handles.Orig_Matrix_problem;
+elseif handles.Method == 2
+    Method = 2; %#ok<NASGU>
 end
-set(handles.Simplex,'Checked','off');
-set(handles.Simplex_transportation,'Checked','off');
-set(handles.panel_enhancement, 'visible', 'on');
-set(handles.panel_transportation, 'visible', 'off');
-set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex dual)');
-set(handles.text_selectvar, 'string', 'Seleccionar variable que sale');
-set(handles.text_selectvar3, 'string', 'Seleccionar variable que entra');
+%AGREGADO(27/12/2016)
+
+uisave(cellstr(char('Matrix_problem', 'Method')), 'LProblem');
+%uisave('Matrix_problem', 'LProblem');
+
+
 
 % ----------
 function setProblemAndTableau(Problem, NewTableau, handles)
@@ -935,19 +996,6 @@ handles.Order_initial = Order_initial;
 handles.gui_sensibility = Sensibility('LPApp', handles);
 guidata(handles.output, handles);
 
-% --------------------------------------------------------------------
-function Simplex_transportation_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
-% hObject    handle to Simplex_transportation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if strcmp(get(hObject, 'Checked'),'off')  
-    set(hObject,'Checked','on');
-end
-set(handles.Simplex,'Checked','off');
-set(handles.Simplex_dual,'Checked','off');
-set(handles.panel_enhancement, 'visible', 'off');
-set(handles.panel_transportation, 'visible', 'on');
-
 
 % --- Executes on selection change in popupmenu_selectvar2.
 function popupmenu_selectvar2_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -971,6 +1019,7 @@ if strcmp(get(handles.pushbutton_asign, 'string'), 'Calcular')
     calc_nextmultiplier(handles);    
 elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Asignar')
     Node_current = [0,0];
+    Num_assignation = 0;
     if Solution_initial == 1
         Solution = zeros(Dimension(1)+Dimension(2)-3, 1, 3);
     else
@@ -985,7 +1034,8 @@ elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Asignar')
 elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Buscar')
     Num_assignation = 0;
     T_VarType_Aux = T_VarType;
-    calc_nextciclevar(handles, [0, 0]);
+    %calc_nextciclevar(handles, [0, 0]);
+    calc_nextciclevar(handles, 0);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1006,21 +1056,43 @@ function pushbutton_asign_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU
 % hObject    handle to pushbutton_asign (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Num_assignation;
+global Num_assignation Dimension;
 
-if strcmp(get(hObject, 'string'), 'Calcular')    
-    calc_nextmultiplier(handles);    
-elseif strcmp(get(hObject, 'string'), 'Asignar')
+if strcmp(get(hObject, 'string'), 'Calcular')  
+    calc_nextmultiplier(handles);
+elseif strcmp(get(hObject, 'string'), 'Asignar')    
     calc_nextassignment(handles);
-elseif strcmp(get(hObject, 'string'), 'Buscar')
+elseif strcmp(get(hObject, 'string'), 'Buscar')    
     calc_nextciclevar(handles, Num_assignation);
 end
 
+if (Num_assignation == Dimension(1)+Dimension(2)-3)
+    Num_assignation = 0;
+end
+
 % --- Executes on button press in pushbutton_asignall.
-function pushbutton_asignall_Callback(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
+function pushbutton_asignall_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to pushbutton_asignall (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global Num_assignation Dimension;
+
+if strcmp(get(handles.pushbutton_asign, 'string'), 'Calcular')    
+    while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
+        calc_nextmultiplier(handles);    
+    end
+    Num_assignation = 0;
+elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Asignar')
+    while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
+        calc_nextassignment(handles);
+    end
+    Num_assignation = 0;
+elseif strcmp(get(handles.pushbutton_asign, 'string'), 'Buscar')
+    while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
+        calc_nextciclevar(handles, Num_assignation);
+    end
+    Num_assignation = 0;
+end
 
 
 % ----------------
@@ -1114,6 +1186,7 @@ if (Num_assignation == Dimension(1)+Dimension(2)-3)
     % se construye el arreglo de cadenas de las variables    
     count = sum(sum(T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) < 0));
     if count ~= 0 % en el caso que haya Rj negativos
+        msgbox('Hay costos reducidos negativos. La solución actual se puede mejorar.','Cálculo de costos reducidos.','modal');
         set_environment('next_cicle', handles);
         Var = cell(count, 1);
         minimo = 0; indice = 0;
@@ -1134,11 +1207,12 @@ if (Num_assignation == Dimension(1)+Dimension(2)-3)
             end
         end
 
-        Num_assignation = 0;
+        %Num_assignation = 0;
         T_VarType_Aux = T_VarType;
         set(handles.popupmenu_selectvar2, 'string', char(Var));
         set(handles.popupmenu_selectvar2, 'value', indice);  
     else
+        msgbox('La solución actual es óptima. No hay costos reducidos negativos.','Solución óptima encontrada.','modal');
         set(handles.popupmenu_selectvar2, 'Enable', 'off');
         set(handles.popupmenu_selectvar2, 'value', 1);
         set(handles.popupmenu_selectvar2, 'string', char('', ''));
@@ -1154,7 +1228,7 @@ function calc_nextciclevar(handles, Num_cassignation)
 global Node_current Num_assignation T_Tableau T_VarType_Aux Node_NBV Dimension Node_Cicle...
     Empty_dimension Matrix_problem Solution_initial Solution Solution_change Minimo;
 
-if strcmp(get(handles.Simplex, 'Checked'), 'on')
+if handles.Method == 1
     colFormat=cell(1,Dimension(2)+1);    
 else
     colFormat=cell(1,Dimension(2));
@@ -1319,6 +1393,10 @@ else
                         if ~(i == Lsup)
                             Empty_dimension = 0;
                         end
+                        %MODIFICADO(27/12/2016)
+                        %Node_Cicle(Num_assignation, 1, 3) = 0;
+                        %Num_assignation = Num_assignation - 1;                        
+                        %MODIFICADO(27/12/2016)
                     end                     
                 end
             end  
@@ -1335,6 +1413,9 @@ else
             for k = (Dimension(1)+Dimension(2)-3):-1:1;                
                 if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
                     Num_cassignation = k;
+                    %MODIFICADO(27/12/2016)
+                    Num_assignation = k-1;
+                    %MODIFICADO(27/12/2016)
                     break;
                 end
             end
@@ -1420,10 +1501,15 @@ else
                        Empty_dimension = 1; 
                        break;
                     else
+                        msgbox('El camino no es un ciclo. Se retornará al punto anterior.', 'Camino en encrucijada.','modal');
                         T_Tableau(ind1(i), Node_current(2)) = 0;
                         if ~(i == Lsup)
                             Empty_dimension = 1;
                         end
+                        %MODIFICADO(27/12/2016)
+                        %Node_Cicle(Num_assignation, 1, 3) = 0;
+                        %Num_assignation = Num_assignation -1;                        
+                        %MODIFICADO(27/12/2016)
                     end
                 end                                
             end  
@@ -1440,6 +1526,9 @@ else
            for k = (Dimension(1)+Dimension(2)-3):-1:1;
                 if Node_Cicle(k, 1, 3) == -1 || Node_Cicle(k, 1, 3) == 1
                     Num_cassignation = k;
+                    %MODIFICADO(27/12/2016)
+                    Num_assignation = k - 1;
+                    %MODIFICADO(27/12/2016)
                     break;
                 end
             end
@@ -1457,7 +1546,8 @@ else
     end
 end
 
-if Num_assignation == Dimension(1)+Dimension(2)-3    
+if Num_assignation == Dimension(1)+Dimension(2)-3
+    msgbox('Se ha encontrado un ciclo de redistribución.','Cálculo de ciclo de redistribución.','modal');
     Solution_initial = 0;
     Node_current = [0, 0];
     set_environment('next_assign', handles);
@@ -1487,7 +1577,7 @@ function pushbutton_watchsolution_Callback(hObject, eventdata, handles) %#ok<INU
 global Solution Matrix_problem Dimension Variables_ind;
 
 if Variables_ind == 0
-    if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    if handles.Method == 1
         colFormat=cell(1,Dimension(2)+1);    
     else
         colFormat=cell(1,Dimension(2));
@@ -1503,8 +1593,9 @@ if Variables_ind == 0
     end
     All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
     Variables_ind = 1;
+    set(hObject, 'string', 'Ver variables');
 else
-    if strcmp(get(handles.Simplex, 'Checked'), 'on')
+    if handles.Method == 1
         colFormat=cell(1,Dimension(2)+1);    
     else
         colFormat=cell(1,Dimension(2));
@@ -1516,6 +1607,7 @@ else
         All_display(Solution(j, 1, 1), Solution(j, 1, 2)) = cellstr(strcat('X', strcat(num2str(Solution(j, 1, 1)), num2str(Solution(j, 1, 2)))));
     end
     Variables_ind = 0;
+    set(hObject, 'string', 'Ver valores');
 end
 set(handles.table_simplexdisplay, 'data', All_display);
 
@@ -1537,6 +1629,116 @@ function popupmenu_selectvar3_CreateFcn(hObject, eventdata, handles) %#ok<INUSD,
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- se ejecuta al seleccionar la opción "Nuevo poblema/Simplex primal" del menú "Archivo"
+function Simplex_primal_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Simplex_primal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+init_method(handles, 1);
+
+% --- se ejecuta al seleccionar la opción "Nuevo poblema/Simplex dual" del menú "Archivo"
+function Simplex_dual2_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Simplex_dual2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+init_method(handles, 2);
+
+% --- se ejecuta al seleccionar la opción "Nuevo poblema/Simplex de transporte" del menú "Archivo"
+function Simplex_transportation2_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Simplex_transportation2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+init_method(handles, 3);
+
+function init_method(handles, method)
+% ventana de dialogo en donde se solicita las dimensiones del problema
+
+if method == 1 || method == 2
+    prompt = {'Número de ecuaciones:','Número de variables:'};
+    def = {'1','2'};    
+elseif method == 3
+    prompt = {'Número de origenes:','Número de destinos:'};
+    def = {'2','2'}; 
+end
+
+dlg_title = 'Dimensiones del problema';
+num_lines = 1;
+
+answer = inputdlg(prompt,dlg_title,num_lines,def);
+
+% se verifica que las dimensiones del problema sean consistentes (m < n)
+if ~isempty(answer)
+    if method == 1
+        handles.Method = 1;
+        set(handles.panel_enhancement, 'visible', 'on');
+        set(handles.panel_transportation, 'visible', 'off');
+        set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex primal)');
+        set(handles.text_selectvar, 'string', 'Seleccionar variable que entra');
+        set(handles.text_selectvar3, 'string', 'Seleccionar variable que sale');
+    elseif method == 2
+        handles.Method = 2;
+        set(handles.panel_enhancement, 'visible', 'on');
+        set(handles.panel_transportation, 'visible', 'off');
+        set(handles.panel_enhancement, 'title', 'Criterio de mejoramiento (Simplex dual)');
+        set(handles.text_selectvar, 'string', 'Seleccionar variable que entra');
+        set(handles.text_selectvar3, 'string', 'Seleccionar variable que sale');
+    elseif method == 3
+        set(handles.panel_enhancement, 'visible', 'off');
+        set(handles.panel_transportation, 'visible', 'on');
+        handles.Method = 3;
+    end
+    user_entry1 = str2double(cellstr(answer{1}));
+    user_entry2 = str2double(cellstr(answer{2}));
+
+    while (1)
+        if (isnan(user_entry1) || user_entry1 < 1) || (isnan(user_entry2) || user_entry2 < 2) || user_entry1 > user_entry2
+            answer = inputdlg(prompt,dlg_title,num_lines,def);
+            user_entry1 = str2double(cellstr(answer{1}));
+            user_entry2 = str2double(cellstr(answer{2}));
+        else
+            break;
+        end
+    end
+    % se abre la ventana para introducir la especificación del problema
+    handles.gui_Matrix_problem = zeros(user_entry1+1, user_entry2+1); % se comparte la especificación del problema
+    handles.First_Matrix_problem = zeros(user_entry1+1, user_entry2+1);
+    handles.istwophases = 0;
+    handles.whatphase = 1;
+    handles.isinit_secondphase = 0;
+    handles.Orig_Matrix_problem = zeros(user_entry1+1, user_entry2+1);
+    handles.maxcanon_vector = 0;
+    handles.setProblem = @setProblem; % se comparte el manejador de función    
+    handles.gui_Problem = Problem('LPApp', handles);
+    guidata(handles.output, handles);
+end
+
+
+
+% --- Executes on selection change in listbox_operations.
+function listbox_operations_Callback(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
+% hObject    handle to listbox_operations (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox_operations contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox_operations
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox_operations_CreateFcn(hObject, eventdata, handles) %#ok<INUSD,DEFNU>
+% hObject    handle to listbox_operations (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');

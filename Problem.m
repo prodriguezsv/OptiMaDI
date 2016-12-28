@@ -1,4 +1,4 @@
-% Copyright 2011 2012 M.Sc. Porfirio Armando Rodríguez
+% Copyright 2011 2012 2016 M.Sc. Porfirio Armando Rodríguez
 
 % This file is part of LPApp
 % LPApp is free software: you can redistribute it and/or modify
@@ -78,7 +78,7 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
+if handles.LPApphandle.Method ~= 3
     setheading(handles, char('f', 'X', 'Yi0', 'Z'));
 else
     setheading(handles, char('Origen', 'Destino', 'Oferta', 'Demanda'));
@@ -143,11 +143,43 @@ global Matrix_problem Order_initial;
 % recupera la especificación dada por el usuario
 All_display = get(handles.table_problem, 'data');
 Matrix_problem = All_display;
+Dim = size(Matrix_problem);
+ident = eye(Dim(1)-1);
+
 % se verifica que la especificación este en forma correcta para el método
 % correspondiente
 if ~iscorrectform(handles)
     return;
 end
+
+%AGREGADO(27/12/2016)
+if handles.LPApphandle.Method ~= 3
+    if ~iscanonicform()
+        handles.LPApphandle.istwophases = 1;
+        handles.LPApphandle.whatphase = 1;
+        handles.LPApphandle.Orig_Matrix_problem = Matrix_problem;
+
+        handles.LPApphandle.maxcanon_vector = max(Order_initial);
+        aux = Matrix_problem(1:Dim(1)-1, Dim(2));
+        Matrix_problem(Dim(1), :) = zeros(1, Dim(2));
+        j=0;
+        Order = max(Order_initial);
+        for i = (Order+1:Dim(1)-1)
+            Matrix_problem(1:Dim(1)-1, Dim(2) + j) = ident(i);
+            Matrix_problem(Dim(1), Dim(2) + j) = 1;
+            Order_initial(Dim(2) + j) = i;                
+            j=j+1;
+        end
+        Order_initial(Order_initial == 0) = Dim(1):Dim(2) + j - 1;
+        Order_initial(Dim(2) + j) = Dim(2) + j;
+        Matrix_problem(1:Dim(1)-1, Dim(2) + j) = aux;
+        %Dimension = size(Matrix_problem);
+        handles.LPApphandle.First_Matrix_problem = Matrix_problem;
+        handles.LPApphandle.First_Order_initial = Order_initial;
+        guidata(handles.LPApphandle.output, handles.LPApphandle);
+    end
+end
+%AGREGADO(27/12/2016)
    
 handles.LPApphandle.Order_initial = Order_initial; % se comparte el orden inicial
 handles.LPApphandle.setProblem(Matrix_problem, handles.LPApphandle); % se establece el problema actual
@@ -160,12 +192,8 @@ global Matrix_problem Order_initial Dimension;
 
 Dimension = size(Matrix_problem);
 Order_initial = zeros(1, Dimension(2));
-if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
-    if ~iscanonicform()
-        iscorrect = 0;
-        return;
-    end
-else
+
+if handles.LPApphandle.Method == 3
     oferta = Matrix_problem(1:(Dimension(1)-1), end);
     demanda = Matrix_problem(end, 1:(Dimension(2)-1));
     if sum(oferta)~= sum(demanda)
@@ -174,11 +202,12 @@ else
         return;
     end
 end
+
 if ~isfactiblesolution(handles)
     iscorrect = 0;
     return;
 end
-if strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'off')
+if handles.LPApphandle.Method ~= 2
     if isdegeneratedsolution(handles)
         errordlg('La solución inicial es degenerada.','Posibilidad de ciclo','modal');
     end
@@ -190,14 +219,14 @@ function response = isfactiblesolution(handles)
 global Matrix_problem Dimension Order_initial;
 
 % se verifica que la solución inicial sea factible
-if strcmp(get(handles.LPApphandle.Simplex, 'Checked'), 'on')    
+if handles.LPApphandle.Method == 1    
     X0 = Matrix_problem(1:(Dimension(1)-1), end);
     if any(X0 < 0)
         errordlg('La solución inicial no es primal factible.','Método Simplex Primal no aplicable','modal');
         response = 0;
         return;
     end
-elseif strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'on')
+elseif handles.LPApphandle.Method == 2
     % se convierte la última en términos de Rj =cj - zj
     [Y, I] = sort(Order_initial); %#ok<ASGLU>
     Tableau_sorted = Matrix_problem(:, I);
@@ -210,7 +239,7 @@ elseif strcmp(get(handles.LPApphandle.Simplex_dual, 'Checked'), 'on')
         errordlg('La solución inicial no es dual factible.','Método Simplex Dual no aplicable','modal');
         return;
     end
-elseif strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'on')
+elseif handles.LPApphandle.Method == 3
     oferta = Matrix_problem(1:(Dimension(1)-1), end);
     demanda = Matrix_problem(end, 1:(Dimension(2)-1));
     if any(oferta < 0) || any(demanda < 0)
@@ -227,7 +256,7 @@ function response = isdegeneratedsolution(handles)
 global Matrix_problem Dimension;
 
 % se verifica que la solución no sea degenerada
-if strcmp(get(handles.LPApphandle.Simplex_transportation, 'Checked'), 'off')
+if handles.LPApphandle.Method ~= 3
     X0 = Matrix_problem(1:(Dimension(1)-1), end);
     if any(X0 == 0)
         response = 1;    
@@ -262,7 +291,9 @@ for i =1:(Dimension(1)-1)
         end           
     end
     if ~response
-        errordlg('La matriz no está en forma canónica.','Método no aplicable','modal');
+        %MODIFICADO(27/12/2016)
+        errordlg('La matriz no está en forma canónica. Se aplicará el método de dos fases','Método simplex de dos fases','modal');
+        %MODIFICADO(27/12/2016)
         return;
     end        
 end
