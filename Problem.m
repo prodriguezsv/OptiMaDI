@@ -68,6 +68,7 @@ function Problem_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 handles.output = hObject;
 
 movegui(hObject,'center');
+
 % se busca el nombre de la aplicación en la línea de llamada
 LPApphandle = find(strcmp(varargin, 'LPApp'));
 if ~isempty(LPApphandle)
@@ -127,15 +128,18 @@ function varargout = Problem_OutputFcn(hObject, eventdata, handles)  %#ok<INUSL>
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
-
+if isfield(handles, 'output')
+    varargout{1} = handles.output;
+else
+    close(hObject);
+end
 
 % --- Executes on button press in pushbutton_ok.
 function pushbutton_ok_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % hObject    handle to pushbutton_ok (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Matrix_problem Order_initial;
+global Matrix_problem Order_initial latex;
 % Matrix_problem    guarda la especificación del problema
 % Orden_initial     registra el orden de las columnas según la matriz
 % identidad
@@ -150,6 +154,18 @@ ident = eye(Dim(1)-1);
 % correspondiente
 if ~iscorrectform(handles)
     return;
+end
+
+if handles.LPApphandle.Method ~= 3
+    latex = '';
+    generar_latexspecification('\section{Especificación del problema}');
+    handles.LPApphandle.latex = latex;    
+    guidata(handles.LPApphandle.output, handles.LPApphandle);
+else
+    generar_latextransportespecification()
+    handles.LPApphandle.latex = latex;
+    handles.LPApphandle.latexproblem = latex;
+    guidata(handles.LPApphandle.output, handles.LPApphandle);
 end
 
 %AGREGADO(27/12/2016)
@@ -176,11 +192,23 @@ if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
         %Dimension = size(Matrix_problem);
         handles.LPApphandle.First_Matrix_problem = Matrix_problem;
         handles.LPApphandle.First_Order_initial = Order_initial;
-        guidata(handles.LPApphandle.output, handles.LPApphandle);
+        
+        latex = '\section{Primera fase del Método Simplex}';
+        generar_latexspecification('\subsection{Especificación del problema asociado}');
+        handles.LPApphandle.latex = [handles.LPApphandle.latex, latex];
+        generar_latexsimplexbegin('\subsection{Desarrollo del método simplex}');
+        handles.LPApphandle.latex = [handles.LPApphandle.latex, latex];
+        handles.LPApphandle.latexIIphasesproblem = handles.LPApphandle.latex;
+        guidata(handles.LPApphandle.output, handles.LPApphandle);        
+    else
+        generar_latexsimplexbegin('\section{Desarrollo del Método Simplex}');
+        handles.LPApphandle.latex = [handles.LPApphandle.latex, latex];    
+        handles.LPApphandle.latexproblem = latex;
+        guidata(handles.LPApphandle.output, handles.LPApphandle); 
     end
 end
 %AGREGADO(27/12/2016)
-   
+ 
 handles.LPApphandle.Order_initial = Order_initial; % se comparte el orden inicial
 handles.LPApphandle.setProblem(Matrix_problem, handles.LPApphandle); % se establece el problema actual
 delete(handles.Problem);
@@ -330,3 +358,209 @@ function pushbutton_cancel_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFN
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 delete(handles.Problem);
+
+function generar_latexspecification(title)
+global Matrix_problem latex;
+
+dim = size(Matrix_problem);
+
+latex = sprintf('%s \r', latex);
+latex = [latex, title];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\begin{equation}'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\nonumber'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\begin{array}{']; 
+for j = 1:dim(2)+1
+    latex = [latex,'c']; %#ok<*AGROW>
+end
+latex = sprintf('%s} \r', latex);
+latex = [latex, '\multicolumn{',num2str(dim(2)+1),'}{l}{minimizar \ '];
+inicial = 0;
+for j = 1:dim(2) - 1
+    if Matrix_problem(dim(1), j) > 0
+        if inicial == 1
+            latex = [latex, ...
+            '+', num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+        else 
+            latex = [latex, ...
+            num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+        end
+        inicial = 1;
+    elseif Matrix_problem(dim(1), j) < 0
+        latex = [latex, ...
+        num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+        inicial = 1;
+    end
+    if j == dim(2) - 1
+        latex = [latex, '} \\'];
+    end 
+end
+latex = sprintf('%s \r', latex);
+latex = [latex, '\multicolumn{',num2str(dim(2)+1),'}{l}{sujeto \ a} \\'];
+latex = sprintf('%s \r', latex);
+inicial = 0;
+for i = 1:dim(1) - 1
+    for j = 1:dim(2) - 1
+        if Matrix_problem(i, j) > 0
+            if inicial == 1
+                latex = [latex, ...
+                '+', num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+            else
+                latex = [latex, ...
+                num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+            end
+            inicial = 1;
+        elseif Matrix_problem(i, j) < 0
+            latex = [latex, ...
+            num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+            inicial = 1;
+        else
+            latex = [latex, ' & '];
+        end           
+    end
+    latex = [latex, ' = & ', num2str(Matrix_problem(i, dim(2))), '\\'];
+    latex = sprintf('%s \r', latex);
+end
+latex = [latex, '\multicolumn{',num2str(dim(2)+1),'}{l}{x_j \ge 0 \ (j = 1, \dots,', num2str(dim(2)-1), ')}'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\end{array}']; 
+latex = sprintf('%s \r', latex);
+latex = [latex, '\end{equation}'];
+latex = sprintf('%s \r', latex); 
+
+    
+function generar_latexsimplexbegin(title)
+global Matrix_problem Order_initial latex;
+
+Tableau = Matrix_problem;
+dim = size(Tableau);
+
+% se convierte la última en términos de Rj =cj - zj
+[Y, I] = sort(Order_initial); %#ok<ASGLU>
+Tableau_sorted = Matrix_problem(:, I);
+c = Tableau_sorted(end,:);
+z = Tableau_sorted(end, 1:(dim(1)-1))*Tableau_sorted(1:(dim(1)-1),:);
+
+R = c - z;
+Tableau(end, I) = R;
+
+latex = '';
+latex = sprintf('%s \r', latex);
+latex = [latex, title];
+latex = sprintf('%s \r La tabla inicial del método simplex es la siguiente: \r', latex);
+latex = [latex, '\begin{equation}'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\nonumber'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\left[ \begin{array}{']; 
+for j = 1:dim(2)-1
+    latex = [latex,'c']; %#ok<AGROW>
+end
+latex = [latex,'|c'];
+latex = sprintf('%s} \r', latex);
+
+for i = 1:dim(1)
+    for j = 1:dim(2)
+        if j == 1        
+            latex = [latex, num2str(Tableau(i, j))]; %#ok<AGROW>
+        else
+            latex = [latex,'& ', num2str(Tableau(i, j))];                 %#ok<AGROW>
+        end
+    end
+    latex = [latex, ' \\']; %#ok<AGROW>
+    latex = sprintf('%s \r', latex);
+end
+latex = [latex, '\end{array} \right]']; 
+latex = sprintf('%s \r', latex);
+latex = [latex, '\end{equation}'];
+latex = sprintf('%s \r', latex);
+
+
+function generar_latextransportespecification()
+global Matrix_problem latex;
+
+dim = size(Matrix_problem);
+
+latex = '';
+latex = sprintf('%s \r', latex);
+latex = [latex, '\section{Especificación del Problema de Transporte}'];
+latex = sprintf('%s \r', latex);
+latex = [latex, 'La siguiente tabla representa los costos unitarios asociados a cada variable: \\'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\begin{equation}'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\nonumber'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\begin{tabular}{']; 
+for j = 1:2*dim(2)
+    latex = [latex,'c']; %#ok<AGROW>
+end
+latex = sprintf('%s} \r', latex);
+
+for i = 1:dim(1)+1
+    if i == 1
+        for j = 1:dim(2)
+            if j < dim(2)        
+                latex = [latex, '&  \multicolumn{2}{c}{Destino ', num2str(j), '} ']; %#ok<AGROW>
+            else
+                latex = [latex, '&  \multicolumn{1}{c}{Oferta} \\']; %#ok<AGROW>                           
+            end
+        end
+        latex = sprintf('%s \r', latex);
+        for j = 2:2*dim(2)
+            latex = [latex, '\cline{', num2str(j), '-', num2str(j), '} ']; %#ok<AGROW>            
+        end
+    elseif i < dim(1)+1
+        for j = 1:dim(2)+1
+            if j == 1        
+                latex = [latex, '\multicolumn{1}{c|}{Origen ', num2str(i-1),'} ']; %#ok<AGROW>
+            elseif j < dim(2)+1
+                latex = [latex, '&  \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$c_{', num2str(i-1),',', num2str(j-1), '}$} ']; %#ok<AGROW>                
+            else
+                latex = [latex, '& \multicolumn{1}{c|}{} \\']; %#ok<AGROW>                
+            end
+        end
+        latex = sprintf('%s \r', latex);
+        for j = 3:2:2*dim(2)
+            latex = [latex, '\cline{', num2str(j), '-', num2str(j), '} ']; %#ok<AGROW>            
+        end
+        latex = sprintf('%s \r', latex);
+        for j = 1:dim(2)+1
+            if j == 1        
+                latex = [latex, '\multicolumn{1}{c|}{} ']; %#ok<AGROW>
+            elseif j < dim(2)+1
+                latex = [latex, '&  \multicolumn{1}{c}{',num2str(Matrix_problem(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
+            else
+                latex = [latex, '& \multicolumn{1}{c|}{',num2str(Matrix_problem(i-1, j-1)),'} \\']; %#ok<AGROW>                
+            end
+        end
+        latex = sprintf('%s \r', latex);
+        for j = 2:2*dim(2)
+            latex = [latex, '\cline{', num2str(j), '-', num2str(j), '} ']; %#ok<AGROW>            
+        end
+    else
+        for j = 1:dim(2)
+            if j > 1        
+                latex = [latex, '&  \multicolumn{1}{c}{', num2str(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
+            else
+                latex = [latex, '\multicolumn{1}{c|}{Demanda} ']; %#ok<AGROW>                           
+            end            
+        end
+        latex = [latex, '&  \multicolumn{1}{c|}{} \\'];
+        latex = sprintf('%s \r', latex);
+        for j = 2:2*dim(2)
+            latex = [latex, '\cline{', num2str(j), '-', num2str(j), '} ']; %#ok<AGROW>            
+        end
+    end
+    latex = sprintf('%s \r', latex);
+end
+
+latex = [latex, '\end{tabular}']; 
+latex = sprintf('%s \r', latex);
+latex = [latex, '\end{equation}'];
+latex = sprintf('%s \r', latex);
+latex = [latex, '\section{Desarrollo del Método de Transporte}'];
+latex = sprintf('%s \r', latex);
+
