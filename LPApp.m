@@ -65,13 +65,22 @@ function LPApp_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 % varargin   command line arguments to LPAppv1 (see VARARGIN)
 
 % Choose default command line output for LPApp
+
 handles.output = hObject;
 
 handles.Method = 0;
+handles.Newmethod = 0;
 handles.latex = '';
 handles.latexproblem = '';
 handles.latexIIphasesproblem = '';
 handles.latexfile = '';
+handles.gui_Matrix_problem = []; % se comparte la especificación del problema
+handles.First_Matrix_problem = [];
+handles.istwophases = 0;
+handles.whatphase = 1;
+handles.isinit_secondphase = 0;
+handles.Orig_Matrix_problem = [];
+handles.maxcanon_vector = 0;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -79,6 +88,8 @@ guidata(hObject, handles);
 movegui('center');
 % UIWAIT makes LPApp wait for user response (see UIRESUME)
 % uiwait(handles.LPApp);
+
+set(handles.table_simplexdisplay, 'data', cell(100,100));
 
 % --- Outputs from this function are returned to the command line.
 function varargout = LPApp_OutputFcn(hObject, eventdata, handles) %#ok<INUSL>
@@ -120,13 +131,16 @@ elseif strcmp(environmentname, 'end')
     set(handles.Saveproblem, 'enable', 'on');
     set(handles.Next_value, 'Enable', 'off');
     set(handles.pushbutton_asignall, 'Enable', 'off');
-    set(handles.Watch_varval, 'Enable', 'on'); 
+    set(handles.Watch_varval, 'Enable', 'off'); 
     set(handles.popupmenu_selectvar, 'Enable', 'off');
     set(handles.popupmenu_selectvar, 'string', char(' ', ' '));
+    set(handles.popupmenu_selectvar, 'value', 1);
     set(handles.popupmenu_selectvar2, 'Enable', 'off');
     set(handles.popupmenu_selectvar2, 'string', char(' ', ' '));
+    set(handles.popupmenu_selectvar2, 'value', 1);
     set(handles.popupmenu_selectvar3, 'Enable', 'off');
     set(handles.popupmenu_selectvar3, 'string', char(' ', ' '));
+    set(handles.popupmenu_selectvar3, 'value', 1);
 elseif strcmp(environmentname, 'next_assign')
     set(handles.Sensibility, 'enable', 'off');
     set(handles.Postoptimality, 'enable', 'off');
@@ -146,9 +160,11 @@ elseif strcmp(environmentname, 'next_calc')
     set(handles.pushbutton_asignall, 'string', 'Calcular todo');   
     set(handles.popupmenu_selectvar2, 'Enable', 'on');       
     set(handles.popupmenu_selectvar, 'Enable', 'off');
-    set(handles.popupmenu_selectvar, 'string', char(' ', ' '));    
+    set(handles.popupmenu_selectvar, 'string', char(' ', ' ')); 
+    set(handles.popupmenu_selectvar, 'value', 1);
     set(handles.popupmenu_selectvar3, 'Enable', 'off');
     set(handles.popupmenu_selectvar3, 'string', char(' ', ' '));
+    set(handles.popupmenu_selectvar3, 'value', 1);
     set(handles.Next_value, 'Enable', 'on');
     set(handles.pushbutton_asignall, 'Enable', 'on');
     set(handles.Watch_varval, 'Enable', 'on');
@@ -218,6 +234,9 @@ guidata(handles.output, handles);
 % Configura la tabla inicial del Método Simplex
 % handles.Order_initial = Order_initial;
 setProblem(Matrix_problem, handles)
+if strcmp(get(handles.Mode_geo3D, 'Checked'), 'on')
+    trace3D(handles);
+end
 
 
 % --- Función utilitaria: obtiene las variables no básicas candidatas a
@@ -319,8 +338,10 @@ if handles.Method ~= 3
                 msgbox('La segunda fase ha terminado. Se ha encontrado una solución óptima','Método simplex de dos fases','modal');
                 generar_latexanalisis('\subsection{Análisis de resultados}'); 
             else                               
-                generar_latexanalisis('\section{Análisis de resultados}');              
-                msgbox('Se ha encontrado una solución óptima','Método simplex','modal'); 
+                generar_latexanalisis('\section{Análisis de resultados}');
+                if strcmp(get(handles.Mode_geo3D, 'Checked'), 'off')
+                    msgbox('Se ha encontrado una solución óptima','Método simplex','modal'); 
+                end
             end
             set(handles.popupmenu_selectvar, 'string', char(' ',' '));
             set(handles.popupmenu_selectvar3, 'string', char(' ',' '));
@@ -380,6 +401,9 @@ if handles.Method == 1
     % se actualiza la tabla de la interfaz
     All_display(:, 1:Dimension(2)) = Tableau;
     All_display(1:(Dimension(1)-1), end) = ratios;
+    
+    spreadsheet = get(handles.table_simplexdisplay, 'data');
+    spreadsheet(1:Dimension(1), 1:Dimension(2)+1) = num2cell(All_display);
 elseif handles.Method == 2
     % Se calculan las razones para la variable básica seleccionada
     Fi = Tableau(Order_current(J), 1:(Dimension(2)-1)); % se recupera el vector fila asociada a la variable básica
@@ -408,8 +432,16 @@ elseif handles.Method == 2
     % se actualiza la tabla de la interfaz
     All_display(1:Dimension(1), :) = Tableau;
     All_display(end, 1:(Dimension(2)-1)) = ratios;
+    
+    spreadsheet = get(handles.table_simplexdisplay, 'data');
+    spreadsheet(1:Dimension(1)+1, 1:Dimension(2)) = num2cell(All_display);
 end
-set(handles.table_simplexdisplay, 'data', All_display);  
+
+
+%MODIFICADO 1/01/2017
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+%set(handles.table_simplexdisplay, 'data', All_display); 
+%MODIFICADO 1/01/2017
 
 % ----------------
 function calc_nextassignment(handles)
@@ -473,8 +505,11 @@ if Solution_initial == 1
     end  
     All_display(end, :) = T_Tableau(end, :);
     All_display(:, end) = T_Tableau(:, end);   
-    All_display(Dimension(1), Dimension(2)) = ObjectiveValue;    
-    set(handles.table_simplexdisplay, 'data', All_display);
+    All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
+    spreadsheet = get(handles.table_simplexdisplay, 'data');
+    spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+    set(handles.table_simplexdisplay, 'data', spreadsheet);
+    %set(handles.table_simplexdisplay, 'data', All_display);
     
     if Num_assignation == Dimension(1)+Dimension(2)-3
         msgbox('Se ha encontrado una solución inicial.','Cálculo de nueva solución.','modal');
@@ -543,7 +578,11 @@ else
     All_display(end, :) = T_Tableau(end, :);
     All_display(:, end) = T_Tableau(:, end);
     All_display(Dimension(1), Dimension(2)) = ObjectiveValue;
-    set(handles.table_simplexdisplay, 'data', All_display);
+    
+    spreadsheet = get(handles.table_simplexdisplay, 'data');
+    spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+    set(handles.table_simplexdisplay, 'data', spreadsheet);
+    %set(handles.table_simplexdisplay, 'data', All_display);
     if Num_assignation == Dimension(1)+Dimension(2)-3
         msgbox('Se ha encontrado una nueva solución.','Cálculo de nueva solución.','modal');
         generar_latexnextsolution('\subsection{Encontrando una nueva solución por redistribución}');
@@ -583,10 +622,14 @@ handles = calc_variables(handles);
 
 handles.latex = [handles.latex, latex];
 guidata(handles.output, handles);
+if strcmp(get(handles.Mode_geo3D, 'Checked'), 'on')
+    trace3D(handles);
+    set(handles.popupmenu_selectvar2, 'Enable', 'on');
+end
     
 % --- Se ejecuta el método simplex primal
 function simplex_primal(handles)
-global Tableau Order_current operations;
+global Tableau Order_current operations Dimension;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -612,11 +655,14 @@ else
 end
 % se actualiza la tabla de la interfaz
 All_display = Tableau;
-set(handles.table_simplexdisplay, 'data', All_display);
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+%set(handles.table_simplexdisplay, 'data', All_display);
 
 % --- Se ejecuta el método simplex primal
 function simplex_dual(handles)
-global Tableau Order_current operations;
+global Tableau Order_current operations Dimension;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -644,7 +690,10 @@ end
 
 % se actualiza la tabla de la interfaz
 All_display = Tableau;
-set(handles.table_simplexdisplay, 'data', All_display);
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+%set(handles.table_simplexdisplay, 'data', All_display);
 
 
 % --- Función utilitaria: proceso del pivote sobre el elemento Ypq
@@ -755,7 +804,10 @@ J = str2double(var(get(handles.popupmenu_selectvar, 'value'), 2));
 
 % se actualizan los datos desplegados
 Aux_Tableau = Tableau;
-All_display = get(handles.table_simplexdisplay, 'data');
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(Aux_Tableau);
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+All_display = Aux_Tableau;
 
 if handles.Method == 1
     ratios = All_display(1:(Dimension(1)-1), end);
@@ -771,7 +823,11 @@ if handles.Method == 1
     All_display = zeros(Dimension(1), Dimension(2)+1);
     All_display(:, 1:Dimension(2)) = Aux_Tableau;
     All_display(1:(Dimension(1)-1), end) = ratios;
-    set(handles.table_simplexdisplay, 'data', All_display);
+    
+    spreadsheet = get(handles.table_simplexdisplay, 'data');
+    spreadsheet(1:Dimension(1), 1:Dimension(2)+1) = num2cell(All_display);
+    set(handles.table_simplexdisplay, 'data', spreadsheet);
+    %set(handles.table_simplexdisplay, 'data', All_display);
 elseif handles.Method == 2
     ratios = All_display(end, 1:(Dimension(2)-1));
     ratios_aux = ratios;    
@@ -791,7 +847,11 @@ elseif handles.Method == 2
     All_display = zeros(Dimension(1)+1, Dimension(2));
     All_display(1:Dimension(1), 1:Dimension(2)) = Aux_Tableau;
     All_display(end, 1:(Dimension(2)-1)) = ratios;
-    set(handles.table_simplexdisplay, 'data', All_display);
+    
+    spreadsheet = get(handles.table_simplexdisplay, 'data');
+    spreadsheet(1:Dimension(1)+1, 1:Dimension(2)) = num2cell(All_display);
+    set(handles.table_simplexdisplay, 'data', spreadsheet);
+    %set(handles.table_simplexdisplay, 'data', All_display);
 end
 
 
@@ -856,7 +916,17 @@ else
     setTableauTags(handles, char('Origen', 'Destino', 'Demanda', 'Oferta'));
     All_display(:, 1:Dimension(2)) = T_Tableau;
 end
-set(handles.table_simplexdisplay, 'data', All_display); 
+%AGREGADO 1/01/2017
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+if Dimension(2)- Dimension(1) == 3
+    set(handles.Mode_geo3D, 'Enable', 'on');
+else
+    set(handles.Mode_geo3D, 'Enable', 'off');
+end
+%set(handles.table_simplexdisplay, 'data', All_display); 
+%AGREGADO 1/01/2017
 % se calculan las nuevas variables no básicas si las hay
 calc_variables(handles);
 
@@ -936,20 +1006,12 @@ if filename ~= 0
     S = load([Y, filename]);
     
     %AGREGADO(27/12/2016)
-    handles.istwophases = 0;
-    handles.whatphase = 1;
-    handles.isinit_secondphase = 0;
-    handles.latex = '';
+    %handles.istwophases = 0;
+    %handles.whatphase = 1;
+    %handles.isinit_secondphase = 0;
+    %handles.latex = '';
     if (isfield(S, 'Method'))
-        if S.Method == 3            
-            handles.Method = 3;                       
-        elseif S.Method == 1            
-            handles.Method = 1;
-            set(handles.panel_enhancement, 'title', 'Panel de control (Simplex primal)');                      
-        elseif S.Method == 2            
-            handles.Method = 2;
-            set(handles.panel_enhancement, 'title', 'Panel de control (Simplex dual)');                   
-        end
+        handles.Newmethod = S.Method;
         handles.setProblem = @setProblem;    
         handles.gui_Matrix_problem = S.Matrix_problem;
         handles.gui_Problem = Problem('LPApp', handles);
@@ -989,7 +1051,12 @@ uisave(cellstr(char('Matrix_problem', 'Method')), 'LProblem');
 function setProblemAndTableau(Problem, NewTableau, handles)
 global Matrix_problem Tableau;
 
-set(handles.table_simplexdisplay, 'data', NewTableau);
+dim = size(NewTableau);
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:dim(1), 1:dim(2)) = num2cell(NewTableau);
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+%set(handles.table_simplexdisplay, 'data', NewTableau);
+
 Tableau = NewTableau;
 Matrix_problem = Problem;
 calc_variables(handles);
@@ -1029,36 +1096,43 @@ function pushbutton_asignall_Callback(hObject, eventdata, handles) %#ok<INUSL,DE
 % hObject    handle to pushbutton_asignall (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Num_assignation Dimension latex;
+global Num_assignation Dimension latex handles_surf handles_norm;
 
-if strcmp(get(handles.Next_value, 'Label'), 'Siguiente multiplicador')    
-    while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
-        calc_nextmultiplier(handles);    
+if strcmp(get(handles.Mode_geo3D, 'Checked'),'off')
+    if strcmp(get(handles.Next_value, 'Label'), 'Siguiente multiplicador')    
+        while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
+            calc_nextmultiplier(handles);    
+        end
+        paso = 2;
+        Num_assignation = 0;
+    elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente valor')
+        while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
+            calc_nextassignment(handles);
+        end
+        paso = 1;
+        Num_assignation = 0;
+    elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente nodo')
+        while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
+            calc_nextciclevar(handles, Num_assignation);
+        end
+        paso = 3;
+        Num_assignation = 0;
     end
-    paso = 2;
-    Num_assignation = 0;
-elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente valor')
-    while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
-        calc_nextassignment(handles);
+
+    if paso == 1
+        handles.latex = [handles.latex, latex];
+    elseif paso == 2
+        handles.latex = [handles.latex, latex];
+    else
+        generar_latexnextcicle();
+        handles.latex = [handles.latex, latex];
     end
-    paso = 1;
-    Num_assignation = 0;
-elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente nodo')
-    while (Num_assignation ~= Dimension(1)+Dimension(2)-3)
-        calc_nextciclevar(handles, Num_assignation);
-    end
-    paso = 3;
-    Num_assignation = 0;
-end
-if paso == 1
-    handles.latex = [handles.latex, latex];
-elseif paso == 2
-    handles.latex = [handles.latex, latex];
+    guidata(handles.output, handles);
 else
-    generar_latexnextcicle();
-    handles.latex = [handles.latex, latex];
+    plano = get(handles.popupmenu_selectvar2, 'value');
+    set(handles_surf(plano), 'Visible','off');
+    set(handles_norm(plano), 'Visible','off');
 end
-guidata(handles.output, handles);
 
 
 % ----------------
@@ -1157,6 +1231,7 @@ if (Num_assignation == Dimension(1)+Dimension(2)-3)
     if count ~= 0 % en el caso que haya Rj negativos
         msgbox('Hay costos reducidos negativos. La solución actual se puede mejorar.','Cálculo de costos reducidos.','modal');
         set(handles.popupmenu_selectvar3, 'string', char(' ', ' '));
+        set(handles.popupmenu_selectvar3, 'value', 1);
         set_environment('next_cicle', handles);
         Var = cell(count, 1);
         minimo = 0; indice = 0;
@@ -1188,7 +1263,10 @@ if (Num_assignation == Dimension(1)+Dimension(2)-3)
     end
 end
 All_display = T_Tableau;
-set(handles.table_simplexdisplay, 'data', All_display);
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+%set(handles.table_simplexdisplay, 'data', All_display);
 
 
 % ------------------------
@@ -1538,7 +1616,10 @@ if Num_assignation == Dimension(1)+Dimension(2)-3
     %set(handles.popupmenu_selectvar, 'enable', 'off');
 end
 All_display = T_Tableau;
-set(handles.table_simplexdisplay, 'data', All_display);
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+%set(handles.table_simplexdisplay, 'data', All_display);
 
 
 % --- Executes on selection change in popupmenu_selectvar3.
@@ -1564,7 +1645,10 @@ if handles.Method == 3
 
     % se actualiza la tabla de la interfaz
     All_display = zeros(Dimension(1), Dimension(2));
-    set(handles.table_simplexdisplay, 'data', All_display); 
+    spreadsheet = get(handles.table_simplexdisplay, 'data');
+    spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+    set(handles.table_simplexdisplay, 'data', spreadsheet);
+    %set(handles.table_simplexdisplay, 'data', All_display); 
     calc_nextassignment(handles);
 end
 
@@ -1587,7 +1671,8 @@ function Simplex_primal_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-init_method(handles, 1);
+handles.Newmethod = 1;
+init_method(handles);
 
 % --- se ejecuta al seleccionar la opción "Nuevo poblema/Simplex dual" del menú "Archivo"
 function Simplex_dual2_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -1595,7 +1680,8 @@ function Simplex_dual2_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-init_method(handles, 2);
+handles.Newmethod = 2;
+init_method(handles);
 
 % --- se ejecuta al seleccionar la opción "Nuevo poblema/Simplex de transporte" del menú "Archivo"
 function Simplex_transportation2_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
@@ -1603,15 +1689,16 @@ function Simplex_transportation2_Callback(hObject, eventdata, handles) %#ok<INUS
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-init_method(handles, 3);
+handles.Newmethod = 3;
+init_method(handles);
 
-function init_method(handles, method)
+function init_method(handles)
 % ventana de dialogo en donde se solicita las dimensiones del problema
 
-if method == 1 || method == 2
+if handles.Newmethod == 1 || handles.Newmethod == 2
     prompt = {'Número de ecuaciones:','Número de variables:'};
     def = {'1','2'};    
-elseif method == 3
+elseif handles.Newmethod == 3
     prompt = {'Número de origenes:','Número de destinos:'};
     def = {'2','2'}; 
 end
@@ -1623,38 +1710,27 @@ answer = inputdlg(prompt,dlg_title,num_lines,def);
 
 % se verifica que las dimensiones del problema sean consistentes (m < n)
 if ~isempty(answer)    
-    if method == 1
-        handles.Method = 1;
-        set(handles.panel_enhancement, 'title', 'Panel de control (Simplex primal)');
-    elseif method == 2
-        handles.Method = 2;
-        set(handles.panel_enhancement, 'title', 'Panel de control (Simplex dual)');
-    elseif method == 3
-        handles.Method = 3;
-    end
     user_entry1 = str2double(cellstr(answer{1}));
     user_entry2 = str2double(cellstr(answer{2}));
 
     while (1)
-        if (isnan(user_entry1) || user_entry1 < 1) || (isnan(user_entry2) || user_entry2 < 2) || user_entry1 > user_entry2
+        if (isnan(user_entry1) || user_entry1 < 1) || (isnan(user_entry2) || user_entry2 < 2) || (user_entry1 > user_entry2 && ...
+                handles.Newmethod ~= 3)
             answer = inputdlg(prompt,dlg_title,num_lines,def);
+            if isempty(answer)
+                return;
+            end
             user_entry1 = str2double(cellstr(answer{1}));
             user_entry2 = str2double(cellstr(answer{2}));
         else
             break;
         end
-        % se abre la ventana para introducir la especificación del problema
-        handles.gui_Matrix_problem = zeros(user_entry1+1, user_entry2+1); % se comparte la especificación del problema
-        handles.First_Matrix_problem = zeros(user_entry1+1, user_entry2+1);
-        handles.istwophases = 0;
-        handles.whatphase = 1;
-        handles.isinit_secondphase = 0;
-        handles.Orig_Matrix_problem = zeros(user_entry1+1, user_entry2+1);
-        handles.maxcanon_vector = 0;
-        handles.setProblem = @setProblem; % se comparte el manejador de función    
-        handles.gui_Problem = Problem('LPApp', handles);
-        guidata(handles.output, handles);
     end
+    handles.gui_Matrix_problem = zeros(user_entry1+1, user_entry2+1);
+    % se abre la ventana para introducir la especificación del problema
+    handles.setProblem = @setProblem; % se comparte el manejador de función    
+    handles.gui_Problem = Problem('LPApp', handles);
+    guidata(handles.output, handles);
     handles.latex = '';
 end
 
@@ -2165,17 +2241,10 @@ else
 end
 %AGREGADO(27/12/2016)
 
+handles.Newmethod = handles.Method;
 handles.gui_Problem = Problem('LPApp', handles);
 guidata(handles.output, handles);
 
-
-% --------------------------------------------------------------------
-function Close_Callback(hObject, eventdata, handles) %#ok<DEFNU,INUSD>
-% hObject    handle to Close (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-close(hObject);
 
 
 % --------------------------------------------------------------------
@@ -2208,8 +2277,11 @@ for j=1:Dimension(1)+Dimension(2)-3
     ObjectiveValue = ObjectiveValue + Solution(j, 1, 3)*Matrix_problem(Solution(j, 1, 1), Solution(j, 1, 2));
 end
 All_display(Dimension(1), Dimension(2)) = cellstr(num2str(ObjectiveValue));
-    
-set(handles.table_simplexdisplay, 'data', All_display);
+ 
+spreadsheet = get(handles.table_simplexdisplay, 'data');
+spreadsheet(1:Dimension(1), 1:Dimension(2)) = All_display;
+set(handles.table_simplexdisplay, 'data', spreadsheet);
+%set(handles.table_simplexdisplay, 'data', All_display);
 
 
 
@@ -2259,35 +2331,39 @@ function popupmenu_selectvar2_Callback(hObject, eventdata, handles) %#ok<INUSL,D
 global Node_current Solution T_Tableau Matrix_problem Dimension Num_assignation T_VarType_Aux ...
     Solution_initial T_VarType NewSolution;
 
+if strcmp(get(handles.Mode_geo3D, 'Checked'),'off')
+    % se calculan las nuevas variables no básicas si las hay
+    if strcmp(get(handles.Next_value, 'Label'), 'Siguiente multiplicador')
+        Node_current = [0, 0];
+        Num_assignation = 0;
+        set_environment('next_calc', handles);
+        T_Tableau = zeros(Dimension(1), Dimension(2));
+        T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
+        T_VarType_Aux = T_VarType;
+        calc_nextmultiplier(handles);    
+    elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente valor')
+        Node_current = [0,0];
+        Num_assignation = 0;
+        if Solution_initial == 1
+            Solution = zeros(Dimension(1)+Dimension(2)-3, 1, 3);
+        else
+            NewSolution = Solution;
+        end
+        T_Tableau = Matrix_problem;
 
-% se calculan las nuevas variables no básicas si las hay
-if strcmp(get(handles.Next_value, 'Label'), 'Siguiente multiplicador')
-    Node_current = [0, 0];
-    Num_assignation = 0;
-    set_environment('next_calc', handles);
-    T_Tableau = zeros(Dimension(1), Dimension(2));
-    T_Tableau(1:Dimension(1)-1, 1:Dimension(2)-1) = Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1);
-    T_VarType_Aux = T_VarType;
-    calc_nextmultiplier(handles);    
-elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente valor')
-    Node_current = [0,0];
-    Num_assignation = 0;
-    if Solution_initial == 1
-        Solution = zeros(Dimension(1)+Dimension(2)-3, 1, 3);
-    else
-        NewSolution = Solution;
+        % se actualiza la tabla de la interfaz
+        All_display = zeros(Dimension(1), Dimension(2));
+        spreadsheet = get(handles.table_simplexdisplay, 'data');
+        spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
+        set(handles.table_simplexdisplay, 'data', spreadsheet);
+        %set(handles.table_simplexdisplay, 'data', All_display); 
+        calc_nextassignment(handles);
+    elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente nodo')
+        Num_assignation = 0;
+        T_VarType_Aux = T_VarType;
+        %calc_nextciclevar(handles, [0, 0]);
+        calc_nextciclevar(handles, 0);
     end
-    T_Tableau = Matrix_problem;
-
-    % se actualiza la tabla de la interfaz
-    All_display = zeros(Dimension(1), Dimension(2));
-    set(handles.table_simplexdisplay, 'data', All_display); 
-    calc_nextassignment(handles);
-elseif strcmp(get(handles.Next_value, 'Label'), 'Siguiente nodo')
-    Num_assignation = 0;
-    T_VarType_Aux = T_VarType;
-    %calc_nextciclevar(handles, [0, 0]);
-    calc_nextciclevar(handles, 0);
 end
 
 
@@ -2301,4 +2377,141 @@ function popupmenu_selectvar2_CreateFcn(hObject, eventdata, handles) %#ok<INUSD,
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --------------------------------------------------------------------
+function Mode_geo3D_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Mode_geo3D (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global handles_surf handles_norm;
+
+if strcmp(get(hObject, 'Checked'), 'on')
+    set(handles.table_simplexdisplay, 'Visible', 'on');
+    set(handles.axes_simplex3D, 'Visible', 'off');
+    set(handles.text_selectvar2, 'string', 'Inicial');
+    set(hObject, 'Checked', 'off');
+    set(handles.popupmenu_selectvar2, 'Enable', 'off');
+    set(handles.popupmenu_selectvar2, 'string', char(' ', ' '));
+    set(handles.popupmenu_selectvar2, 'value', 1);
+    set(handles.pushbutton_asignall, 'String', 'Asignar todas');
+    set(handles.pushbutton_asignall, 'Enable', 'off');
+    hold off;
+    handles_surf = [];
+    handles_norm = [];
+else
+    handles_surf = [];
+    handles_norm = [];
+    %surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 x31],'ydata',[y11 y11; y21 y11], ...
+     %   'zdata', [z11 z21;z21 z21], 'cdata', [z11 z21;z21 z21]); hold on;
+    %surf(handles.axes_simplex3D, 'xdata',[0 x_minmax(2);0 x_minmax(2)],'ydata',[0 0;y_minmax(2) 0], ...
+     %   'zdata', [0 0;0 0], 'cdata', [0 0;0 0]); hold on;
+    %surf(handles.axes_simplex3D, 'xdata',[0 x_minmax(2);0 x_minmax(2)],'ydata',[0 0;0 0], ...
+     %   'zdata', [0 0;z_minmax(2) 0], 'cdata', [0 0;0 0]); hold on;    
+    
+    trace3D(handles);     
+    set(hObject, 'Checked', 'on');
+    set(handles.axes_simplex3D, 'Visible', 'on');
+    set(handles.table_simplexdisplay, 'Visible', 'off');
+    set(handles.popupmenu_selectvar2, 'Enable', 'on');    
+    set(handles.text_selectvar2, 'string', 'Plano');    
+    set(handles.pushbutton_asignall, 'String', 'Quitar');
+    set(handles.pushbutton_asignall, 'Enable', 'on');
+end
+
+function trace3D(handles)
+global Matrix_problem Dimension Tableau handles_surf handles_norm x_minmax y_minmax z_minmax;
+%Construimos el sistema de coordenadas en la ventana
+view(3); grid on;
+xlabel(get(gcf, 'CurrentAxes'), 'Eje X');
+ylabel(get(gcf, 'CurrentAxes'), 'Eje Y');
+zlabel(get(gcf, 'CurrentAxes'), 'Eje Z');
+
+% Obtenemos los puntos de intersección con los ejes y graficamos
+% los planos
+
+table = Matrix_problem(1:Dimension(1),1:4); %%1
+table(1:Dimension(1),end) = Matrix_problem(1:Dimension(1),end); %%1
+table(end,end) = -Tableau(end,end);
+
+if isempty(handles_surf)
+    handles_surf = zeros(1,Dimension(1));
+    handles_norm = zeros(1,Dimension(1));
+    x_minmax = zeros(1,2);
+    y_minmax = zeros(1,2);
+    z_minmax = zeros(1,2);    
+end
+
+% se construye el arreglo de índices de los planos    
+Var = cell(Dimension(1), 1);
+for i = 1:(Dimension(1))
+    Var(i) = cellstr(strcat(num2str(i)));
+end
+set(handles.popupmenu_selectvar2, 'string', char(Var));
+set(handles.popupmenu_selectvar2, 'value', 1);
+set(handles.pushbutton_asignall, 'Enable', 'on');
+
+for i=1:Dimension(1)
+    if strcmp(get(handles.Mode_geo3D, 'Checked'),'off') || i == Dimension(1)
+        x11 = 0; y11 =0; syms z11 y21 x31;
+        z = solve([num2str(table(i, 1)), '*x11+', ...
+            num2str(table(i, 2)), '*y11+', num2str(table(i, 3)), '*z11=', ...
+            num2str(table(i, 4))], z11); z11=eval(z);
+        z_minmax(1) = min([x_minmax(1), z11]);
+        z_minmax(1) = max([x_minmax(2), z11]);
+        x21 = 0; z21 =0;  %#ok<NASGU>
+        y = solve([num2str(table(i, 1)),'*x21+', ...
+            num2str(table(i, 2)), '*y21+', num2str(table(i, 3)), '*z21=', ...
+            num2str(table(i, 4))], y21); y21=eval(y);
+        y_minmax(1) = min([y_minmax(1), y21]);
+        y_minmax(1) = max([y_minmax(2), y21]);
+        y31 = 0; z31 =0; %#ok<NASGU>
+        x = solve([num2str(table(i, 1)),'*x31+', ...
+            num2str(table(i, 2)), '*y31+', num2str(table(i, 3)), '*z31=', ...
+            num2str(table(i, 4))], x31); x31=eval(x);
+        x_minmax(1) = min([x_minmax(1), x31]);
+        x_minmax(1) = max([x_minmax(2), x31]);
+        surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 y_minmax(2);0 0], ...
+            'zdata', [0 0;0 0], 'cdata', [0 0;0 0]); hold on;
+        surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 0;0 0], ...
+            'zdata', [0 z_minmax(2);0 0], 'cdata', [0 0;0 0]); hold on;
+        surf(handles.axes_simplex3D, 'xdata',[0 0;0 0],'ydata',[0 y_minmax(2); 0 0], ...
+            'zdata', [0 0;z_minmax(2) z_minmax(2)], 'cdata', [0 0;0 0]); hold on;
+
+        if i == Dimension(1)-1
+            handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 x31],'ydata',[y11 y11; y21 y11], ...
+                'zdata', [z11 z21;z21 z21], 'cdata', [z11 z21;z21 z21]); hold on;            
+        elseif i == Dimension(1)
+            if handles_surf(i) ~= 0
+                set(handles_surf(i), 'Visible', 'off');
+                set(handles_norm(i), 'Visible', 'off');
+            end
+            outer_point = -1*[x11 y11 z11]+1*[x31 y11 z21]+1*[x11 y21 z21];
+            handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 outer_point(1)],'ydata',[y11 y11; y21 outer_point(2)], ...
+                'zdata', [z11 z21;z21 outer_point(3)], 'cdata', [z11 z21;z21 outer_point(3)]); hold on;
+        else
+            %C=zeros(2, 2, 3); C(:,:,1) =[1 1; 1 1]; C(:,:,3) =[1 1; 1 1];
+            handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 x31],'ydata',[y11 y11; y21 y11], ...
+                'zdata', [z11 z21;z21 z21], 'cdata', [z11 z21;z21 z21]); hold on;                 
+        end
+        mean_point = 0.3*[x11 y11 z11]+0.3*[x31 y11 z21]+0.4*[x11 y21 z21];
+        handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
+    end
+
+    %quiver3(x11,y11,z11, table(i, 1), table(i, 2), table(i, 3), 'Color', [1 0 1]);                            
+end
+
+
+% --------------------------------------------------------------------
+function Control_panel_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Control_panel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if strcmp(get(handles.Control_panel, 'Checked'), 'off')
+    set(handles.panel_enhancement, 'Visible', 'on')
+    set(handles.Control_panel, 'Checked', 'on')
+else
+    set(handles.panel_enhancement, 'Visible', 'off')
+    set(handles.Control_panel, 'Checked', 'off')
 end

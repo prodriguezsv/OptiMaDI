@@ -79,7 +79,7 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-if handles.LPApphandle.Method ~= 3
+if handles.LPApphandle.Newmethod ~= 3
     setheading(handles, char('f', 'X', 'Yi0', 'Z'));
 else
     setheading(handles, char('Origen', 'Destino', 'Oferta', 'Demanda'));
@@ -156,6 +156,7 @@ if ~iscorrectform(handles)
     return;
 end
 
+handles.LPApphandle.Method = handles.LPApphandle.Newmethod;
 if handles.LPApphandle.Method ~= 3
     latex = '';
     generar_latexspecification('\section{Especificación del problema}');
@@ -173,6 +174,7 @@ if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
     if ~iscanonicform()
         handles.LPApphandle.istwophases = 1;
         handles.LPApphandle.whatphase = 1;
+        handles.LPApphandle.isinit_secondphase = 0;
         handles.LPApphandle.Orig_Matrix_problem = Matrix_problem;
 
         handles.LPApphandle.maxcanon_vector = max(Order_initial);
@@ -221,7 +223,7 @@ global Matrix_problem Order_initial Dimension;
 Dimension = size(Matrix_problem);
 Order_initial = zeros(1, Dimension(2));
 
-if handles.LPApphandle.Method == 3
+if handles.LPApphandle.Newmethod == 3
     oferta = Matrix_problem(1:(Dimension(1)-1), end);
     demanda = Matrix_problem(end, 1:(Dimension(2)-1));
     if sum(oferta)~= sum(demanda)
@@ -241,7 +243,7 @@ elseif rank(full(Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1))) ~= Dimensi
    return;
 end
 
-if handles.LPApphandle.Method == 2    
+if handles.LPApphandle.Newmethod == 2    
     if ~iscanonicform()
         iscorrect = 0;
         return;
@@ -254,7 +256,7 @@ if ~isfactiblesolution(handles)
 end
 
 if isdegeneratedsolution(handles)
-    if handles.LPApphandle.Method == 3
+    if handles.LPApphandle.Newmethod == 3
         errordlg('La oferta (demanda) de algún origen (destino) es cero.','Origen o destino inútil','modal');
         iscorrect = 0;
         return;
@@ -270,14 +272,14 @@ function response = isfactiblesolution(handles)
 global Matrix_problem Dimension Order_initial;
 
 % se verifica que la solución inicial sea factible
-if handles.LPApphandle.Method == 1    
+if handles.LPApphandle.Newmethod == 1    
     X0 = Matrix_problem(1:(Dimension(1)-1), end);
     if any(X0 < 0)
         errordlg('La solución inicial no es primal factible.','Método Simplex Primal no aplicable','modal');
         response = 0;
         return;
     end
-elseif handles.LPApphandle.Method == 2
+elseif handles.LPApphandle.Newmethod == 2
     % se convierte la última en términos de Rj =cj - zj
     [Y, I] = sort(Order_initial); %#ok<ASGLU>
     Tableau_sorted = Matrix_problem(:, I);
@@ -290,7 +292,7 @@ elseif handles.LPApphandle.Method == 2
         errordlg('La solución inicial no es dual factible.','Método Simplex Dual no aplicable','modal');
         return;
     end
-elseif handles.LPApphandle.Method == 3
+elseif handles.LPApphandle.Newmethod == 3
     oferta = Matrix_problem(1:(Dimension(1)-1), end);
     demanda = Matrix_problem(end, 1:(Dimension(2)-1));
     if any(oferta < 0) || any(demanda < 0)
@@ -307,7 +309,7 @@ function response = isdegeneratedsolution(handles)
 global Matrix_problem Dimension;
 
 % se verifica que la solución no sea degenerada
-if handles.LPApphandle.Method ~= 3
+if handles.LPApphandle.Newmethod ~= 3
     X0 = Matrix_problem(1:(Dimension(1)-1), end);
     if any(X0 == 0)
         response = 1;    
