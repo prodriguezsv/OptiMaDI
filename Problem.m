@@ -213,6 +213,11 @@ end
  
 handles.LPApphandle.Order_initial = Order_initial; % se comparte el orden inicial
 handles.LPApphandle.setProblem(Matrix_problem, handles.LPApphandle); % se establece el problema actual
+if strcmp(get(handles.LPApphandle.Mode_geo3D, 'Checked'), 'on')
+    set(handles.LPApphandle.Mode_geo3D, 'Checked', 'off');
+    set(handles.LPApphandle.axes_simplex3D, 'visible', 'off');
+    set(handles.LPApphandle.table_simplexdisplay, 'visible', 'on');
+end
 delete(handles.Problem);
 
 % ---Funcion utilitaria: Verifica si se ha ingresado la formulación del

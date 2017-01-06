@@ -2403,6 +2403,7 @@ if strcmp(get(hObject, 'Checked'), 'on')
 else
     handles_surf = [];
     handles_norm = [];
+    cla(handles.axes_simplex3D);
     %surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 x31],'ydata',[y11 y11; y21 y11], ...
      %   'zdata', [z11 z21;z21 z21], 'cdata', [z11 z21;z21 z21]); hold on;
     %surf(handles.axes_simplex3D, 'xdata',[0 x_minmax(2);0 x_minmax(2)],'ydata',[0 0;y_minmax(2) 0], ...
@@ -2410,7 +2411,7 @@ else
     %surf(handles.axes_simplex3D, 'xdata',[0 x_minmax(2);0 x_minmax(2)],'ydata',[0 0;0 0], ...
      %   'zdata', [0 0;z_minmax(2) 0], 'cdata', [0 0;0 0]); hold on;    
     
-    trace3D(handles);     
+    trace3D(handles);
     set(hObject, 'Checked', 'on');
     set(handles.axes_simplex3D, 'Visible', 'on');
     set(handles.table_simplexdisplay, 'Visible', 'off');
@@ -2421,19 +2422,34 @@ else
 end
 
 function trace3D(handles)
-global Matrix_problem Dimension Tableau handles_surf handles_norm x_minmax y_minmax z_minmax;
+global Matrix_problem Dimension Tableau handles_surf handles_norm x_minmax y_minmax z_minmax Order_current;
 %Construimos el sistema de coordenadas en la ventana
 view(3); grid on;
-xlabel(get(gcf, 'CurrentAxes'), 'Eje X');
-ylabel(get(gcf, 'CurrentAxes'), 'Eje Y');
-zlabel(get(gcf, 'CurrentAxes'), 'Eje Z');
+xlabel(handles.axes_simplex3D, 'Eje X1');
+ylabel(handles.axes_simplex3D, 'Eje X2');
+zlabel(handles.axes_simplex3D, 'Eje X3');
 
 % Obtenemos los puntos de intersección con los ejes y graficamos
 % los planos
 
 table = Matrix_problem(1:Dimension(1),1:4); %%1
 table(1:Dimension(1),end) = Matrix_problem(1:Dimension(1),end); %%1
-table(end,end) = -Tableau(end,end);
+
+Basic_Order_current_3D = find(Order_current(1:Dimension(1)-1) < Dimension(1));
+%Basic_vector_Order = Order_current_3D < Dimension(1);
+
+if ~isempty(Basic_Order_current_3D)
+    solution = zeros(1,Dimension(2)-1);
+    basic_solution = Tableau(1:Dimension(1)-1, end);
+    sorted_basic_solution = basic_solution(Order_current(Order_current < Dimension(1)));    
+    solution(Order_current(1:Dimension(2)-1) < Dimension(1)) = sorted_basic_solution;
+    costos = Matrix_problem(end,1:Dimension(2)-1);
+    Objective_function = costos(Basic_Order_current_3D)*solution(Basic_Order_current_3D)';
+    table(end,end) = Objective_function;
+else
+    table(end,end) = 0;
+end
+%table(end,end) = -Tableau(end,end);
 
 if isempty(handles_surf)
     handles_surf = zeros(1,Dimension(1));
@@ -2446,7 +2462,7 @@ end
 % se construye el arreglo de índices de los planos    
 Var = cell(Dimension(1), 1);
 for i = 1:(Dimension(1))
-    Var(i) = cellstr(strcat(num2str(i)));
+    Var(i) = cellstr(['f',num2str(i), ': (', num2str(table(i,1)), ')X1 + (',num2str(table(i,2)), ')X2 + (', num2str(table(i,3)), ')X3 = ', num2str(table(i,4))]);
 end
 set(handles.popupmenu_selectvar2, 'string', char(Var));
 set(handles.popupmenu_selectvar2, 'value', 1);
@@ -2454,53 +2470,448 @@ set(handles.pushbutton_asignall, 'Enable', 'on');
 
 for i=1:Dimension(1)
     if strcmp(get(handles.Mode_geo3D, 'Checked'),'off') || i == Dimension(1)
-        x11 = 0; y11 =0; syms z11 y21 x31;
-        z = solve([num2str(table(i, 1)), '*x11+', ...
-            num2str(table(i, 2)), '*y11+', num2str(table(i, 3)), '*z11=', ...
-            num2str(table(i, 4))], z11); z11=eval(z);
-        z_minmax(1) = min([x_minmax(1), z11]);
-        z_minmax(1) = max([x_minmax(2), z11]);
-        x21 = 0; z21 =0;  %#ok<NASGU>
-        y = solve([num2str(table(i, 1)),'*x21+', ...
-            num2str(table(i, 2)), '*y21+', num2str(table(i, 3)), '*z21=', ...
-            num2str(table(i, 4))], y21); y21=eval(y);
-        y_minmax(1) = min([y_minmax(1), y21]);
-        y_minmax(1) = max([y_minmax(2), y21]);
-        y31 = 0; z31 =0; %#ok<NASGU>
-        x = solve([num2str(table(i, 1)),'*x31+', ...
-            num2str(table(i, 2)), '*y31+', num2str(table(i, 3)), '*z31=', ...
-            num2str(table(i, 4))], x31); x31=eval(x);
-        x_minmax(1) = min([x_minmax(1), x31]);
-        x_minmax(1) = max([x_minmax(2), x31]);
-        surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 y_minmax(2);0 0], ...
-            'zdata', [0 0;0 0], 'cdata', [0 0;0 0]); hold on;
-        surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 0;0 0], ...
-            'zdata', [0 z_minmax(2);0 0], 'cdata', [0 0;0 0]); hold on;
-        surf(handles.axes_simplex3D, 'xdata',[0 0;0 0],'ydata',[0 y_minmax(2); 0 0], ...
-            'zdata', [0 0;z_minmax(2) z_minmax(2)], 'cdata', [0 0;0 0]); hold on;
-
-        if i == Dimension(1)-1
-            handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 x31],'ydata',[y11 y11; y21 y11], ...
-                'zdata', [z11 z21;z21 z21], 'cdata', [z11 z21;z21 z21]); hold on;            
-        elseif i == Dimension(1)
+        isthereintercept = zeros(1,Dimension(1));
+        if table(i, 3) ~= 0
+            isthereintercept(3) = 1;
+            x11 = 0; y11 =0;  syms z11; %#ok<NASGU>
+            z = solve([num2str(table(i, 1)), '*x11+', ...
+                num2str(table(i, 2)), '*y11+', num2str(table(i, 3)), '*z11=', ...
+                num2str(table(i, 4))], z11); z11=eval(z);
+        end
+        if table(i, 2) ~= 0
+            isthereintercept(2) = 1;
+            x21 = 0; z21 =0;  syms y21; %#ok<NASGU>
+            y = solve([num2str(table(i, 1)),'*x21+', ...
+                num2str(table(i, 2)), '*y21+', num2str(table(i, 3)), '*z21=', ...
+                num2str(table(i, 4))], y21); y21=eval(y);
+        end
+        if table(i, 1) ~= 0
+            isthereintercept(1) = 1;
+            y31 = 0; z31 =0; syms x31;
+            x = solve([num2str(table(i, 1)),'*x31+', ...
+                num2str(table(i, 2)), '*y31+', num2str(table(i, 3)), '*z31=', ...
+                num2str(table(i, 4))], x31); x31=eval(x);
+        end              
+        
+        if all(isthereintercept > 0)
+            if all([x31 y21 z11] > 0) 
+                x1 = 0; y1 = y21; z1 = 0;
+                x2 = 0; y2 = 0; z2 = z11;
+                x3 = x31; y3 = 0; z3 = 0;
+                if i == Dimension(1)
+                    outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                    x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
+                else
+                    x4 = x31; y4 = 0; z4 = 0;               
+                end                                
+            elseif any([x31 y21 z11] > 0)
+                if all([x31 y21] > 0)
+                    inner_point1 = 2*[x31 0 0]-1*[0 0 z11];
+                    inner_point2 = 2*[0 y21 0]-1*[0 0 z11];
+                    x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
+                    x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
+                    x3 = x31; y3 = 0; z3 = 0;
+                    x4 = 0; y4 = y21; z4 = 0;
+                elseif all([x31 z11] >0)
+                    inner_point1 = 2*[x31 0 0]-1*[0 y21 0];
+                    inner_point2 = 2*[0 0 z11]-1*[0 y21 0];
+                    x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
+                    x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
+                    x3 = 0; y3 = 0; z3 = z11;
+                    x4 = 0; y4 = y21; z4 = 0;
+                elseif all([y21 z11] > 0)
+                    inner_point1 = 2*[0 y21 0]-1*[x31 0 0];
+                    inner_point2 = 2*[0 0 z11]-1*[x31 0 0];
+                    x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
+                    x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
+                    x3 = 0; y3 = 0; z3 = z11;
+                    x4 = 0; y4 = y21; z4 = 0;
+                elseif x31 > 0
+                    inner_point1 = 2*[x31 0 0]-1*[0 0 z11];
+                    inner_point2 = 2*[x31 0 0]-1*[0 y21 0];
+                    x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
+                    x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
+                    x3 = x31; y3 = 0; z3 = 0;
+                    if i == Dimension(1)
+                        outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                        x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
+                    else
+                        x4 = x31; y4 = 0; z4 = 0;               
+                    end                    
+                elseif y21 > 0
+                    inner_point1 = 2*[0 y21 0]-1*[0 0 z11];
+                    inner_point2 = 2*[0 y21 0]-1*[x31 0 0];
+                    x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
+                    x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
+                    x3 = x31; y3 = 0; z3 = 0;
+                    if i == Dimension(1)
+                        outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                        x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
+                    else
+                        x4 = x31; y4 = 0; z4 = 0;               
+                    end 
+                elseif z11 > 0
+                    inner_point1 = 2*[0 0 z11]-1*[0 y21 0];
+                    inner_point2 = 2*[0 0 z11]-1*[x31 0 0];
+                    x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
+                    x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
+                    x3 = x31; y3 = 0; z3 = 0;
+                    if i == Dimension(1)
+                        outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                        x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
+                    else
+                        x4 = x31; y4 = 0; z4 = 0;               
+                    end 
+                end
+                %%%desarrollar
+            elseif all([x31 y21 z11] == 0)
+                x_minmax(2) = max([x_minmax(2), 1]);
+                y_minmax(2) = max([y_minmax(2), 1]);
+                z_minmax(2) = max([z_minmax(2), 1]);
+                isthereinterceptline = zeros(1,Dimension(1));
+                
+                x11 = x_minmax(2); z11 =0; syms y11;
+                y = solve([num2str(table(i, 1)), '*x11+', ...
+                num2str(table(i, 2)), '*y11+', num2str(table(i, 3)), '*z11=', ...
+                num2str(table(i, 4))], y11); y11=eval(y);
+                if y11 > 0
+                    isthereinterceptline(1) = 1; % Plano XY
+                end
+                
+                x21 = x_minmax(2); y21 = 0; syms z21;
+                z = solve([num2str(table(i, 1)), '*x21+', ...
+                num2str(table(i, 2)), '*y21+', num2str(table(i, 3)), '*z21=', ...
+                num2str(table(i, 4))], z21); z21=eval(z);
+                if z21 > 0
+                    isthereinterceptline(2) = 1; % Plano XZ
+                end
+                
+                x31 = 0; z31 =z_minmax(2); syms y31;
+                y = solve([num2str(table(i, 1)), '*x31+', ...
+                num2str(table(i, 2)), '*y31+', num2str(table(i, 3)), '*z31=', ...
+                num2str(table(i, 4))], y31); y31=eval(y);
+                if y31 > 0
+                    isthereinterceptline(3) = 1; % Plano YZ
+                end
+                
+                if isthereinterceptline(1) == 1 && isthereinterceptline(2) == 1
+                    x1 = x11; y1 = y11; z1 = z11;
+                    x2 = x21; y2 = y21; z2 = z21;
+                    x3 = 0; y3 = 0; z3 = 0;
+                    if i == Dimension(1)
+                        outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                        x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);
+                    else
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end
+                elseif isthereinterceptline(1) == 1 && isthereinterceptline(3) == 1
+                    x1 = x11; y1 = y11; z1 = z11;
+                    x2 = x31; y2 = y31; z2 = z31;
+                    x3 = 0; y3 = 0; z3 = 0;
+                    if i == Dimension(1)
+                        outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                        x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);
+                    else
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end
+                elseif isthereinterceptline(2) == 1 && isthereinterceptline(3) == 1
+                    x1 = x21; y1 = y21; z1 = z21;
+                    x2 = x31; y2 = y31; z2 = z31;
+                    x3 = 0; y3 = 0; z3 = 0;
+                    if i == Dimension(1)
+                        outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                        x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);
+                    else
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end
+                else
+                    if i == Dimension(1)
+                        x1 = x11; y1 = y11; z1 = z11;
+                        x2 = x21; y2 = y21; z2 = z21;
+                        x3 = x31; y3 = y31; z3 = z31;                        
+                        outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                        x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
+                    else
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = 0;   
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end  
+                end
+                %%% desarrollar
+            else % si todos son negativos
+                if i == Dimension(1)
+                    x1 = x31; y1 = 0; z1 = 0;
+                    x2 = 0; y2 = y21; z2 = 0;
+                    x3 = 0; y3 = 0; z3 = z11;
+                    outer_point = -1*[x1 y1 z1]+1*[x2 y2 z2]+1*[x3 y3 z3];
+                    x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
+                else
+                    x1 = 0; y1 = 0; z1 = 0;
+                    x2 = 0; y2 = 0; z2 = 0;
+                    x3 = 0; y3 = 0; z3 = 0;   
+                    x4 = 0; y4 = 0; z4 = 0;
+                end                
+            end            
+        else
+            x_minmax(2) = max([x_minmax(2), 1]);
+            y_minmax(2) = max([y_minmax(2), 1]);
+            z_minmax(2) = max([z_minmax(2), 1]);
+            if isthereintercept(1) == 1 && isthereintercept(2) == 1
+                if all([x31 y21] > 0)                                          
+                    x1 = x31; y1 = 0; z1 = 0;
+                    x2 = x31; y2 = 0; z2 = z_minmax(2);
+                    x3 = 0; y3 = y21; z3 = 0;
+                    x4 = 0; y4 = y21; z4 = z_minmax(2);
+                elseif any([x31 y21] > 0) 
+                    if x31 >0
+                        inner_point1 = 2*[x31 0 0]-1*[0 y21 0];                        
+                        x1 = x31; y1 = 0; z1 = 0;
+                        x2 = x31; y2 = 0; z2 = z_minmax(2);
+                        x3 = inner_point1(1); y3 = inner_point1(2); z3 = z_minmax(2);
+                        x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                    else
+                        inner_point1 = 2*[0 y21 0]-1*[x31 0 0];                        
+                        x1 = 0; y1 = y21; z1 = 0;
+                        x2 = 0; y2 = y21; z2 = z_minmax(2);
+                        x3 = inner_point1(1); y3 = inner_point1(2); z3 = z_minmax(2);
+                        x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                    end
+                elseif all([x31 y21] == 0)
+                    x11 = x_minmax(2); z11 = 0; syms y11;
+                    y = solve([num2str(table(i, 1)), '*x11+', ...
+                    num2str(table(i, 2)), '*y11+', num2str(table(i, 3)), '*z11=', ...
+                    num2str(table(i, 4))], y11); y11=eval(y);
+                
+                    if y11 > 0
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = x11; y2 = y11; z2 = 0;
+                        x3 = x11; y3 = y11; z3 = z_minmax(2);
+                        x4 = 0; y4 = 0; z4 = z_minmax(2);
+                    else
+                        if i == Dimension(1)                        
+                            x1 = 0; y1 = 0; z1 = 0;
+                            x2 = x11; y2 = y11; z2 = 0;
+                            x3 = x11; y3 = y11; z3 = z_minmax(2);
+                            x4 = 0; y4 = 0; z4 = z_minmax(2);
+                        else
+                            x1 = 0; y1 = 0; z1 = 0;
+                            x2 = 0; y2 = 0; z2 = 0;
+                            x3 = 0; y3 = 0; z3 = 0;   
+                            x4 = 0; y4 = 0; z4 = 0;
+                        end
+                    end                    
+                else %%% si son negativos
+                    if i == Dimension(1)                        
+                        x1 = x31; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = y21; z2 = 0;
+                        x3 = x31; y3 = 0; z3 = z_minmax(2);   
+                        x4 = 0; y4 = y21; z4 = z_minmax(2);
+                    else
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = 0;   
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end
+                end
+            elseif isthereintercept(1) == 1 && isthereintercept(3) == 1
+                if all([x31 z11] > 0)
+                    x1 = x31; y1 = 0; z1 = 0;
+                    x2 = x31; y2 = y_minmax(2); z2 = 0;
+                    x3 = 0; y3 = 0; z3 = z11;
+                    x4 = 0; y4 = y_minmax(2); z4 = z11;
+                elseif any([x31 z11] > 0)
+                    if x31 >0
+                        inner_point1 = 2*[x31 0 0]-1*[0 0 z11];                        
+                        x1 = x31; y1 = 0; z1 = 0;
+                        x2 = x31; y2 = y_minmax(2); z2 = 0;
+                        x3 = inner_point1(1); y3 = y_minmax(2); z3 = inner_point1(3);
+                        x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                    else
+                        inner_point1 = 2*[0 0 z11]-1*[x31 0 0];                        
+                        x1 = 0; y1 = 0; z1 = z11;
+                        x2 = 0; y2 = y_minmax(2); z2 = z11;
+                        x3 = inner_point1(1); y3 = y_minmax(2); z3 = inner_point1(3);
+                        x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                    end
+                elseif all([x31 z11] == 0)
+                    x21 = x_minmax(2); y21 = 0; syms z21;
+                    z = solve([num2str(table(i, 1)), '*x21+', ...
+                    num2str(table(i, 2)), '*y21+', num2str(table(i, 3)), '*z21=', ...
+                    num2str(table(i, 4))], z21); z21=eval(z);
+                    if z21 > 0
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = x21; y2 = 0; z2 = z21;
+                        x3 = x21; y3 = y_minmax(2); z3 = z21;
+                        x4 = 0; y4 = y_minmax(2); z4 = 0;
+                    else
+                        if i == Dimension(1)                        
+                            x1 = 0; y1 = 0; z1 = 0;
+                            x2 = x21; y2 = 0; z2 = z21;
+                            x3 = x21; y3 = y_minmax(2); z3 = z21;
+                            x4 = 0; y4 = y_minmax(2); z4 = 0;
+                        else
+                            x1 = 0; y1 = 0; z1 = 0;
+                            x2 = 0; y2 = 0; z2 = 0;
+                            x3 = 0; y3 = 0; z3 = 0;   
+                            x4 = 0; y4 = 0; z4 = 0;
+                        end
+                    end
+                else %%%si son negativos
+                    if i == Dimension(1)                        
+                        x1 = x31; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = z11;
+                        x3 = x31; y3 = y_minmax(2); z3 = 0;   
+                        x4 = 0; y4 = y_minmax(2); z4 = z11;
+                    else
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = 0;   
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end
+                end
+            elseif isthereintercept(2) == 1 && isthereintercept(3) == 1
+                if all([y21 z11] > 0)
+                    x1 = 0; y1 = y21; z1 = 0;
+                    x2 = x_minmax(2); y2 = y21; z2 = 0;
+                    x3 = 0; y3 = 0; z3 = z11;
+                    x4 = x_minmax(2); y4 = 0; z4 = z11;
+                elseif any([y21 z11] > 0)
+                    if y21 >0
+                        inner_point1 = 2*[0 y21 0]-1*[0 0 z11];                        
+                        x1 = 0; y1 = y21; z1 = 0;
+                        x2 = x_minmax(2); y2 = y21; z2 = 0;
+                        x3 = x_minmax(2); y3 = inner_point1(2); z3 = inner_point1(3);
+                        x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                    else
+                        inner_point1 = 2*[0 0 z11]-1*[0 y21 0];                        
+                        x1 = 0; y1 = 0; z1 = z11;
+                        x2 = x_minmax(2); y2 = 0; z2 = z11;
+                        x3 = x_minmax(2); y3 = inner_point1(2); z3 = inner_point1(3);
+                        x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                    end
+                elseif all([y21 z11] == 0)
+                    x31 = 0; y31 = y_minmax(2); syms z31;
+                    z = solve([num2str(table(i, 1)), '*x31+', ...
+                    num2str(table(i, 2)), '*y31+', num2str(table(i, 3)), '*z31=', ...
+                    num2str(table(i, 4))], z31); z31=eval(z);
+                    if z31 > 0
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = y31; z2 = z31;
+                        x3 = x_minmax(2); y3 = y31; z3 = z31;
+                        x4 = x_minmax(2); y4 = 0; z4 = 0;
+                    else
+                        if i == Dimension(1)                        
+                            x1 = 0; y1 = 0; z1 = 0;
+                            x2 = 0; y2 = y31; z2 = z31;
+                            x3 = x_minmax(2); y3 = y31; z3 = z31;
+                            x4 = x_minmax(2); y4 = 0; z4 = 0;
+                        else
+                            x1 = 0; y1 = 0; z1 = 0;
+                            x2 = 0; y2 = 0; z2 = 0;
+                            x3 = 0; y3 = 0; z3 = 0;   
+                            x4 = 0; y4 = 0; z4 = 0;
+                        end
+                    end                    
+                else %%% si son negativos
+                    if i == Dimension(1)                        
+                        x1 = 0; y1 = y21; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = z11;
+                        x3 = x_minmax(2); y3 = y21; z3 = 0;   
+                        x4 = x_minmax(2); y4 = 0; z4 = z11;
+                    else
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = 0;   
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end 
+                end
+            elseif isthereintercept(1) == 1
+                if x31 > 0
+                    x1 = x31; y1 = y_minmax(2); z1 = 0;
+                    x2 = x31; y2 = -y_minmax(2); z2 = 0;
+                    x3 = x31; y3 = 0; z3 = z_minmax(2);   
+                    x4 = x31; y4 = 0; z4 = -z_minmax(2);   
+                elseif x31 == 0
+                    if i == Dimension(1)                        
+                        x1 = 0; y1 = y_minmax(2); z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = z_minmax(2);   
+                        x4 = 0; y4 = y_minmax(2); z4 = z_minmax(2);
+                    else
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = 0;   
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end 
+                end
+            elseif isthereintercept(2) == 1
+                if y21 > 0 
+                    x1 = x_minmax(2); y1 = y21; z1 = 0;
+                    x2 = -x_minmax(2); y2 = y21; z2 = 0;
+                    x3 = x31; y3 = 0; z3 = z_minmax(2);   
+                    x4 = x31; y4 = 0; z4 = -z_minmax(2);
+                elseif y21 == 0
+                    if i == Dimension(1)                        
+                        x1 = x_minmax(2); y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = z_minmax(2);   
+                        x4 = x_minmax(2); y4 = 0; z4 = z_minmax(2);
+                    else
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = 0;   
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end 
+                end
+            elseif isthereintercept(3) == 1
+                if z11 > 0 
+                    x1 = 0; y1 = y_minmax(2); z1 = z11;
+                    x2 = 0; y2 = -y_minmax(2); z2 = z11;
+                    x3 = x_minmax(2); y3 = 0; z3 = z11;   
+                    x4 = x_minmax(2); y4 = 0; z4 = z11;
+                elseif z11 == 0
+                    if i == Dimension(1)                        
+                        x1 = x_minmax(2); y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = y_minmax(2); z3 = 0;   
+                        x4 = x_minmax(2); y4 = y_minmax(2); z4 = 0;
+                    else
+                        x1 = 0; y1 = 0; z1 = 0;
+                        x2 = 0; y2 = 0; z2 = 0;
+                        x3 = 0; y3 = 0; z3 = 0;   
+                        x4 = 0; y4 = 0; z4 = 0;
+                    end 
+                end
+            end
+        end
+        
+        if i == Dimension(1)
             if handles_surf(i) ~= 0
                 set(handles_surf(i), 'Visible', 'off');
                 set(handles_norm(i), 'Visible', 'off');
             end
-            outer_point = -1*[x11 y11 z11]+1*[x31 y11 z21]+1*[x11 y21 z21];
-            handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 outer_point(1)],'ydata',[y11 y11; y21 outer_point(2)], ...
-                'zdata', [z11 z21;z21 outer_point(3)], 'cdata', [z11 z21;z21 outer_point(3)]); hold on;
-        else
-            %C=zeros(2, 2, 3); C(:,:,1) =[1 1; 1 1]; C(:,:,3) =[1 1; 1 1];
-            handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x11 x31;x11 x31],'ydata',[y11 y11; y21 y11], ...
-                'zdata', [z11 z21;z21 z21], 'cdata', [z11 z21;z21 z21]); hold on;                 
         end
-        mean_point = 0.3*[x11 y11 z11]+0.3*[x31 y11 z21]+0.4*[x11 y21 z21];
+        handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x1 x2;x3 x4],'ydata',[y1 y2; y3 y4], ...
+                'zdata', [z1 z2;z3 z4], 'cdata', [z11 z21;z11 z21]); hold on;
+        mean_point = 0.3*[x1 y1 z1]+0.3*[x2 y2 z2]+0.4*[x3 y3 z3];
         handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
+        
+        x_minmax(1) = min([x_minmax(1), x1, x2, x3, x4]);
+        x_minmax(2) = max([x_minmax(2), x1, x2, x3, x4]);
+        y_minmax(1) = min([y_minmax(1), y1, y2, y3, y4]);
+        y_minmax(2) = max([y_minmax(2), y1, y2, y3, y4]);
+        z_minmax(1) = min([z_minmax(1), z1, z2, z3, z4]);
+        z_minmax(2) = max([z_minmax(2), z1, z2, z3, z4]);
     end
-
     %quiver3(x11,y11,z11, table(i, 1), table(i, 2), table(i, 3), 'Color', [1 0 1]);                            
 end
+%surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 y_minmax(2);0 0], ...
+%    'zdata', [0 0;0 0], 'cdata', [0 0;0 0]); hold on;
+%surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 0;0 0], ...
+%    'zdata', [0 z_minmax(2);0 0], 'cdata', [0 0;0 0]); hold on;
+%surf(handles.axes_simplex3D, 'xdata',[0 0;0 0],'ydata',[0 y_minmax(2); 0 0], ...
+%    'zdata', [0 0;z_minmax(2) z_minmax(2)], 'cdata', [0 0;0 0]); hold on;
 
 
 % --------------------------------------------------------------------
