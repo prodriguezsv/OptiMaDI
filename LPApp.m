@@ -2392,6 +2392,7 @@ if strcmp(get(hObject, 'Checked'), 'on')
     set(handles.axes_simplex3D, 'Visible', 'off');
     set(handles.text_selectvar2, 'string', 'Inicial');
     set(hObject, 'Checked', 'off');
+    set(handles.uipushtool1, 'Enable', 'off');
     set(handles.popupmenu_selectvar2, 'Enable', 'off');
     set(handles.popupmenu_selectvar2, 'string', char(' ', ' '));
     set(handles.popupmenu_selectvar2, 'value', 1);
@@ -2413,6 +2414,7 @@ else
     
     trace3D(handles);
     set(hObject, 'Checked', 'on');
+    set(handles.uipushtool1, 'Enable', 'on');
     set(handles.axes_simplex3D, 'Visible', 'on');
     set(handles.table_simplexdisplay, 'Visible', 'off');
     set(handles.popupmenu_selectvar2, 'Enable', 'on');    
@@ -2422,7 +2424,7 @@ else
 end
 
 function trace3D(handles)
-global Matrix_problem Dimension Tableau handles_surf handles_norm x_minmax y_minmax z_minmax Order_current;
+global Matrix_problem Dimension Tableau handles_surf handles_norm x_minmax y_minmax z_minmax Order_current points_set table;
 %Construimos el sistema de coordenadas en la ventana
 view(3); grid on;
 xlabel(handles.axes_simplex3D, 'Eje X1');
@@ -2432,31 +2434,33 @@ zlabel(handles.axes_simplex3D, 'Eje X3');
 % Obtenemos los puntos de intersección con los ejes y graficamos
 % los planos
 
-table = Matrix_problem(1:Dimension(1),1:4); %%1
-table(1:Dimension(1),end) = Matrix_problem(1:Dimension(1),end); %%1
 
-Basic_Order_current_3D = find(Order_current(1:Dimension(1)-1) < Dimension(1));
-%Basic_vector_Order = Order_current_3D < Dimension(1);
-
-if ~isempty(Basic_Order_current_3D)
-    solution = zeros(1,Dimension(2)-1);
-    basic_solution = Tableau(1:Dimension(1)-1, end);
-    sorted_basic_solution = basic_solution(Order_current(Order_current < Dimension(1)));    
-    solution(Order_current(1:Dimension(2)-1) < Dimension(1)) = sorted_basic_solution;
-    costos = Matrix_problem(end,1:Dimension(2)-1);
-    Objective_function = costos(Basic_Order_current_3D)*solution(Basic_Order_current_3D)';
-    table(end,end) = Objective_function;
-else
-    table(end,end) = 0;
-end
 %table(end,end) = -Tableau(end,end);
 
 if isempty(handles_surf)
+    table = Matrix_problem(1:Dimension(1),1:4); %%1
+    table(1:Dimension(1),end) = Matrix_problem(1:Dimension(1),end); %%1
+
+    Basic_Order_current_3D = find(Order_current(1:Dimension(1)-1) < Dimension(1));
+
+    if ~isempty(Basic_Order_current_3D)
+        solution = zeros(1,Dimension(2)-1);
+        basic_solution = Tableau(1:Dimension(1)-1, end);
+        sorted_basic_solution = basic_solution(Order_current(Order_current < Dimension(1)));    
+        solution(Order_current(1:Dimension(2)-1) < Dimension(1)) = sorted_basic_solution;
+        costos = Matrix_problem(end,1:Dimension(2)-1);
+        Objective_function = costos(Basic_Order_current_3D)*solution(Basic_Order_current_3D)';
+        table(end,end) = Objective_function;
+    else
+        table(end,end) = 0;
+    end
+
     handles_surf = zeros(1,Dimension(1));
     handles_norm = zeros(1,Dimension(1));
     x_minmax = zeros(1,2);
     y_minmax = zeros(1,2);
-    z_minmax = zeros(1,2);    
+    z_minmax = zeros(1,2);
+    points_set = cell(1, Dimension(1));
 end
 
 % se construye el arreglo de índices de los planos    
@@ -2506,7 +2510,8 @@ for i=1:Dimension(1)
                     x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
                 else
                     x4 = x31; y4 = 0; z4 = 0;               
-                end                                
+                end
+                points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 1);
             elseif any([x31 y21 z11] > 0)
                 if all([x31 y21] > 0)
                     inner_point1 = 2*[x31 0 0]-1*[0 0 z11];
@@ -2515,6 +2520,7 @@ for i=1:Dimension(1)
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = x31; y3 = 0; z3 = 0;
                     x4 = 0; y4 = y21; z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 2);
                 elseif all([x31 z11] >0)
                     inner_point1 = 2*[x31 0 0]-1*[0 y21 0];
                     inner_point2 = 2*[0 0 z11]-1*[0 y21 0];
@@ -2522,6 +2528,7 @@ for i=1:Dimension(1)
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = 0; y3 = 0; z3 = z11;
                     x4 = 0; y4 = y21; z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 3);
                 elseif all([y21 z11] > 0)
                     inner_point1 = 2*[0 y21 0]-1*[x31 0 0];
                     inner_point2 = 2*[0 0 z11]-1*[x31 0 0];
@@ -2529,6 +2536,7 @@ for i=1:Dimension(1)
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = 0; y3 = 0; z3 = z11;
                     x4 = 0; y4 = y21; z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 4);
                 elseif x31 > 0
                     inner_point1 = 2*[x31 0 0]-1*[0 0 z11];
                     inner_point2 = 2*[x31 0 0]-1*[0 y21 0];
@@ -2540,7 +2548,8 @@ for i=1:Dimension(1)
                         x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
                     else
                         x4 = x31; y4 = 0; z4 = 0;               
-                    end                    
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 5);
                 elseif y21 > 0
                     inner_point1 = 2*[0 y21 0]-1*[0 0 z11];
                     inner_point2 = 2*[0 y21 0]-1*[x31 0 0];
@@ -2552,7 +2561,8 @@ for i=1:Dimension(1)
                         x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
                     else
                         x4 = x31; y4 = 0; z4 = 0;               
-                    end 
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 6);
                 elseif z11 > 0
                     inner_point1 = 2*[0 0 z11]-1*[0 y21 0];
                     inner_point2 = 2*[0 0 z11]-1*[x31 0 0];
@@ -2564,7 +2574,8 @@ for i=1:Dimension(1)
                         x4 = outer_point(1); y4 = outer_point(2); z4 = outer_point(3);                    
                     else
                         x4 = x31; y4 = 0; z4 = 0;               
-                    end 
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 7);
                 end
                 %%%desarrollar
             elseif all([x31 y21 z11] == 0)
@@ -2607,6 +2618,7 @@ for i=1:Dimension(1)
                     else
                         x4 = 0; y4 = 0; z4 = 0;
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 8);
                 elseif isthereinterceptline(1) == 1 && isthereinterceptline(3) == 1
                     x1 = x11; y1 = y11; z1 = z11;
                     x2 = x31; y2 = y31; z2 = z31;
@@ -2617,6 +2629,7 @@ for i=1:Dimension(1)
                     else
                         x4 = 0; y4 = 0; z4 = 0;
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 9);
                 elseif isthereinterceptline(2) == 1 && isthereinterceptline(3) == 1
                     x1 = x21; y1 = y21; z1 = z21;
                     x2 = x31; y2 = y31; z2 = z31;
@@ -2627,6 +2640,7 @@ for i=1:Dimension(1)
                     else
                         x4 = 0; y4 = 0; z4 = 0;
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 10);
                 else
                     if i == Dimension(1)
                         x1 = x11; y1 = y11; z1 = z11;
@@ -2639,7 +2653,8 @@ for i=1:Dimension(1)
                         x2 = 0; y2 = 0; z2 = 0;
                         x3 = 0; y3 = 0; z3 = 0;   
                         x4 = 0; y4 = 0; z4 = 0;
-                    end  
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 11);
                 end
                 %%% desarrollar
             else % si todos son negativos
@@ -2654,7 +2669,8 @@ for i=1:Dimension(1)
                     x2 = 0; y2 = 0; z2 = 0;
                     x3 = 0; y3 = 0; z3 = 0;   
                     x4 = 0; y4 = 0; z4 = 0;
-                end                
+                end
+                points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 12);
             end            
         else
             x_minmax(2) = max([x_minmax(2), 5]);
@@ -2665,7 +2681,8 @@ for i=1:Dimension(1)
                     x1 = 0; y1 = y21; z1 = 0;
                     x2 = x31; y2 = 0; z2 = 0;
                     x3 = 0; y3 = y21; z3 = z_minmax(2);
-                    x4 = x31; y4 = 0; z4 = z_minmax(2);                                        
+                    x4 = x31; y4 = 0; z4 = z_minmax(2);
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 13);
                 elseif any([x31 y21] > 0) 
                     if x31 >0
                         inner_point1 = 2*[x31 0 0]-1*[0 y21 0];                        
@@ -2674,6 +2691,7 @@ for i=1:Dimension(1)
                         x2 = inner_point1(1); y2 = inner_point1(2); z2 = z_minmax(2);
                         x3 = x31; y3 = 0; z3 = 0;
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                        points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 14);
                     else
                         inner_point1 = 2*[0 y21 0]-1*[x31 0 0];                        
                        
@@ -2681,9 +2699,10 @@ for i=1:Dimension(1)
                         x2 = inner_point1(1); y2 = inner_point1(2); z2 = z_minmax(2);
                         x3 = 0; y3 = y21; z3 = 0;
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
+                        points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 15);
                     end
                 elseif all([x31 y21] == 0)
-                    x11 = x_minmax(2); z11 = 0; syms y11; %#ok<NASGU>
+                    x11 = x_minmax(2); z11 = 0; syms y11;
                     y = solve([num2str(table(i, 1)), '*x11+', ...
                     num2str(table(i, 2)), '*y11+', num2str(table(i, 3)), '*z11=', ...
                     num2str(table(i, 4))], y11); y11=eval(y);
@@ -2705,7 +2724,8 @@ for i=1:Dimension(1)
                             x3 = 0; y3 = 0; z3 = 0;   
                             x4 = 0; y4 = 0; z4 = 0;
                         end
-                    end                    
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 16);
                 else %%% si son negativos
                     if i == Dimension(1)                        
                         x1 = x31; y1 = 0; z1 = 0;
@@ -2718,13 +2738,15 @@ for i=1:Dimension(1)
                         x3 = 0; y3 = 0; z3 = 0;   
                         x4 = 0; y4 = 0; z4 = 0;
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 17);
                 end
             elseif isthereintercept(1) == 1 && isthereintercept(3) == 1
                 if all([x31 z11] > 0)
                     x1 = 0; y1 = 0; z1 = z11;
                     x2 = x31; y2 = 0; z2 = 0;
                     x3 = 0; y3 = y_minmax(2); z3 = z11;
-                    x4 = x31; y4 = y_minmax(2); z4 = 0;                                        
+                    x4 = x31; y4 = y_minmax(2); z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 18);
                 elseif any([x31 z11] > 0)
                     if x31 >0
                         inner_point1 = 2*[x31 0 0]-1*[0 0 z11];  
@@ -2741,8 +2763,9 @@ for i=1:Dimension(1)
                         x3 = 0; y3 = 0; z3 = z11;
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);                        
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 19);
                 elseif all([x31 z11] == 0)
-                    x21 = x_minmax(2); y21 = 0; syms z21; %#ok<NASGU>
+                    x21 = x_minmax(2); y21 = 0; syms z21;
                     z = solve([num2str(table(i, 1)), '*x21+', ...
                     num2str(table(i, 2)), '*y21+', num2str(table(i, 3)), '*z21=', ...
                     num2str(table(i, 4))], z21); z21=eval(z);
@@ -2764,6 +2787,7 @@ for i=1:Dimension(1)
                             x4 = 0; y4 = 0; z4 = 0;
                         end
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 20);
                 else %%%si son negativos
                     if i == Dimension(1)                        
                         x1 = x31; y1 = 0; z1 = 0;
@@ -2776,6 +2800,7 @@ for i=1:Dimension(1)
                         x3 = 0; y3 = 0; z3 = 0;   
                         x4 = 0; y4 = 0; z4 = 0;
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 21);
                 end
             elseif isthereintercept(2) == 1 && isthereintercept(3) == 1
                 if all([y21 z11] > 0)
@@ -2783,6 +2808,7 @@ for i=1:Dimension(1)
                     x2 = x_minmax(2); y2 = y21; z2 = 0;
                     x3 = 0; y3 = 0; z3 = z11;
                     x4 = x_minmax(2); y4 = 0; z4 = z11;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 22);
                 elseif any([y21 z11] > 0)
                     if y21 >0
                         inner_point1 = 2*[0 y21 0]-1*[0 0 z11];                        
@@ -2799,8 +2825,9 @@ for i=1:Dimension(1)
                         x3 = x_minmax(2); y3 = inner_point1(2); z3 = inner_point1(3);
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
                     end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 23);
                 elseif all([y21 z11] == 0)
-                    x31 = 0; y31 = y_minmax(2); syms z31; %#ok<NASGU>
+                    x31 = 0; y31 = y_minmax(2); syms z31;
                     z = solve([num2str(table(i, 1)), '*x31+', ...
                     num2str(table(i, 2)), '*y31+', num2str(table(i, 3)), '*z31=', ...
                     num2str(table(i, 4))], z31); z31=eval(z);
@@ -2808,7 +2835,8 @@ for i=1:Dimension(1)
                         x1 = 0; y1 = 0; z1 = 0;
                         x2 = x_minmax(2); y2 = 0; z2 = 0;
                         x3 = 0; y3 = y31; z3 = z31;
-                        x4 = x_minmax(2); y4 = y31; z4 = z31;                                                 
+                        x4 = x_minmax(2); y4 = y31; z4 = z31;
+                        points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 24);
                     else
                         if i == Dimension(1)                        
                             x1 = 0; y1 = 0; z1 = 0;
@@ -2821,7 +2849,8 @@ for i=1:Dimension(1)
                             x3 = 0; y3 = 0; z3 = 0;   
                             x4 = 0; y4 = 0; z4 = 0;
                         end
-                    end                    
+                        points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 25);
+                    end                  
                 else %%% si son negativos
                     if i == Dimension(1)                        
                         x1 = 0; y1 = y21; z1 = 0;
@@ -2833,14 +2862,16 @@ for i=1:Dimension(1)
                         x2 = 0; y2 = 0; z2 = 0;
                         x3 = 0; y3 = 0; z3 = 0;   
                         x4 = 0; y4 = 0; z4 = 0;
-                    end 
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 26);
                 end
             elseif isthereintercept(1) == 1
                 if x31 > 0
                     x1 = x31; y1 = 0; 0;   
                     x2 = x31; y2 = 0; z2 = z_minmax(2); 
                     x3 = x31; y3 = y_minmax(2); z3 = 0;
-                    x4 = x31; y4 = y_minmax(2); z4 = z_minmax(2);                      
+                    x4 = x31; y4 = y_minmax(2); z4 = z_minmax(2);
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 27);
                 elseif x31 == 0
                     if i == Dimension(1)                         
                         x1 = 0; y1 = 0; z1 = 0;
@@ -2852,12 +2883,14 @@ for i=1:Dimension(1)
                         x2 = 0; y2 = 0; z2 = 0;
                         x3 = 0; y3 = 0; z3 = 0;   
                         x4 = 0; y4 = 0; z4 = 0;
-                    end 
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 28);
                 else
                     x1 = 0; y1 = 0; z1 = 0;
                     x2 = 0; y2 = 0; z2 = 0;
                     x3 = 0; y3 = 0; z3 = 0;   
                     x4 = 0; y4 = 0; z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 30);
                 end
             elseif isthereintercept(2) == 1
                 if y21 > 0                                           
@@ -2865,6 +2898,7 @@ for i=1:Dimension(1)
                     x2 = x_minmax(2); y2 = y21; z2 = z_minmax(2);                    
                     x3 = 0; y3 = y21; z3 = 0;
                     x4 = x_minmax(2); y4 = y21; z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 31);
                 elseif y21 == 0
                     if i == Dimension(1) 
                         x1 = 0; y1 = 0; z1 = 0;
@@ -2876,19 +2910,22 @@ for i=1:Dimension(1)
                         x2 = 0; y2 = 0; z2 = 0;
                         x3 = 0; y3 = 0; z3 = 0;   
                         x4 = 0; y4 = 0; z4 = 0;
-                    end 
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 32);
                 else
                     x1 = 0; y1 = 0; z1 = 0;
                     x2 = 0; y2 = 0; z2 = 0;
                     x3 = 0; y3 = 0; z3 = 0;   
                     x4 = 0; y4 = 0; z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 33);
                 end
             elseif isthereintercept(3) == 1
                 if z11 > 0 
                     x1 = 0; y1 = y_minmax(2); z1 = z11;
                     x2 = x_minmax(2); y2 = y_minmax(2); z2 = z11;
                     x3 = 0; y3 = 0; z3 = z11;
-                    x4 = x_minmax(2); y4 = 0; z4 = z11;                                                               
+                    x4 = x_minmax(2); y4 = 0; z4 = z11;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 34);
                 elseif z11 == 0
                     if i == Dimension(1) 
                         x1 = 0; y1 = 0; z1 = 0; 
@@ -2900,12 +2937,14 @@ for i=1:Dimension(1)
                         x2 = 0; y2 = 0; z2 = 0;
                         x3 = 0; y3 = 0; z3 = 0;   
                         x4 = 0; y4 = 0; z4 = 0;
-                    end 
+                    end
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 35);
                 else
                     x1 = 0; y1 = 0; z1 = 0;
                     x2 = 0; y2 = 0; z2 = 0;
                     x3 = 0; y3 = 0; z3 = 0;   
                     x4 = 0; y4 = 0; z4 = 0;
+                    points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 36);
                 end
             end
         end
@@ -2916,8 +2955,9 @@ for i=1:Dimension(1)
                 set(handles_norm(i), 'Visible', 'off');
             end
         end
+                
         handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x1 x2; x3 x4],'ydata',[y1 y2; y3 y4], ...
-                'zdata', [z1 z2; z3 z4], 'cdata', [z11 z21; z21 z11]); hold on;
+                'zdata', [z1 z2; z3 z4], 'cdata', [round(z11) round(y21); round(x31) round(z11)]); hold on;
         mean_point = 0.3*[x1 y1 z1]+0.3*[x2 y2 z2]+0.4*[x3 y3 z3];
         handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
         
@@ -2949,4 +2989,81 @@ if strcmp(get(handles.Control_panel, 'Checked'), 'off')
 else
     set(handles.panel_enhancement, 'Visible', 'off')
     set(handles.Control_panel, 'Checked', 'off')
+end
+
+
+% --------------------------------------------------------------------
+function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to uipushtool1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global points_set Dimension table handles_surf handles_norm;
+
+points_set_copy = points_set;
+for i = 1:Dimension - 1
+    if points_set{i}.tipo == 1
+        syms x1 y1 x2 z2 y3 z3;
+        for j = 1:Dimension -1
+            if j ~= i
+                if points_set{j}.tipo == 1
+                    % Plano XY                    
+                    sol = solve([num2str(table(i, 1)), '*x1+', num2str(table(i, 2)), '*y1 =', num2str(table(i, 4))], ...
+                        [num2str(table(j, 1)), '*x1+', num2str(table(j, 2)), '*y1 =', num2str(table(j, 4))], x1, y1);
+                    sol = [sol.x1 sol.y1];
+                    x=eval(sol(1)); y=eval(sol(2));
+                    if points_set_copy{i}.points(3, 1) <= points_set_copy{j}.points(3, 1)
+                        points_set{i}.points(2, :) = [x y 0];
+                    else
+                        points_set{i}.points(3, :) = [x y 0];
+                    end
+                    
+                    %Plano XZ
+                    sol = solve([num2str(table(i, 1)), '*x2+', num2str(table(i, 3)), '*z2 =', num2str(table(i, 4))], ...
+                        [num2str(table(j, 1)), '*x2+', num2str(table(j, 3)), '*z2 =', num2str(table(j, 4))], x2, z2);
+                    sol = [sol.x2 sol.z2];
+                    x=eval(sol(1)); z=eval(sol(2));
+                    if points_set_copy{i}.points(1, 3) <= points_set_copy{j}.points(1, 3)
+                        if points_set{i}.points(3, 2) == 0
+                            points_set{i}.points(3, :) = [x 0 z];
+                        else
+                            points_set{i}.points(4, :) = [x 0 z];
+                        end                        
+                    else                        
+                        points_set{i}.points(1, :) = [x 0 z];                                                
+                    end
+                    
+                     %Plano YZ
+                    sol = solve([num2str(table(i, 2)), '*y3+', num2str(table(i, 3)), '*z3 =', num2str(table(i, 4))], ...
+                        [num2str(table(j, 2)), '*y3+', num2str(table(j, 3)), '*z3 =', num2str(table(j, 4))], y3, z3);
+                    sol = [sol.y3 sol.z3];
+                    y=eval(sol(1)); z=eval(sol(2));
+                    if points_set_copy{i}.points(2, 1) <= points_set_copy{j}.points(2, 1)
+                        if points_set{i}.points(1, 1) == 0
+                            points_set{i}.points(1, :) = [0 y z];
+                        else
+                            points_set{i}.points(4, :) = [0 y z];
+                        end
+                    else
+                        if points_set{i}.points(2, 1) == 0
+                            points_set{i}.points(2, :) = [0 y z];
+                        else
+                            points_set{i}.points(4, :) = [0 y z];
+                        end                        
+                    end
+
+                    p = points_set{i}.points;
+                    set(handles_surf(i), 'Visible', 'off');
+                    handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[p(1,1) p(2,1); p(3,1) p(4,1)], 'ydata',[p(1,2) p(2,2); p(3,2) p(4,2)], ...
+                        'zdata', [p(1,3) p(2,3); p(3,3) p(4,3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;
+                    mean_point = 0.3*[p(1,1) p(1,2) p(1,3)]+0.3*[p(2,1) p(2,2) p(2,3)]+0.4*[p(3,1) p(3,2) p(3,3)];
+                    set(handles_norm(i), 'Visible', 'off');
+                    handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
+                else
+                    return;
+                end
+            end
+        end
+    else
+        return;
+    end
 end
