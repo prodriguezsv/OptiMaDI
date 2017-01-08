@@ -2434,8 +2434,12 @@ zlabel(handles.axes_simplex3D, 'Eje X3');
 % Obtenemos los puntos de intersección con los ejes y graficamos
 % los planos
 
-table = Matrix_problem(1:Dimension(1),1:4); %%1
+table = zeros(Dimension(1)+3, Dimension(1)+1);
+table(1:Dimension(1), 1:Dimension(1)+1) = Matrix_problem(1:Dimension(1),1:4); %%1
 table(1:Dimension(1),end) = Matrix_problem(1:Dimension(1),end); %%1
+table(Dimension(1)+1,:) = [0 0 1 0];
+table(Dimension(1)+2,:) = [0 1 0 0];
+table(Dimension(1)+3,:) = [1 0 0 0];
 
 Basic_Order_current_3D = find(Order_current(1:Dimension(1)-1) < Dimension(1));
 
@@ -2446,9 +2450,9 @@ if ~isempty(Basic_Order_current_3D)
     solution(Order_current(1:Dimension(2)-1) < Dimension(1)) = sorted_basic_solution;
     costos = Matrix_problem(end,1:Dimension(2)-1);
     Objective_function = costos(Basic_Order_current_3D)*solution(Basic_Order_current_3D)';
-    table(end,end) = Objective_function;
+    table(Dimension(1),Dimension(1)+1) = Objective_function;
 else
-    table(end,end) = 0;
+    table(Dimension(1),Dimension(1)+1) = 0;
 end
 %table(end,end) = -Tableau(end,end);
 
@@ -2458,7 +2462,7 @@ if isempty(handles_surf)
     x_minmax = zeros(1,2);
     y_minmax = zeros(1,2);
     z_minmax = zeros(1,2);
-    points_set = cell(1, Dimension(1));
+    points_set = cell(1, Dimension(1));    
 end
 
 % se construye el arreglo de índices de los planos    
@@ -2518,15 +2522,15 @@ for i=1:Dimension(1)
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = x31; y3 = 0; z3 = 0;
                     x4 = 0; y4 = y21; z4 = 0;
-                    points_set{i} = struct('points', [x1 y1 z1; x4 y4 z4; x3 y3 z3; x2 y2 z2], 'tipo', 2);
+                    points_set{i} = struct('points', [x2 y2 z2; x4 y4 z4; x3 y3 z3; x1 y1 z1], 'tipo', 2);
                 elseif all([x31 z11] >0)
                     inner_point1 = 2*[x31 0 0]-1*[0 y21 0];
                     inner_point2 = 2*[0 0 z11]-1*[0 y21 0];
                     x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = 0; y3 = 0; z3 = z11;
-                    x4 = 0; y4 = y21; z4 = 0;
-                    points_set{i} = struct('points', [x3 y3 z3; x4 y4 z4; x1 y1 z1; x2 y2 z2], 'tipo', 3);
+                    x4 = x31; y4 = 0; z4 = 0;
+                    points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x4 y4 z4; x2 y2 z2], 'tipo', 3);
                 elseif all([y21 z11] > 0)
                     inner_point1 = 2*[0 y21 0]-1*[x31 0 0];
                     inner_point2 = 2*[0 0 z11]-1*[x31 0 0];
@@ -2689,7 +2693,7 @@ for i=1:Dimension(1)
                         x2 = inner_point1(1); y2 = inner_point1(2); z2 = z_minmax(2);
                         x3 = x31; y3 = 0; z3 = 0;
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
-                        points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 14);
+                        points_set{i} = struct('points', [x1 y1 z1; x4 y4 z4; x3 y3 z3; x2 y2 z2], 'tipo', 14);
                     else
                         inner_point1 = 2*[0 y21 0]-1*[x31 0 0];                        
                        
@@ -2697,7 +2701,7 @@ for i=1:Dimension(1)
                         x2 = inner_point1(1); y2 = inner_point1(2); z2 = z_minmax(2);
                         x3 = 0; y3 = y21; z3 = 0;
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
-                        points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x2 y2 z2; x4 y4 z4], 'tipo', 15);
+                        points_set{i} = struct('points', [x1 y1 z1; x3 y3 z3; x4 y4 z4; x2 y2 z2], 'tipo', 15);
                     end
                 elseif all([x31 y21] == 0)
                     x11 = x_minmax(2); z11 = 0; syms y11;
@@ -2753,7 +2757,7 @@ for i=1:Dimension(1)
                         x2 = inner_point1(1); y2 = y_minmax(2); z2 = inner_point1(3);
                         x3 = x31; y3 = 0; z3 = 0;
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3); 
-                        points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 19);
+                        points_set{i} = struct('points', [x4 y4 z4; x1 y1 z1; x3 y3 z3; x2 y2 z2], 'tipo', 19);
                     else
                         inner_point1 = 2*[0 0 z11]-1*[x31 0 0];                        
                         
@@ -2761,7 +2765,7 @@ for i=1:Dimension(1)
                         x2 = inner_point1(1); y2 = y_minmax(2); z2 = inner_point1(3);
                         x3 = 0; y3 = 0; z3 = z11;
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
-                        points_set{i} = struct('points', [x3 y3 z3; x2 y2 z2; x1 y1 z1; x4 y4 z4], 'tipo', 20);
+                        points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x4 y4 z4; x4 y4 z4], 'tipo', 20);
                     end                    
                 elseif all([x31 z11] == 0)
                     x21 = x_minmax(2); y21 = 0; syms z21;
@@ -2817,7 +2821,7 @@ for i=1:Dimension(1)
                         x2 = 0; y2 = y21; z2 = 0;
                         x3 = x_minmax(2); y3 = inner_point1(2); z3 = inner_point1(3);
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
-                        points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 24);
+                        points_set{i} = struct('points', [x4 y4 z4; x2 y2 z2; x1 y1 z1; x3 y3 z3], 'tipo', 24);
                     else
                         inner_point1 = 2*[0 0 z11]-1*[0 y21 0];                        
                         
@@ -2825,7 +2829,7 @@ for i=1:Dimension(1)
                         x2 = 0; y2 = 0; z2 = z11;
                         x3 = x_minmax(2); y3 = inner_point1(2); z3 = inner_point1(3);
                         x4 = inner_point1(1); y4 = inner_point1(2); z4 = inner_point1(3);
-                        points_set{i} = struct('points', [x2 y2 z2; x1 y1 z1; x3 y3 z3; x4 y4 z4], 'tipo', 25);
+                        points_set{i} = struct('points', [x2 y2 z2; x4 y4 z4; x1 y1 z1; x3 y3 z3], 'tipo', 25);
                     end                    
                 elseif all([y21 z11] == 0)
                     x31 = 0; y31 = y_minmax(2); syms z31;
@@ -2967,10 +2971,14 @@ for i=1:Dimension(1)
         y_minmax(1) = min([y_minmax(1), y1, y2, y3, y4]);
         y_minmax(2) = max([y_minmax(2), y1, y2, y3, y4]);
         z_minmax(1) = min([z_minmax(1), z1, z2, z3, z4]);
-        z_minmax(2) = max([z_minmax(2), z1, z2, z3, z4]);
+        z_minmax(2) = max([z_minmax(2), z1, z2, z3, z4]);                
     end
     %quiver3(x11,y11,z11, table(i, 1), table(i, 2), table(i, 3), 'Color', [1 0 1]);                            
 end
+points_set{Dimension(1)+1} = struct('points', [0 0 0; 0 y_minmax(2) 0; x_minmax(2) 0 0; x_minmax(2) 0 0], 'tipo', 36);
+points_set{Dimension(1)+2} = struct('points', [0 0 z_minmax(2); 0 0 0; x_minmax(2) 0 0; x_minmax(2) 0 0], 'tipo',33);
+points_set{Dimension(1)+3} = struct('points', [0 0 z_minmax(2); 0 y_minmax(2) 0; 0 0 0; 0 0 0], 'tipo',30);
+
 %surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 y_minmax(2);0 0], ...
 %    'zdata', [0 0;0 0], 'cdata', [0 0;0 0]); hold on;
 %surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 0;0 0], ...
@@ -3001,113 +3009,186 @@ function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<INUSL,DEF
 global points_set Dimension table handles_surf handles_norm;
 
 points_set_copy = points_set;
-for i = 1:Dimension - 1 
-    syms x1 y1 x2 z2 y3 z3;
-    for j = 1:Dimension -1
-        if j ~= i                
-            % Plano XY 
-            if points_set{i}.tipo == 1 || points_set{i}.tipo == 2 || points_set{i}.tipo == 5 || points_set{i}.tipo == 6 || points_set{i}.tipo == 13 || ...
-               points_set{i}.tipo == 14 || points_set{i}.tipo == 15 || points_set{i}.tipo == 19 || points_set{i}.tipo == 24 || points_set{i}.tipo == 32 || ...
-               points_set{i}.tipo == 29 || points_set{i}.tipo == 3 || points_set{i}.tipo == 4 ||points_set{i}.tipo == 8 || points_set{i}.tipo == 9 || ...
-               points_set{i}.tipo == 16 || points_set{i}.tipo == 18 || points_set{i}.tipo == 23
-                if points_set{j}.tipo == 1 || points_set{j}.tipo == 2 || points_set{j}.tipo == 5 || points_set{j}.tipo == 6 || points_set{j}.tipo == 13 || ...
-                   points_set{j}.tipo == 14 || points_set{j}.tipo == 15 || points_set{j}.tipo == 19 || points_set{j}.tipo == 24 || points_set{j}.tipo == 32 || ...
-                   points_set{j}.tipo == 29 || points_set{j}.tipo == 3 || points_set{j}.tipo == 4 ||points_set{j}.tipo == 8 || points_set{j}.tipo == 9 || ...
-                   points_set{j}.tipo == 16 || points_set{j}.tipo == 18 || points_set{j}.tipo == 23
-                    sol = solve([num2str(table(i, 1)), '*x1+', num2str(table(i, 2)), '*y1 =', num2str(table(i, 4))], ...
-                        [num2str(table(j, 1)), '*x1+', num2str(table(j, 2)), '*y1 =', num2str(table(j, 4))], x1, y1);
-                    sol = [sol.x1 sol.y1];
-                    x=eval(sol(1)); y=eval(sol(2));
-                    if x >= 0 && y >= 0
-                        if points_set_copy{i}.points(3, 1) <= points_set_copy{j}.points(3, 1)
-                            points_set{i}.points(2, :) = [x y 0];
-                        else
-                            points_set{i}.points(3, :) = [x y 0];
-                        end
-                    else
-                        if points_set_copy{i}.points(3, 1) > points_set_copy{j}.points(3, 1)
-                            points_set{i}.points(3, :) = points_set{j}.points(3, :);
-                            points_set{i}.points(2, :) = points_set{j}.points(2, :);
-                        end
-                    end                            
-                end
-            end
 
-            %Plano XZ
-             if points_set{i}.tipo == 1 || points_set{i}.tipo == 3 || points_set{i}.tipo == 5 || points_set{i}.tipo == 7 || points_set{i}.tipo == 14 || ...
-                     points_set{i}.tipo == 18 || points_set{i}.tipo == 20 || points_set{i}.tipo == 25 || points_set{i}.tipo == 29 || points_set{i}.tipo == 35 || ...
-                     points_set{i}.tipo == 19 || points_set{i}.tipo == 2 || points_set{i}.tipo == 4 || points_set{i}.tipo == 8 || points_set{i}.tipo == 10 || ...
-                     points_set{i}.tipo == 21 || points_set{i}.tipo == 13 || points_set{i}.tipo == 23
-                 if points_set{j}.tipo == 1 || points_set{j}.tipo == 3 || points_set{j}.tipo == 5 || points_set{j}.tipo == 7 || points_set{j}.tipo == 14 || ...
-                         points_set{j}.tipo == 18 || points_set{j}.tipo == 20 || points_set{j}.tipo == 25 || points_set{j}.tipo == 29 || points_set{j}.tipo == 35 || ...
-                         points_set{j}.tipo == 19 || points_set{j}.tipo == 2 || points_set{j}.tipo == 4 || points_set{j}.tipo == 8 || points_set{j}.tipo == 10 || ...
-                         points_set{j}.tipo == 21 || points_set{j}.tipo == 13 || points_set{j}.tipo == 23
-                    sol = solve([num2str(table(i, 1)), '*x2+', num2str(table(i, 3)), '*z2 =', num2str(table(i, 4))], ...
-                        [num2str(table(j, 1)), '*x2+', num2str(table(j, 3)), '*z2 =', num2str(table(j, 4))], x2, z2);
-                    sol = [sol.x2 sol.z2];
-                    x=eval(sol(1)); z=eval(sol(2));
-                    if x >= 0 && z >= 0
-                        if points_set_copy{i}.points(1, 3) <= points_set_copy{j}.points(1, 3)
-                            if points_set{i}.points(3, 2) == 0
-                                points_set{i}.points(3, :) = [x 0 z];
+for i = 1:Dimension(1)+3
+    if i ~= Dimension(1)
+        syms x1 y1 x2 z2 y3 z3;
+        for j = 1:Dimension(1)-1
+            if j ~= i                
+                % Plano XY 
+                if points_set_copy{i}.tipo == 1 || points_set_copy{i}.tipo == 2 || points_set_copy{i}.tipo == 5 || points_set_copy{i}.tipo == 6 || points_set_copy{i}.tipo == 13 || ...
+                   points_set_copy{i}.tipo == 14 || points_set_copy{i}.tipo == 15 || points_set_copy{i}.tipo == 19 || points_set_copy{i}.tipo == 24 || points_set_copy{i}.tipo == 32 || ...
+                   points_set_copy{i}.tipo == 29 || points_set_copy{i}.tipo == 3 || points_set_copy{i}.tipo == 4 ||points_set_copy{i}.tipo == 8 || points_set_copy{i}.tipo == 9 || ...
+                   points_set_copy{i}.tipo == 16 || points_set_copy{i}.tipo == 18 || points_set_copy{i}.tipo == 36 || points_set_copy{i}.tipo == 23 || points_set_copy{i}.tipo == 21
+                    if points_set_copy{j}.tipo == 1 || points_set_copy{j}.tipo == 2 || points_set_copy{j}.tipo == 5 || points_set_copy{j}.tipo == 6 || points_set_copy{j}.tipo == 13 || ...
+                       points_set_copy{j}.tipo == 14 || points_set_copy{j}.tipo == 15 || points_set_copy{j}.tipo == 19 || points_set_copy{j}.tipo == 24 || points_set_copy{j}.tipo == 32 || ...
+                       points_set_copy{j}.tipo == 29 || points_set_copy{j}.tipo == 3 || points_set_copy{j}.tipo == 4 ||points_set_copy{j}.tipo == 8 || points_set_copy{j}.tipo == 9 || ...
+                       points_set_copy{j}.tipo == 16 || points_set_copy{j}.tipo == 18 || points_set_copy{j}.tipo == 36 || points_set_copy{j}.tipo == 23 || points_set_copy{j}.tipo == 21
+                   
+                        sol = solve([num2str(table(i, 1)), '*x1+', num2str(table(i, 2)), '*y1 =', num2str(table(i, 4))], ...
+                            [num2str(table(j, 1)), '*x1+', num2str(table(j, 2)), '*y1 =', num2str(table(j, 4))], x1, y1);
+                        sol = [sol.x1 sol.y1];
+                        if isempty(symvar(sol))
+                            x=eval(sol(1)); y=eval(sol(2));
+                            if x > 0 && y > 0
+                                if points_set{i}.points(3, 1) <= points_set{j}.points(3, 1)
+                                    points_set_copy{i}.points(2, :) = [x y 0];
+                                else
+                                    points_set_copy{i}.points(3, :) = [x y 0];
+                                    points_set_copy{i}.points(4, :) = [x y 0]; %%%7/01
+                                end
                             else
-                                points_set{i}.points(4, :) = [x 0 z];
-                            end                        
-                        else                        
-                            points_set{i}.points(1, :) = [x 0 z];                                                
-                        end
-                    else
-                        if points_set_copy{i}.points(1, 3) > points_set_copy{j}.points(1, 3)
-                            points_set{i}.points(3, :) = points_set{j}.points(3, :);
-                            points_set{i}.points(1, :) = points_set{j}.points(1, :);
-                        end
-                    end
-                 end
-             end
-
-             %Plano YZ
-              if points_set{i}.tipo == 1 || points_set{i}.tipo == 4 || points_set{i}.tipo == 6 || points_set{i}.tipo == 7 || points_set{i}.tipo == 15 || ...
-                 points_set{i}.tipo == 20 || points_set{i}.tipo == 23 || points_set{i}.tipo == 24 || points_set{i}.tipo == 25 || points_set{i}.tipo == 32 || ...
-                 points_set{i}.tipo == 35 || points_set{i}.tipo == 2 || points_set{i}.tipo == 3 || points_set{i}.tipo == 9 || points_set{i}.tipo == 10 || ...
-                 points_set{i}.tipo == 26 || points_set{i}.tipo == 18 || points_set{i}.tipo == 13
-                  if points_set{j}.tipo == 1 || points_set{j}.tipo == 4 || points_set{j}.tipo == 6 || points_set{j}.tipo == 7 || points_set{j}.tipo == 25 || ...
-                    points_set{j}.tipo == 20 || points_set{j}.tipo == 23 || points_set{j}.tipo == 24 || points_set{j}.tipo == 25 || points_set{j}.tipo == 32 || ...
-                    points_set{j}.tipo == 35 || points_set{j}.tipo == 2 || points_set{j}.tipo == 3 || points_set{j}.tipo == 9 || points_set{j}.tipo == 10 || ...
-                    points_set{j}.tipo == 26 || points_set{j}.tipo == 18 || points_set{j}.tipo == 13
-                    sol = solve([num2str(table(i, 2)), '*y3+', num2str(table(i, 3)), '*z3 =', num2str(table(i, 4))], ...
-                        [num2str(table(j, 2)), '*y3+', num2str(table(j, 3)), '*z3 =', num2str(table(j, 4))], y3, z3);
-                    sol = [sol.y3 sol.z3];
-                    y=eval(sol(1)); z=eval(sol(2));
-                    if y >= 0 && z >= 0
-                        if points_set_copy{i}.points(2, 1) <= points_set_copy{j}.points(2, 1)
-                            if points_set{i}.points(1, 1) == 0
-                                points_set{i}.points(1, :) = [0 y z];
-                            else
-                                points_set{i}.points(4, :) = [0 y z];
+                                if points_set{i}.points(3, 1) >= points_set{j}.points(3, 1) && ...
+                                    points_set{i}.points(2, 1) >= points_set{j}.points(2, 1)                                    
+                                    points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
+                                    points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
+                                    points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
+                                end
                             end
                         else
-                            if points_set{i}.points(2, 1) == 0
-                                points_set{i}.points(2, :) = [0 y z];
-                            else
-                                points_set{i}.points(4, :) = [0 y z];
-                            end                        
+                            if points_set{i}.points(3, 1) >= points_set{j}.points(3, 1) && ...
+                                    points_set{i}.points(2, 1) >= points_set{j}.points(2, 1)
+                                if points_set_copy{i}.tipo == 36
+                                    points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
+                                    points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
+                                    points_set_copy{i}.points(1, :) = [0 0 0];
+                                    points_set_copy{i}.points(4, :) = points_set_copy{i}.points(3, :);
+                                elseif points_set_copy{i}.tipo == 13
+                                   points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
+                                   points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
+                                   points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :); 
+                                end
+                            end
                         end
-                    else
-                        if points_set_copy{i}.points(2, 1) > points_set_copy{j}.points(2, 1)
-                            points_set{i}.points(2, :) = points_set{j}.points(2, :);
-                            points_set{i}.points(1, :) = points_set{j}.points(1, :);
-                        end
+                                                    
                     end
-                  end
-              end
+                end
 
-            p = points_set{i}.points;
-            set(handles_surf(i), 'Visible', 'off');
-            handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[p(1,1) p(2,1); p(3,1) p(4,1)], 'ydata',[p(1,2) p(2,2); p(3,2) p(4,2)], ...
-                'zdata', [p(1,3) p(2,3); p(3,3) p(4,3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;
-            mean_point = 0.3*[p(1,1) p(1,2) p(1,3)]+0.3*[p(2,1) p(2,2) p(2,3)]+0.4*[p(3,1) p(3,2) p(3,3)];
-            set(handles_norm(i), 'Visible', 'off');
-            handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
+                %Plano XZ
+                 if points_set_copy{i}.tipo == 1 || points_set_copy{i}.tipo == 3 || points_set_copy{i}.tipo == 5 || points_set_copy{i}.tipo == 7 || points_set_copy{i}.tipo == 14 || ...
+                         points_set_copy{i}.tipo == 18 || points_set_copy{i}.tipo == 20 || points_set_copy{i}.tipo == 25 || points_set_copy{i}.tipo == 29 || points_set_copy{i}.tipo == 35 || ...
+                         points_set_copy{i}.tipo == 19 || points_set_copy{i}.tipo == 2 || points_set_copy{i}.tipo == 4 || points_set_copy{i}.tipo == 8 || points_set_copy{i}.tipo == 10 || ...
+                         points_set_copy{i}.tipo == 21 || points_set_copy{i}.tipo == 13 || points_set_copy{i}.tipo == 33 || points_set_copy{i}.tipo == 23
+                     if points_set_copy{j}.tipo == 1 || points_set_copy{j}.tipo == 3 || points_set_copy{j}.tipo == 5 || points_set_copy{j}.tipo == 7 || points_set_copy{j}.tipo == 14 || ...
+                             points_set_copy{j}.tipo == 18 || points_set_copy{j}.tipo == 20 || points_set_copy{j}.tipo == 25 || points_set_copy{j}.tipo == 29 || points_set_copy{j}.tipo == 35 || ...
+                             points_set_copy{j}.tipo == 19 || points_set_copy{j}.tipo == 2 || points_set_copy{j}.tipo == 4 || points_set_copy{j}.tipo == 8 || points_set_copy{j}.tipo == 10 || ...
+                             points_set_copy{j}.tipo == 21 || points_set_copy{j}.tipo == 13 || points_set_copy{j}.tipo == 33 || points_set_copy{j}.tipo == 23
+                        sol = solve([num2str(table(i, 1)), '*x2+', num2str(table(i, 3)), '*z2 =', num2str(table(i, 4))], ...
+                            [num2str(table(j, 1)), '*x2+', num2str(table(j, 3)), '*z2 =', num2str(table(j, 4))], x2, z2);
+                        sol = [sol.x2 sol.z2];
+                        if isempty(symvar(sol))
+                            x=eval(sol(1)); z=eval(sol(2));
+                            if x > 0 && z > 0
+                                if points_set{i}.points(1, 3) <= points_set{j}.points(1, 3)
+                                    if points_set_copy{i}.points(3, 2) == 0
+                                        points_set_copy{i}.points(3, :) = [x 0 z];
+                                        points_set_copy{i}.points(4, :) = [x 0 z]; %%%7/01
+                                    else
+                                        points_set_copy{i}.points(4, :) = [x 0 z];
+                                    end                        
+                                else                        
+                                    points_set_copy{i}.points(1, :) = [x 0 z];                                                
+                                end
+                            else
+                                if points_set{i}.points(1, 3) >= points_set{j}.points(1, 3) && ...
+                                        points_set{i}.points(3, 1) >= points_set{j}.points(3, 1)
+                                    if points_set_copy{i}.points(3, 2) == 0
+                                        points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
+                                        points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
+                                    end
+                                    points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);
+                                end
+                            end
+                        else
+                            if points_set{i}.points(1, 3) >= points_set{j}.points(1, 3) && ...
+                                        points_set{i}.points(3, 1) >= points_set{j}.points(3, 1)
+                              if points_set_copy{i}.tipo == 33
+                                points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
+                                points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);
+                                points_set_copy{i}.points(2, :) = [0 0 0];
+                                points_set_copy{i}.points(4, :) = points_set_copy{i}.points(3, :);
+                              elseif points_set_copy{i}.tipo == 18
+                                  points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
+                                  points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
+                                  points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);
+                              end
+                            end
+                        end
+                        
+                     end
+                 end
+
+                 %Plano YZ
+                  if points_set_copy{i}.tipo == 1 || points_set_copy{i}.tipo == 4 || points_set_copy{i}.tipo == 6 || points_set_copy{i}.tipo == 7 || points_set_copy{i}.tipo == 15 || ...
+                     points_set_copy{i}.tipo == 20 || points_set_copy{i}.tipo == 23 || points_set_copy{i}.tipo == 24 || points_set_copy{i}.tipo == 25 || points_set_copy{i}.tipo == 32 || ...
+                     points_set_copy{i}.tipo == 35 || points_set_copy{i}.tipo == 2 || points_set_copy{i}.tipo == 3 || points_set_copy{i}.tipo == 9 || points_set_copy{i}.tipo == 10 || ...
+                     points_set_copy{i}.tipo == 26 || points_set_copy{i}.tipo == 18 || points_set_copy{i}.tipo == 30 || points_set_copy{i}.tipo == 13
+                      if points_set_copy{j}.tipo == 1 || points_set_copy{j}.tipo == 4 || points_set_copy{j}.tipo == 6 || points_set_copy{j}.tipo == 7 || points_set_copy{j}.tipo == 25 || ...
+                        points_set_copy{j}.tipo == 20 || points_set_copy{j}.tipo == 23 || points_set_copy{j}.tipo == 24 || points_set_copy{j}.tipo == 25 || points_set_copy{j}.tipo == 32 || ...
+                        points_set_copy{j}.tipo == 35 || points_set_copy{j}.tipo == 2 || points_set_copy{j}.tipo == 3 || points_set_copy{j}.tipo == 9 || points_set_copy{j}.tipo == 10 || ...
+                        points_set_copy{j}.tipo == 26 || points_set_copy{j}.tipo == 18 || points_set_copy{j}.tipo == 30 || points_set_copy{j}.tipo == 13
+                        sol = solve([num2str(table(i, 2)), '*y3+', num2str(table(i, 3)), '*z3 =', num2str(table(i, 4))], ...
+                            [num2str(table(j, 2)), '*y3+', num2str(table(j, 3)), '*z3 =', num2str(table(j, 4))], y3, z3);
+                        sol = [sol.y3 sol.z3];
+                        if isempty(symvar(sol))
+                            y=eval(sol(1)); z=eval(sol(2));
+                            if y > 0 && z > 0
+                                if points_set{i}.points(2, 2) <= points_set{j}.points(2, 2)
+                                    if points_set_copy{i}.points(1, 1) == 0
+                                        points_set_copy{i}.points(1, :) = [0 y z];
+                                    else
+                                        points_set_copy{i}.points(4, :) = [0 y z];
+                                    end
+                                else
+                                    if points_set_copy{i}.points(2, 1) == 0
+                                        points_set_copy{i}.points(2, :) = [0 y z];
+                                    else
+                                        points_set_copy{i}.points(4, :) = [0 y z];
+                                    end                        
+                                end
+                            else
+                                if points_set{i}.points(2, 2) >= points_set{j}.points(2, 2) && ...
+                                        points_set{i}.points(1, 3) >= points_set{j}.points(1, 3)
+                                    if points_set_copy{i}.points(2, 1) == 0
+                                        points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
+                                    end
+                                    if points_set_copy{i}.points(1, 1) == 0
+                                        points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);
+                                    end
+                                end
+                            end                 
+                        else
+                            if points_set{i}.points(2, 2) >= points_set{j}.points(2, 2) && ...
+                                        points_set{i}.points(1, 3) >= points_set{j}.points(1, 3)
+                               if points_set_copy{i}.tipo == 30
+                                    points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
+                                    points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);
+                                    points_set_copy{i}.points(3, :) = [0 0 0];
+                                    points_set_copy{i}.points(4, :) = [0 0 0];
+                               elseif points_set_copy{i}.tipo == 23
+                                   points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
+                                   points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);
+                               end
+                            end
+                        end
+                      end                     
+                  end
+
+                p = points_set_copy{i}.points;
+                mean_point = 0.3*[p(1,1) p(1,2) p(1,3)]+0.3*[p(2,1) p(2,2) p(2,3)]+0.4*[p(3,1) p(3,2) p(3,3)];
+                if i < Dimension(1)
+                    set(handles_surf(i), 'Visible', 'off');
+                    set(handles_norm(i), 'Visible', 'off');
+                    handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[p(1,1) p(4,1); p(2,1) p(3,1)], 'ydata',[p(1,2) p(4,2); p(2,2) p(3,2)], ...
+                        'zdata', [p(1,3) p(4,3); p(2,3) p(3,3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;                
+                    handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
+                else
+                    surf(handles.axes_simplex3D, 'xdata',[p(1,1) p(2,1); p(3,1) p(4,1)], 'ydata',[p(1,2) p(2,2); p(3,2) p(4,2)], ...
+                        'zdata', [p(1,3) p(2,3); p(3,3) p(4,3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;                
+                    %quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
+                end
+                
+            end
         end
     end
 end
