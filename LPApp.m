@@ -2434,8 +2434,8 @@ zlabel(handles.axes_simplex3D, 'Eje X3');
 % Obtenemos los puntos de intersección con los ejes y graficamos
 % los planos
 
-table = zeros(Dimension(1)+3, Dimension(1)+1);
-table(1:Dimension(1), 1:Dimension(1)+1) = Matrix_problem(1:Dimension(1),1:4); %%1
+table = zeros(Dimension(1)+3, 4);
+table(1:Dimension(1), 1:4) = Matrix_problem(1:Dimension(1),1:4); %%1
 table(1:Dimension(1),end) = Matrix_problem(1:Dimension(1),end); %%1
 table(Dimension(1)+1,:) = [0 0 1 0];
 table(Dimension(1)+2,:) = [0 1 0 0];
@@ -2461,7 +2461,7 @@ if isempty(handles_surf)
     x_minmax = zeros(1,2);
     y_minmax = zeros(1,2);
     z_minmax = zeros(1,2);
-    points_set = cell(1, Dimension(1));  
+    points_set = cell(1, Dimension(1)+3);  
     colormap(handles.axes_simplex3D, prism)
 else
     delete(h);
@@ -2478,7 +2478,7 @@ set(handles.pushbutton_asignall, 'Enable', 'on');
 
 for i=1:Dimension(1)
     if strcmp(get(handles.Mode_geo3D, 'Checked'),'off') || i == Dimension(1)
-        isthereintercept = zeros(1,Dimension(1)); 
+        isthereintercept = zeros(1,3); 
         z11 = 0;
         if table(i, 3) ~= 0
             isthereintercept(3) = 1;
@@ -2586,7 +2586,7 @@ for i=1:Dimension(1)
                 x_minmax(2) = max([x_minmax(2), 1]);
                 y_minmax(2) = max([y_minmax(2), 1]);
                 z_minmax(2) = max([z_minmax(2), 1]);
-                isthereinterceptline = zeros(1,Dimension(1));
+                isthereinterceptline = zeros(1,3);
                 
                 x11 = x_minmax(2); z11 =0; syms y11;
                 y = solve([num2str(table(i, 1)), '*x11+', ...
@@ -2962,9 +2962,22 @@ for i=1:Dimension(1)
                 set(handles_norm(i), 'Visible', 'off');
             end
         end
-                
-        handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x1 x2; x3 x4],'ydata',[y1 y2; y3 y4], ...
-                'zdata', [z1 z2; z3 z4], 'cdata', [round(z11) round(y21); round(x31) round(z11)]); hold on;
+        
+        p = [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4];
+        K = convex_hull(p);
+        K_dim = size(K);
+        
+        if K_dim(1) == 5
+            handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
+                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'g'); hold on; 
+        else
+            handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
+                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'g'); hold on; 
+        end
+        
+        %handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x1 x2; x3 x4],'ydata',[y1 y2; y3 y4], ...
+        %        'zdata', [z1 z2; z3 z4], 'cdata', [round(z11) round(y21); round(x31) round(z11)]); hold on;
+        
         mean_point = 0.3*[x1 y1 z1]+0.3*[x2 y2 z2]+0.4*[x3 y3 z3];
         handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
         
@@ -3035,14 +3048,18 @@ for i = 1:Dimension(1)+3
                             x=eval(sol(1)); y=eval(sol(2));
                             if x > 0 && y > 0
                                 if points_set{i}.points(3, 1) <= points_set{j}.points(3, 1)
-                                    points_set_copy{i}.points(2, :) = [x y 0];
+                                    if points_set{i}.points(3, 1) < x %%%11/01
+                                        points_set_copy{i}.points(2, :) = [x y 0];
+                                    end
                                 else
-                                    points_set_copy{i}.points(3, :) = [x y 0];
-                                    points_set_copy{i}.points(4, :) = [x y 0]; %%%7/01
+                                    if points_set{i}.points(3, 1) > x %%%%11/01
+                                        points_set_copy{i}.points(3, :) = [x y 0];
+                                        points_set_copy{i}.points(4, :) = [x y 0]; %%%7/01
+                                    end
                                 end
                             else
                                 if points_set{i}.points(3, 1) >= points_set{j}.points(3, 1) && ...
-                                    points_set{i}.points(2, 1) >= points_set{j}.points(2, 1)                                    
+                                    points_set{i}.points(2, 1) >= points_set{j}.points(2, 1)                                  
                                     points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
                                     points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
                                     points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
@@ -3106,14 +3123,18 @@ for i = 1:Dimension(1)+3
                             x=eval(sol(1)); z=eval(sol(2));
                             if x > 0 && z > 0
                                 if points_set{i}.points(1, 3) <= points_set{j}.points(1, 3)
-                                    if points_set_copy{i}.points(3, 2) == 0
-                                        points_set_copy{i}.points(3, :) = [x 0 z];
-                                        points_set_copy{i}.points(4, :) = [x 0 z]; %%%7/01
-                                    else
-                                        points_set_copy{i}.points(4, :) = [x 0 z];
-                                    end                        
-                                else                        
-                                    points_set_copy{i}.points(1, :) = [x 0 z];                                                
+                                    if points_set{i}.points(1, 3) < z %%%11/01
+                                        if points_set_copy{i}.points(3, 2) == 0
+                                            points_set_copy{i}.points(3, :) = [x 0 z];
+                                            points_set_copy{i}.points(4, :) = [x 0 z]; %%%7/01
+                                        else
+                                            points_set_copy{i}.points(4, :) = [x 0 z];
+                                        end
+                                    end
+                                else
+                                    if points_set{i}.points(1, 3) > z %%%%11/01
+                                        points_set_copy{i}.points(1, :) = [x 0 z];
+                                    end
                                 end
                             else
                                 if points_set{i}.points(1, 3) >= points_set{j}.points(1, 3) && ...
@@ -3183,17 +3204,21 @@ for i = 1:Dimension(1)+3
                             y=eval(sol(1)); z=eval(sol(2));
                             if y > 0 && z > 0
                                 if points_set{i}.points(2, 2) <= points_set{j}.points(2, 2)
-                                    if points_set_copy{i}.points(1, 1) == 0
-                                        points_set_copy{i}.points(1, :) = [0 y z];
-                                    else
-                                        points_set_copy{i}.points(4, :) = [0 y z];
+                                    if points_set{i}.points(2, 2) < y %%%11/01
+                                        if points_set_copy{i}.points(1, 1) == 0
+                                            points_set_copy{i}.points(1, :) = [0 y z];
+                                        else
+                                            points_set_copy{i}.points(4, :) = [0 y z];
+                                        end
                                     end
                                 else
-                                    if points_set_copy{i}.points(2, 1) == 0
-                                        points_set_copy{i}.points(2, :) = [0 y z];
-                                    else
-                                        points_set_copy{i}.points(4, :) = [0 y z];
-                                    end                        
+                                    if points_set{i}.points(2, 2) > y %%%11/01
+                                        if points_set_copy{i}.points(2, 1) == 0
+                                            points_set_copy{i}.points(2, :) = [0 y z];
+                                        else
+                                            points_set_copy{i}.points(4, :) = [0 y z];
+                                        end
+                                    end
                                 end
                             else
                                 if points_set{i}.points(2, 2) >= points_set{j}.points(2, 2) && ...
@@ -3346,6 +3371,14 @@ if points(1, 3) ~= points(2, 3)
     else        
         theta = pi/2;      
 
+        R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
+        new_points = R_y*points';
+        points = new_points';
+    end    
+else
+    if ~(points(1, 1) == points(3, 1) && points(3, 1) == points(2, 1))
+        theta = pi/2;      
+        
         R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
         new_points = R_y*points';
         points = new_points';
