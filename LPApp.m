@@ -114,6 +114,9 @@ if strcmp(environmentname, 'next')
     set(handles.slider_increment, 'value', 0);
     set(handles.Saveproblem, 'enable', 'on');
     set(handles.popupmenu_selectvar3, 'Enable', 'on');
+    set(handles.Restriction_nonnegativity, 'Enable', 'off');
+    set(handles.Uncut_planes, 'Enable', 'off');   
+    set(handles.pushbutton_asignall, 'Enable', 'off');
     val_switches = ['on ';'on ';'on ';'on ';'on ';'off'];   
 elseif strcmp(environmentname, 'sol_multiples')
     set(handles.Sensibility, 'enable', 'on');
@@ -142,6 +145,9 @@ elseif strcmp(environmentname, 'end')
     set(handles.popupmenu_selectvar3, 'string', char(' ', ' '));
     set(handles.popupmenu_selectvar3, 'value', 1);
 elseif strcmp(environmentname, 'next_assign')
+    set(handles.Restriction_nonnegativity, 'Enable', 'off');
+    set(handles.Uncut_planes, 'Enable', 'off');
+    set(handles.Mode_geo3D, 'Enable', 'off');
     set(handles.Sensibility, 'enable', 'off');
     set(handles.Postoptimality, 'enable', 'off');
     setTableauTags(handles, char('Origen', 'Destino', 'Demanda', 'Oferta'));
@@ -2398,6 +2404,8 @@ if strcmp(get(hObject, 'Checked'), 'on')
     set(handles.popupmenu_selectvar2, 'value', 1);
     set(handles.pushbutton_asignall, 'String', 'Asignar todas');
     set(handles.pushbutton_asignall, 'Enable', 'off');
+    set(handles.Restriction_nonnegativity, 'Enable', 'off');
+    set(handles.Uncut_planes, 'Enable', 'off');
     hold off;
     handles_surf = [];
     handles_norm = [];
@@ -2421,6 +2429,7 @@ else
     set(handles.text_selectvar2, 'string', 'Plano');    
     set(handles.pushbutton_asignall, 'String', 'Quitar');
     set(handles.pushbutton_asignall, 'Enable', 'on');
+    set(handles.Restriction_nonnegativity, 'Enable', 'on');
 end
 
 function trace3D(handles)
@@ -2456,7 +2465,7 @@ end
 %table(end,end) = -Tableau(end,end);
 
 if isempty(handles_surf)    
-    handles_surf = zeros(1,Dimension(1));
+    handles_surf = zeros(1,Dimension(1)+3);
     handles_norm = zeros(1,Dimension(1));
     x_minmax = zeros(1,2);
     y_minmax = zeros(1,2);
@@ -2583,9 +2592,9 @@ for i=1:Dimension(1)
                 end
                 %%%desarrollar
             elseif all([x31 y21 z11] == 0)
-                x_minmax(2) = max([x_minmax(2), 1]);
-                y_minmax(2) = max([y_minmax(2), 1]);
-                z_minmax(2) = max([z_minmax(2), 1]);
+                x_minmax(2) = max([x_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
+                y_minmax(2) = max([y_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
+                z_minmax(2) = max([z_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
                 isthereinterceptline = zeros(1,3);
                 
                 x11 = x_minmax(2); z11 =0; syms y11;
@@ -2686,7 +2695,7 @@ for i=1:Dimension(1)
                     x2 = x31; y2 = 0; z2 = 0;
                     x3 = 0; y3 = y21; z3 = z_minmax(2);
                     x4 = x31; y4 = 0; z4 = z_minmax(2);
-                    points_set{i} = struct('points', [x2 y2 z2; x3 y3 z3; x4 y4 z4; x1 y1 z1], 'tipo', 13);
+                    points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x2 y2 z2; x4 y4 z4], 'tipo', 13);
                 elseif any([x31 y21] > 0) 
                     if x31 >0
                         inner_point1 = 2*[x31 0 0]-1*[0 y21 0];                        
@@ -2706,7 +2715,7 @@ for i=1:Dimension(1)
                         points_set{i} = struct('points', [x1 y1 z1; x3 y3 z3; x4 y4 z4; x2 y2 z2], 'tipo', 15);
                     end
                 elseif all([x31 y21] == 0)
-                    x11 = x_minmax(2); z11 = 0; syms y11;
+                    x11 = x_minmax(2); z11 = 0; syms y11; %#ok<NASGU>
                     y = solve([num2str(table(i, 1)), '*x11+', ...
                     num2str(table(i, 2)), '*y11+', num2str(table(i, 3)), '*z11=', ...
                     num2str(table(i, 4))], y11); y11=eval(y);
@@ -2750,7 +2759,7 @@ for i=1:Dimension(1)
                     x2 = x31; y2 = 0; z2 = 0;
                     x3 = 0; y3 = y_minmax(2); z3 = z11;
                     x4 = x31; y4 = y_minmax(2); z4 = 0;
-                    points_set{i} = struct('points', [x1 y1 z1; x3 y3 z3; x4 y4 z4; x2 y2 z2], 'tipo', 18);
+                    points_set{i} = struct('points', [x1 y1 z1; x3 y3 z3; x2 y2 z2; x4 y4 z4], 'tipo', 18);
                 elseif any([x31 z11] > 0)
                     if x31 >0
                         inner_point1 = 2*[x31 0 0]-1*[0 0 z11];  
@@ -2770,7 +2779,7 @@ for i=1:Dimension(1)
                         points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x4 y4 z4; x4 y4 z4], 'tipo', 20);
                     end                    
                 elseif all([x31 z11] == 0)
-                    x21 = x_minmax(2); y21 = 0; syms z21;
+                    x21 = x_minmax(2); y21 = 0; syms z21; %#ok<NASGU>
                     z = solve([num2str(table(i, 1)), '*x21+', ...
                     num2str(table(i, 2)), '*y21+', num2str(table(i, 3)), '*z21=', ...
                     num2str(table(i, 4))], z21); z21=eval(z);
@@ -2814,7 +2823,7 @@ for i=1:Dimension(1)
                     x2 = x_minmax(2); y2 = y21; z2 = 0;
                     x3 = 0; y3 = 0; z3 = z11;
                     x4 = x_minmax(2); y4 = 0; z4 = z11;
-                    points_set{i} = struct('points', [x2 y2 z2; x3 y3 z3; x1 y1 z1; x4 y4 z4], 'tipo', 23);
+                    points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x2 y2 z2; x4 y4 z4], 'tipo', 23);
                 elseif any([y21 z11] > 0)
                     if y21 >0
                         inner_point1 = 2*[0 y21 0]-1*[0 0 z11];                        
@@ -2834,7 +2843,7 @@ for i=1:Dimension(1)
                         points_set{i} = struct('points', [x2 y2 z2; x4 y4 z4; x1 y1 z1; x3 y3 z3], 'tipo', 25);
                     end                    
                 elseif all([y21 z11] == 0)
-                    x31 = 0; y31 = y_minmax(2); syms z31;
+                    x31 = 0; y31 = y_minmax(2); syms z31; %#ok<NASGU>
                     z = solve([num2str(table(i, 1)), '*x31+', ...
                     num2str(table(i, 2)), '*y31+', num2str(table(i, 3)), '*z31=', ...
                     num2str(table(i, 4))], z31); z31=eval(z);
@@ -2966,13 +2975,17 @@ for i=1:Dimension(1)
         p = [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4];
         K = convex_hull(p);
         K_dim = size(K);
-        
+        if i == Dimension(1)
+            c = 'y';
+        else
+            c = 'g';
+        end
         if K_dim(1) == 5
             handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
-                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'g'); hold on; 
+                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', c); hold on; 
         else
             handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
-                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'g'); hold on; 
+                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', c); hold on; 
         end
         
         %handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[x1 x2; x3 x4],'ydata',[y1 y2; y3 y4], ...
@@ -2995,12 +3008,12 @@ points_set{Dimension(1)+2} = struct('points', [0 0 z_minmax(2); 0 0 0; x_minmax(
 points_set{Dimension(1)+3} = struct('points', [0 0 z_minmax(2); 0 y_minmax(2) 0; 0 0 0; 0 0 0], 'tipo',30);
 h = plot3(handles.axes_simplex3D, solution(1), solution(2), solution(3), 'rs');
 
-%surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 y_minmax(2);0 0], ...
-%    'zdata', [0 0;0 0], 'cdata', [0 0;0 0]); hold on;
-%surf(handles.axes_simplex3D, 'xdata',[0 0;x_minmax(2) x_minmax(2)],'ydata',[0 0;0 0], ...
-%    'zdata', [0 z_minmax(2);0 0], 'cdata', [0 0;0 0]); hold on;
-%surf(handles.axes_simplex3D, 'xdata',[0 0;0 0],'ydata',[0 y_minmax(2); 0 0], ...
-%    'zdata', [0 0;z_minmax(2) z_minmax(2)], 'cdata', [0 0;0 0]); hold on;
+handles_surf(Dimension(1)+1) = patch('xdata',[0 0 x_minmax(2) x_minmax(2)],'ydata', [0 y_minmax(2) 0 0], ...
+    'zdata', [0 0 0 0], 'FaceColor', 'b', 'visible', 'off'); hold on;
+handles_surf(Dimension(1)+2) = patch('xdata', [0 0 x_minmax(2) x_minmax(2)], 'ydata',[0 0 0 0], ...
+    'zdata', [0 z_minmax(2) 0 0], 'FaceColor', 'b', 'visible', 'off'); hold on;
+handles_surf(Dimension(1)+3) = patch('xdata', [0 0 0 0],'ydata', [0 y_minmax(2) 0 0], ...
+    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', 'off'); hold on;
 
 
 % --------------------------------------------------------------------
@@ -3018,11 +3031,17 @@ end
 
 
 % --------------------------------------------------------------------
-function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<INUSL>
 % hObject    handle to uipushtool1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global points_set Dimension table handles_surf handles_norm;
+
+%set(handles.Restriction_nonnegativity, 'Enable', 'off');
+set(handles.pushbutton_asignall, 'Enable', 'off');
+if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'on')
+    Restriction_nonnegativity_Callback(handles.Restriction_nonnegativity, eventdata, handles);
+end
 
 points_set_copy = points_set;
 
@@ -3048,33 +3067,36 @@ for i = 1:Dimension(1)+3
                             x=eval(sol(1)); y=eval(sol(2));
                             if x > 0 && y > 0
                                 if points_set{i}.points(3, 1) <= points_set{j}.points(3, 1)
-                                    if points_set{i}.points(3, 1) < x %%%11/01
+                                    if points_set{i}.points(2, 1) <= x %%%11/01
                                         points_set_copy{i}.points(2, :) = [x y 0];
                                     end
                                 else
-                                    if points_set{i}.points(3, 1) > x %%%%11/01
+                                    if points_set{i}.points(3, 2) <= y %%%%11/01
                                         points_set_copy{i}.points(3, :) = [x y 0];
                                         points_set_copy{i}.points(4, :) = [x y 0]; %%%7/01
                                     end
                                 end
                             else
                                 if points_set{i}.points(3, 1) >= points_set{j}.points(3, 1) && ...
-                                    points_set{i}.points(2, 1) >= points_set{j}.points(2, 1)                                  
-                                    points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
-                                    points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
-                                    points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
+                                    points_set{i}.points(2, 2) >= points_set{j}.points(2, 2) && ...
+                                    points_set{i}.points(1, 3) >= points_set{j}.points(1, 3)
+                                    if points_set_copy{i}.points(3, :) == points_set_copy{i}.points(4, :) %%%12/01
+                                        points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
+                                    end
+                                    points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);                                                                        
+                                    points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);       
                                 end
                             end
                         else
                             if points_set{i}.points(3, 1) >= points_set{j}.points(3, 1) && ...
-                                    points_set{i}.points(2, 1) >= points_set{j}.points(2, 1)
+                                    points_set{i}.points(2, 2) >= points_set{j}.points(2, 2)
                                 if points_set_copy{i}.tipo == 36                                    
                                     if points_set_copy{j}.points(2, 1) == 0 && points_set_copy{j}.points(2, 3) == 0
                                         points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);                                        
                                     else
                                          if points_set_copy{j}.points(2, 3) ~= 0
-                                            points_set_copy{i}.points(2, :) = points_set_copy{j}.points(4, :); 
-                                         else
+                                            points_set_copy{i}.points(2, :) = points_set_copy{j}.points(4, :);  %%%% Revisar %%%% Prueba cambio de 4 por 2
+                                         else 
                                             points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
                                          end
                                     end
@@ -3123,25 +3145,32 @@ for i = 1:Dimension(1)+3
                             x=eval(sol(1)); z=eval(sol(2));
                             if x > 0 && z > 0
                                 if points_set{i}.points(1, 3) <= points_set{j}.points(1, 3)
-                                    if points_set{i}.points(1, 3) < z %%%11/01
+                                    if points_set{i}.points(3, 3) <= z %%%11/01
                                         if points_set_copy{i}.points(3, 2) == 0
                                             points_set_copy{i}.points(3, :) = [x 0 z];
                                             points_set_copy{i}.points(4, :) = [x 0 z]; %%%7/01
                                         else
                                             points_set_copy{i}.points(4, :) = [x 0 z];
                                         end
+                                    %elseif points_set{i}.points(1, 2) ~= 0
+                                    %   points_set_copy{i}.points(4, :) = [x 0 z];
                                     end
                                 else
-                                    if points_set{i}.points(1, 3) > z %%%%11/01
+                                    if points_set{i}.points(1, 1) <= x %%%%11/01
                                         points_set_copy{i}.points(1, :) = [x 0 z];
+                                    %else
+                                    %    points_set_copy{i}.points(4, :) = [x 0 z];
                                     end
                                 end
                             else
                                 if points_set{i}.points(1, 3) >= points_set{j}.points(1, 3) && ...
-                                        points_set{i}.points(3, 1) >= points_set{j}.points(3, 1)
+                                        points_set{i}.points(3, 1) >= points_set{j}.points(3, 1) && ...
+                                        points_set{i}.points(2, 2) >= points_set{j}.points(2, 2)
                                     if points_set_copy{i}.points(3, 2) == 0
-                                        points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);
-                                        points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
+                                        if points_set_copy{i}.points(3, :) == points_set_copy{i}.points(4, :) %%%12/01
+                                            points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
+                                        end
+                                        points_set_copy{i}.points(3, :) = points_set_copy{j}.points(3, :);                                        
                                     end
                                     points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);
                                 end
@@ -3154,7 +3183,7 @@ for i = 1:Dimension(1)+3
                                         points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :);                                        
                                   else
                                      if points_set_copy{j}.points(1, 2) ~= 0
-                                        points_set_copy{i}.points(1, :) = points_set_copy{j}.points(4, :); 
+                                        points_set_copy{i}.points(1, :) = points_set_copy{j}.points(4, :);  %%%% Revisar %%%% Prueba cambio de 4 por 1
                                      else
                                          points_set_copy{i}.points(1, :) = points_set_copy{j}.points(1, :); 
                                      end
@@ -3171,7 +3200,7 @@ for i = 1:Dimension(1)+3
                                           points_set_copy{i}.points(4, :) = points_set_copy{j}.points(3, :);
                                       end
                                   end                                   
-                                  points_set_copy{i}.points(2, :) = [0 0 0];
+                                  points_set_copy{i}.points(2, :) = [0 0 0]; %%%%Revisar %%%%%%
                                   
                                   if points_set_copy{i}.points(3, 2) > 0 && points_set_copy{i}.points(1, 2) > 0
                                         points_set_copy{i}.points(:) = 0;
@@ -3204,7 +3233,7 @@ for i = 1:Dimension(1)+3
                             y=eval(sol(1)); z=eval(sol(2));
                             if y > 0 && z > 0
                                 if points_set{i}.points(2, 2) <= points_set{j}.points(2, 2)
-                                    if points_set{i}.points(2, 2) < y %%%11/01
+                                    if points_set{i}.points(1, 2) <= y %%%11/01
                                         if points_set_copy{i}.points(1, 1) == 0
                                             points_set_copy{i}.points(1, :) = [0 y z];
                                         else
@@ -3212,7 +3241,7 @@ for i = 1:Dimension(1)+3
                                         end
                                     end
                                 else
-                                    if points_set{i}.points(2, 2) > y %%%11/01
+                                    if points_set{i}.points(2, 3) <= z %%%11/01
                                         if points_set_copy{i}.points(2, 1) == 0
                                             points_set_copy{i}.points(2, :) = [0 y z];
                                         else
@@ -3222,7 +3251,8 @@ for i = 1:Dimension(1)+3
                                 end
                             else
                                 if points_set{i}.points(2, 2) >= points_set{j}.points(2, 2) && ...
-                                        points_set{i}.points(1, 3) >= points_set{j}.points(1, 3)
+                                        points_set{i}.points(1, 3) >= points_set{j}.points(1, 3) && ...
+                                        points_set{i}.points(3, 1) >= points_set{j}.points(3, 1)
                                     if points_set_copy{i}.points(2, 1) == 0
                                         points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
                                     end
@@ -3249,7 +3279,7 @@ for i = 1:Dimension(1)+3
                                         points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
                                   else
                                       if points_set_copy{j}.points(2, 1) ~= 0
-                                            points_set_copy{i}.points(2, :) = points_set_copy{j}.points(4, :);                                            
+                                            points_set_copy{i}.points(2, :) = points_set_copy{j}.points(4, :);  %%%% Revisar %%%% Prueba cambio de 4 por 2                                           
                                       else
                                           points_set_copy{i}.points(2, :) = points_set_copy{j}.points(2, :);
                                       end
@@ -3270,8 +3300,9 @@ for i = 1:Dimension(1)+3
                         end
                       end                     
                   end
-                                
-                if  any(points_set_copy{i}.points(:)~=0)
+                        
+                C = cross(points_set_copy{i}.points(1, :)-points_set_copy{i}.points(2, :), points_set_copy{i}.points(1, :)-points_set_copy{i}.points(3, :));
+                if  any(points_set_copy{i}.points(:)~=0) && any(C(:) ~= 0)
                     p = points_set_copy{i}.points;
                     mean_point = 0.3*[p(1,1) p(1,2) p(1,3)]+0.3*[p(2,1) p(2,2) p(2,3)]+0.4*[p(3,1) p(3,2) p(3,3)];
                     K = convex_hull([p(1,1) p(1,2) p(1,3); p(2,1) p(2,2) p(2,3); p(3,1) p(3,2) p(3,3); p(4,1) p(4,2) p(4,3)]);
@@ -3308,6 +3339,8 @@ for i = 1:Dimension(1)+3
     end
 end
 
+set(handles.Uncut_planes, 'Enable', 'on');
+
 
 %%%
 %%% Calcula el orden de los nodos para trazar un polígono convexo
@@ -3330,59 +3363,112 @@ end
     
 syms z1 z2;
 
-if points(1, 3) ~= points(2, 3)
-    if ~(points(1, 1) == points(3, 1) && points(3, 1) == points(2, 1))
-                
-        if coef1 ~= 0 && coef2 ~= 0
-            if points(1, 2) == points(3, 2) && points(3, 2) == points(2, 2)
-                theta = pi/2;        
-            elseif ~(strcmp(angulo1, 'NaN')||strcmp(angulo2, 'NaN'))
-                sol = solve(['asin(z1/', num2str(coef1), ')-', num2str(angulo1), '-asin(z1/', num2str(coef2), ')+', num2str(angulo2)], z1);
-                if ~isempty(sol)
-                    z = eval(sol);
-                    theta = asin(min(abs(z(1)))/coef1) - angulo1;
+N = cross(points(1,:)-points(2,:), points(1,:)-points(3,:));
+C = dot(N, [0 0 1]);
+
+if any(C(:) ~= 0)
+    if points(1, 3) ~= points(2, 3)
+        if ~(points(1, 1) == points(3, 1) && points(3, 1) == points(2, 1))
+
+            if coef1 ~= 0 && coef2 ~= 0
+                if points(1, 2) == points(3, 2) && points(3, 2) == points(2, 2)
+                    theta = pi/2;        
+                elseif ~(strcmp(angulo1, 'NaN')||strcmp(angulo2, 'NaN'))
+                    sol = solve(['asin(z1/', num2str(coef1), ')-', num2str(angulo1), '-asin(z1/', num2str(coef2), ')+', num2str(angulo2)], z1);
+                    if ~isempty(sol)
+                        z = eval(sol);
+                        theta = asin(min(abs(z(1)))/coef1) - angulo1;
+                    end
+                elseif strcmp(angulo1, 'NaN') && strcmp(angulo2, 'NaN')
+                    sol = solve(['acos(z1/', num2str(points(1, 3)), ')+', 'acos(z1/', num2str(points(2, 3)), ')'], z1);
+                    if ~isempty(sol)
+                        z = eval(sol);
+                        theta = asin(min(abs(z(1)))/coef2) - angulo2;            
+                    end
+                elseif strcmp(angulo1, 'NaN')
+                    sol = solve(['acos(z1/', num2str(points(1, 3)), ')', '-asin(z1/', num2str(coef2), ')+', num2str(angulo2)], z1);
+                    if ~isempty(sol)
+                        z = eval(sol);
+                        theta = asin(min(abs(z(1)))/coef2) - angulo2;            
+                    end
+                elseif strcmp(angulo2, 'NaN')
+                    sol = solve(['asin(z1/', num2str(points(2, 3)), ')', '-asin(z1/', num2str(coef1), ')+', num2str(angulo1)], z1);
+                    if ~isempty(sol)
+                        z = eval(sol);
+                        theta = asin(min(abs(z(1)))/coef1) - angulo1;            
+                    end 
                 end
-            elseif strcmp(angulo1, 'NaN') && strcmp(angulo2, 'NaN')
-                sol = solve(['acos(z1/', num2str(points(1, 3)), ')+', 'acos(z1/', num2str(points(2, 3)), ')'], z1);
-                if ~isempty(sol)
-                    z = eval(sol);
-                    theta = asin(min(abs(z(1)))/coef2) - angulo2;            
-                end
-            elseif strcmp(angulo1, 'NaN')
-                sol = solve(['acos(z1/', num2str(points(1, 3)), ')', '-asin(z1/', num2str(coef2), ')+', num2str(angulo2)], z1);
-                if ~isempty(sol)
-                    z = eval(sol);
-                    theta = asin(min(abs(z(1)))/coef2) - angulo2;            
-                end
-            elseif strcmp(angulo2, 'NaN')
-                sol = solve(['asin(z1/', num2str(points(2, 3)), ')', '-asin(z1/', num2str(coef1), ')+', num2str(angulo1)], z1);
-                if ~isempty(sol)
-                    z = eval(sol);
-                    theta = asin(min(abs(z(1)))/coef1) - angulo1;            
-                end 
+            elseif any([coef1 coef2] ~= 0)
+                theta = pi/2;      
             end
-        elseif any([coef1 coef2] ~= 0)
+
+            R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
+            new_points = R_x*points';
+            points = new_points';   
+        else        
             theta = pi/2;      
+
+            R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
+            new_points = R_y*points';
+            points = new_points';
+        end    
+    else
+        if ~(points(1, 1) == points(3, 1) && points(3, 1) == points(2, 1))
+            theta = pi/2;      
+
+            R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
+            new_points = R_y*points';
+            points = new_points';
         end
-
-        R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
-        new_points = R_x*points';
-        points = new_points';   
-    else        
-        theta = pi/2;      
-
-        R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
-        new_points = R_y*points';
-        points = new_points';
-    end    
-else
-    if ~(points(1, 1) == points(3, 1) && points(3, 1) == points(2, 1))
-        theta = pi/2;      
-        
-        R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
-        new_points = R_y*points';
-        points = new_points';
     end
+else
+    if points(1,1) ~= points(2,1)
+        punto1 = points(1,:); punto2 = points(2,:);
+    elseif points(1,1) ~= points(3,1)
+        punto1 = points(1,:); punto2 = points(3,:);
+    else
+        punto1 = points(2,:); punto2 = points(3,:);
+    end
+    
+    u = punto1 - punto2;
+    theta = pi/2;    
+
+    R_u = [cos(theta)+u(1)^2*(1-cos(theta))           u(1)*u(2)*(1-cos(theta))-u(3)*sin(theta)    u(1)*u(3)*(1-cos(theta))+u(2)*sin(theta); ...
+           u(2)*u(1)*(1-cos(theta))+u(3)*sin(theta)   cos(theta)+u(2)^2*(1-cos(theta))            u(2)*u(3)*(1-cos(theta))-u(1)*sin(theta); ...
+           u(3)*u(1)*(1-cos(theta))-u(2)*sin(theta)   u(3)*u(2)*(1-cos(theta))+u(1)*sin(theta)    cos(theta)+u(3)^2*(1-cos(theta))];
+    new_points = R_u*points';
+    points = new_points';
 end
 
 ind = convhull(points(:,1), points(:,2));
+
+
+% --------------------------------------------------------------------
+function Restriction_nonnegativity_Callback(hObject, eventdata, handles) %#ok<INUSD>
+% hObject    handle to Restriction_nonnegativity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global Dimension handles_surf;
+
+if strcmp(get(hObject, 'Checked'), 'off')
+    set(handles_surf(Dimension(1)+1), 'visible', 'on');
+    set(handles_surf(Dimension(1)+2), 'visible', 'on');
+    set(handles_surf(Dimension(1)+3), 'visible', 'on');
+    set(hObject, 'Checked', 'on');
+else
+    set(handles_surf(Dimension(1)+1), 'visible', 'off');
+    set(handles_surf(Dimension(1)+2), 'visible', 'off');
+    set(handles_surf(Dimension(1)+3), 'visible', 'off');
+    set(hObject, 'Checked', 'off');
+end
+
+% --------------------------------------------------------------------
+function Uncut_planes_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Uncut_planes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+uipushtool1_ClickedCallback(handles.Mode_geo3D, eventdata, handles); %%%% Arreglar %%%%%
+
+%set(handles.Restriction_nonnegativity, 'Enable', 'on');
+set(handles.pushbutton_asignall, 'Enable', 'on');
