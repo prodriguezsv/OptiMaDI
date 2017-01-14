@@ -183,7 +183,7 @@ if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
         j=0;
         Order = max(Order_initial);
         for i = (Order+1:Dim(1)-1)
-            Matrix_problem(1:Dim(1)-1, Dim(2) + j) = ident(i);
+            Matrix_problem(1:Dim(1)-1, Dim(2) + j) = ident(:, i);
             Matrix_problem(Dim(1), Dim(2) + j) = 1;
             Order_initial(Dim(2) + j) = i;                
             j=j+1;
