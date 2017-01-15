@@ -333,7 +333,9 @@ if handles.Method ~= 3
             set_environment('sol_multiples', handles);
             set(handles.popupmenu_selectvar, 'value', 1);
             calc_ratios(handles);
-            msgbox('El proceso ha encontrado una solución óptima. Haga clic en "Solucion múltiple" para encontrar otra.','Método simplex','modal');
+            if strcmp(get(handles.Mode_geo3D, 'Checked'), 'off')
+                msgbox('El proceso ha encontrado una solución óptima. Haga clic en "Solucion múltiple" para encontrar otra.','Método simplex','modal');
+            end
             generar_latexanalisis('\section{Análisis de resultados}');
         else % No hay Soluciones múltiples, no hay más opciones
             if (handles.istwophases == 1 && handles.whatphase == 1) 
@@ -2502,7 +2504,7 @@ if ~isempty(Basic_Order_current_3D)
     solution(Order_current(1:Dimension(2)-1) < Dimension(1)) = sorted_basic_solution;
     costos = Matrix_problem(end,1:Dimension(2)-1);
     Objective_function = costos(Basic_Order_current_3D)*solution(Basic_Order_current_3D)';
-    table(Dimension(1),Dimension(1)+1) = Objective_function;    
+    table(Dimension(1),4) = Objective_function;    
 else
     table(Dimension(1),4) = 0;
 end
@@ -2525,6 +2527,7 @@ end
 set(handles.popupmenu_selectvar2, 'string', char(Var));
 set(handles.popupmenu_selectvar2, 'value', 1);
 set(handles.pushbutton_asignall, 'Enable', 'on');
+set(handles.uipushtool1, 'Enable', 'on');
 
 for i=1:Dimension(1)
     if strcmp(get(handles.Mode_geo3D, 'Checked'),'off') || i == Dimension(1)
@@ -3046,17 +3049,35 @@ for i=1:Dimension(1)
     end
     %quiver3(x11,y11,z11, table(i, 1), table(i, 2), table(i, 3), 'Color', [1 0 1]);                            
 end
-points_set{Dimension(1)+1} = struct('points', [0 0 0; 0 y_minmax(2) 0; x_minmax(2) 0 0; x_minmax(2) 0 0], 'tipo', 36);
-points_set{Dimension(1)+2} = struct('points', [0 0 z_minmax(2); 0 0 0; x_minmax(2) 0 0; x_minmax(2) 0 0], 'tipo',33);
-points_set{Dimension(1)+3} = struct('points', [0 0 z_minmax(2); 0 y_minmax(2) 0; 0 0 0; 0 0 0], 'tipo',30);
+
+points_set{Dimension(1)+1} = struct('points', [x_minmax(2) y_minmax(2) 0; 0 y_minmax(2) 0; x_minmax(2) 0 0; 0 0 0], 'tipo', 36); %XY
+points_set{Dimension(1)+2} = struct('points', [0 0 z_minmax(2);  x_minmax(2) 0 z_minmax(2); x_minmax(2) 0 0; 0 0 0], 'tipo',33); %XZ
+points_set{Dimension(1)+3} = struct('points', [0 0 z_minmax(2); 0 y_minmax(2) 0; 0 y_minmax(2) z_minmax(2); 0 0 0], 'tipo',30); %YZ
 h = plot3(handles.axes_simplex3D, solution(1), solution(2), solution(3), 'rs');
 
-handles_surf(Dimension(1)+1) = patch('xdata',[0 0 x_minmax(2) x_minmax(2)],'ydata', [0 y_minmax(2) 0 0], ...
-    'zdata', [0 0 0 0], 'FaceColor', 'b', 'visible', 'off'); hold on;
-handles_surf(Dimension(1)+2) = patch('xdata', [0 0 x_minmax(2) x_minmax(2)], 'ydata',[0 0 0 0], ...
-    'zdata', [0 z_minmax(2) 0 0], 'FaceColor', 'b', 'visible', 'off'); hold on;
-handles_surf(Dimension(1)+3) = patch('xdata', [0 0 0 0],'ydata', [0 y_minmax(2) 0 0], ...
-    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', 'off'); hold on;
+if strcmp(get(handles.Mode_geo3D, 'Checked'),'on')
+    if handles_surf(Dimension(1)+1) ~= 0
+        set(handles_surf(Dimension(1)+1), 'visible', 'off');
+        set(handles_surf(Dimension(1)+2), 'visible', 'off');
+        set(handles_surf(Dimension(1)+3), 'visible', 'off');
+        delete(handles_surf(Dimension(1)+1));
+        delete(handles_surf(Dimension(1)+2));
+        delete(handles_surf(Dimension(1)+3));
+    end
+end
+
+if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'off') || (strcmp(get(handles.Mode_geo3D, 'Checked'),'on') && ...
+        strcmp(get(handles.Uncut_planes, 'Enable'), 'on'))
+    visibility = 'off';
+else
+    visibility = 'on';
+end
+handles_surf(Dimension(1)+1) = patch('xdata',[0 x_minmax(2) x_minmax(2) 0],'ydata', [0 0 y_minmax(2) y_minmax(2)], ...
+    'zdata', [0 0 0 0], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on; % XY
+handles_surf(Dimension(1)+2) = patch('xdata', [0 x_minmax(2) x_minmax(2) 0], 'ydata',[0 0 0 0], ... 
+    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on; % XZ
+handles_surf(Dimension(1)+3) = patch('xdata', [0 0 0 0],'ydata', [0 y_minmax(2) y_minmax(2) 0], ...
+    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on; %YZ
 
 
 % --------------------------------------------------------------------
@@ -3080,10 +3101,12 @@ function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<DEFNU,INU
 % handles    structure with handles and user data (see GUIDATA)
 global points_set Dimension table handles_surf handles_norm;
 
-%set(handles.Restriction_nonnegativity, 'Enable', 'off');
+set(handles.Restriction_nonnegativity, 'Enable', 'off');
 set(handles.pushbutton_asignall, 'Enable', 'off');
 if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'on')
-    Restriction_nonnegativity_Callback(handles.Restriction_nonnegativity, eventdata, handles);
+    set(handles_surf(Dimension(1)+1), 'visible', 'off');
+    set(handles_surf(Dimension(1)+2), 'visible', 'off');
+    set(handles_surf(Dimension(1)+3), 'visible', 'off');
 end
 
 points_set_nonred = points_set;
@@ -3175,7 +3198,7 @@ for i = 1:Dimension(1)+3
                             else
                                 if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
                                         points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
-                                    if points_set_convex{i}.tipo == 36                                    
+                                    if points_set_convex{i}.tipo == 36     %%% Plano XY                               
                                         if points_set_convex{j}.points(2, 1) == 0 && points_set_convex{j}.points(2, 3) == 0
                                             points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);                                        
                                         else
@@ -3527,14 +3550,19 @@ for i = 1:Dimension(1)+3
                         end
                         handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
                     else
+                        if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'off')
+                            visibility = 'off';
+                        else
+                            visibility = 'on';
+                        end
                         %surf(handles.axes_simplex3D, 'xdata',[p(1,1) p(2,1); p(3,1) p(4,1)], 'ydata',[p(1,2) p(2,2); p(3,2) p(4,2)], ...
                         %    'zdata', [p(1,3) p(2,3); p(3,3) p(4,3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;
                         if K_dim(1) == 5
                             patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'b'); hold on;
+                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on;
                         else
                             patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'b'); hold on;
+                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on;
                         end
                         %quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
                     end
@@ -3669,7 +3697,7 @@ ind = convhull(points(:,1), points(:,2));
 
 
 % --------------------------------------------------------------------
-function Restriction_nonnegativity_Callback(hObject, eventdata, handles) %#ok<INUSD>
+function Restriction_nonnegativity_Callback(hObject, eventdata, handles) %#ok<DEFNU,INUSD>
 % hObject    handle to Restriction_nonnegativity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -3703,6 +3731,6 @@ set(handles.Mode_geo3D, 'Checked','off'); %Truco para correr función trace3D
 trace3D(handles);    
 
 set(handles.Mode_geo3D, 'Checked','on');
-set(handles.Restriction_nonnegativity, 'Checked','off');
-
+set(handles.Restriction_nonnegativity, 'Enable','on');
+set(hObject, 'Enable','off');
 set(handles.pushbutton_asignall, 'Enable', 'on');
