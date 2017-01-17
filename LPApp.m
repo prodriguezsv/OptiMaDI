@@ -3144,39 +3144,49 @@ for i = 1:Dimension(1)+3
                                 x=eval(sol(1)); y=eval(sol(2));
                                 if x > 0 && y > 0
                                     if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                        if points_actual(2, 1) <= x %%%11/01
-                                            N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
-                                            C = dot(N, [0 0 1]);
-                                            points_set_convex{i}.points(2, :) = [x y 0];                                            
-                                            
-                                            if all(C(:) == 0)
-                                                points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(1, 3)];                                               
-                                                points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(3, 2) points_set_convex{i}.points(1, 3)];
-                                                %table_copy(i, :) = table_copy(j, :);
-                                                %points_set_nonred{i} = points_set_nonred{j};
-                                                %points_set_convex{i}.tipo = points_set_convex{j}.tipo;
+                                        if points_set_convex{i}.points(3, 3) == 0
+                                            if points_actual(2, 1) <= x && points_actual(2, 2) >= y %%%11/01
+                                                N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                C = dot(N, [0 0 1]);
+                                                points_set_convex{i}.points(2, :) = [x y 0];                                            
+
+                                                if all(C(:) == 0)
+                                                    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(1, 3)];                                                    
+                                                    points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(3, 2) points_set_convex{i}.points(1, 3)];
+                                                end
+                                                C = dot(N, [0 1 0]);
+                                                if all(C(:) == 0)
+                                                    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y points_set_convex{i}.points(4, 3)];
+                                                end
                                             end
+                                        else
+                                            %%% Desarrollar
                                         end
                                     else
-                                        if points_actual(3, 2) <= y %%%%11/01
-                                            N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
-                                            C = dot(N, [0 0 1]);
-                                            points_set_convex{i}.points(3, :) = [x y 0];
-                                            points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01                                            
-                                            
-                                            if all(C(:) == 0)
-                                                points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
-                                                points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(2, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];
-                                                %table_copy(i, :) = table_copy(j, :);
-                                                %points_set_nonred{i} = points_set_nonred{j};
-                                                %points_set_convex{i}.tipo = points_set_convex{j}.tipo;
+                                        if points_set_convex{i}.points(2, 3) == 0
+                                            if points_actual(3, 2) <= y && points_actual(3, 1) >= x %%%%11/01
+                                                N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                C = dot(N, [0 0 1]);
+                                                points_set_convex{i}.points(3, :) = [x y 0];
+                                                points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01                                            
+
+                                                if all(C(:) == 0)
+                                                    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];                                                    
+                                                    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(2, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];
+                                                end
+                                                C = dot(N, [1 0 0]);
+                                                if all(C(:) == 0)
+                                                    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) points_set_convex{i}.points(4, 3)];
+                                                end
                                             end
+                                        else
+                                            %%% Desarrollar
                                         end
                                     end
                                 else
                                     if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
-                                        points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
-                                        % && points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
+                                        points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) && ...
+                                        points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
                                         if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :)) %%%12/01  %%%14/01
                                             points_set_convex{i}.points(4, :) = points_set_convex{j}.points(3, :);    
                                         end
@@ -3184,15 +3194,15 @@ for i = 1:Dimension(1)+3
                                         points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);                                                                        
                                         points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :); 
                                         
-                                        if points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
-                                            if ~all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
-                                            end
-                                            points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
-                                            table_copy(i, :) = table_copy(j, :);
-                                            points_set_nonred{i} = points_set_nonred{j};
-                                            points_set_convex{i}.tipo = points_set_convex{j}.tipo;
+                                        %if points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
+                                        if ~all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                            points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
                                         end
+                                        points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
+                                        table_copy(i, :) = table_copy(j, :);
+                                        points_set_nonred{i} = points_set_nonred{j};
+                                        points_set_convex{i}.tipo = points_set_convex{j}.tipo;
+                                        %end
                                     end
                                 end
                             else
@@ -3270,55 +3280,83 @@ for i = 1:Dimension(1)+3
                                 x=eval(sol(1)); z=eval(sol(2));
                                 if x > 0 && z > 0
                                     if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                        if points_actual(1, 1) <= x %%%%11/01
-                                            N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
-                                            C = dot(N, [0 1 0]);
-                                            if points_set_convex{i}.points(1, 2) == 0
-                                                points_set_convex{i}.points(1, :) = [x 0 z];
+                                        if points_set_convex{i}.points(3, 2) == 0
+                                            if points_actual(1, 1) <= x && points_actual(1, 3) >= z %%%%11/01
+                                                N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                C = dot(N, [0 1 0]);
+                                                if points_set_convex{i}.points(1, 2) == 0
+                                                    points_set_convex{i}.points(1, :) = [x 0 z];
 
-                                                if all(C(:) == 0)
-                                                    points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(3, 3)];
-                                                    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(2, 2) z];                                                    
-                                                    %table_copy(i, :) = table_copy(j, :);
-                                                    %points_set_nonred{i} = points_set_nonred{j};
-                                                    %points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                                end                                                                                                
-                                            else
-                                                points_set_convex{i}.points(4, :) = [x 0 z];
-                                                
-                                                if all(C(:) == 0)
-                                                    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                    points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];
-                                                    %table_copy(i, :) = table_copy(j, :);
-                                                    %points_set_nonred{i} = points_set_nonred{j};
-                                                    %points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                                end
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(3, 3)];
+                                                        points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(2, 2) z];                                                    
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [0 0 1]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) points_set_convex{i}.points(4, 2) z];
+                                                        end
+                                                    end
+                                                else
+                                                    points_set_convex{i}.points(4, :) = [x 0 z];
+
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [0 0 1]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(1, 2) z];
+                                                        end
+                                                    end
+                                                end                                            
                                             end
-                                            
-                                        end                                                                                                                                                                                                                       
+                                        else
+                                             %%% Desarrollar
+                                        end
                                     else
-                                        if points_actual(3, 3) <= z %%%11/01
-                                            N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
-                                            C = dot(N, [0 1 0]);
-                                            if points_set_convex{i}.points(3, 2) == 0
-                                                points_set_convex{i}.points(3, :) = [x 0 z];
-                                            else
-                                                points_set_convex{i}.points(4, :) = [x 0 z]; %%%7/01                                                
-                                            end
-                                            
-                                            if all(C(:) == 0)
-                                                points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];
-                                                %table_copy(i, :) = table_copy(j, :);
-                                                %points_set_nonred{i} = points_set_nonred{j};
-                                                %points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                            end
-                                        end 
+                                        if points_set_convex{i}.points(1, 2) == 0
+                                            if points_actual(3, 3) <= z && points_actual(3, 1) >= x %%%11/01
+                                                N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                C = dot(N, [0 1 0]);
+                                                if points_set_convex{i}.points(3, 2) == 0
+                                                    points_set_convex{i}.points(3, :) = [x 0 z];
+                                                    if all(points_actual(3, :) == points_actual(4, :))
+                                                        points_set_convex{i}.points(4, :) = [x 0 z];
+                                                    end
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];                                                    
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [1 0 0]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) points_set_convex{i}.points(4, 3)];
+                                                        end
+                                                    end
+                                                else
+                                                    points_set_convex{i}.points(4, :) = [x 0 z]; %%%7/01  
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(3, 3)];
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [1 0 0]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(3, :) = [x points_set_convex{i}.points(3, 2) points_set_convex{i}.points(3, 3)];
+                                                        end
+                                                    end
+                                                end                                                
+                                            end 
+                                        else
+                                            %%% Desarrollar
+                                        end
                                     end
                                 else
                                     if points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) && ...
-                                            points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
-                                            % && points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
+                                            points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
+                                            points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
                                         if points_set_convex{i}.points(3, 2) == 0
                                             points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);
                                             if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :)) %%%12/01 %%%14/01
@@ -3327,15 +3365,15 @@ for i = 1:Dimension(1)+3
                                         end
                                         points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
                                         
-                                        if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
-                                            points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
-                                            if ~all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
-                                            end
-                                            table_copy(i, :) = table_copy(j, :);
-                                            points_set_nonred{i} = points_set_nonred{j};
-                                            points_set_convex{i}.tipo = points_set_convex{j}.tipo;
+                                        %if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
+                                        points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
+                                        if ~all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                            points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
                                         end
+                                        table_copy(i, :) = table_copy(j, :);
+                                        points_set_nonred{i} = points_set_nonred{j};
+                                        points_set_convex{i}.tipo = points_set_convex{j}.tipo;
+                                        %end
                                     end
                                 end
                             else
@@ -3412,67 +3450,96 @@ for i = 1:Dimension(1)+3
                                 y=eval(sol(1)); z=eval(sol(2));
                                 if y > 0 && z > 0
                                     if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
-                                        if points_actual(1, 2) <= y %%%11/01
-                                            N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
-                                            C = dot(N, [1 0 0]);
-                                            if points_set_convex{i}.points(1, 1) == 0
-                                                points_set_convex{i}.points(1, :) = [0 y z];
-                                                if all(C(:) == 0)
-                                                    points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(2, 3)];
-                                                    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(3, 1) y z];
-                                                end                                                
-                                            else
-                                                points_set_convex{i}.points(4, :) = [0 y z];
-                                                if all(C(:) == 0)
-                                                    points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(2, 3)];
-                                                    points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(3, 1) y z];
-                                                    %table_copy(i, :) = table_copy(j, :);
-                                                    %points_set_nonred{i} = points_set_nonred{j};
-                                                    %points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                                end
-                                            end                                                                                        
+                                        if points_set_convex{i}.points(2, 1) == 0
+                                            if points_actual(1, 2) <= y  && points_actual(1, 3) >= z %%%11/01
+                                                N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                C = dot(N, [1 0 0]);
+                                                if points_set_convex{i}.points(1, 1) == 0
+                                                    points_set_convex{i}.points(1, :) = [0 y z];
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(2, 3)];
+                                                        points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(3, 1) y z];
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [0 0 1]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) points_set_convex{i}.points(4, 2) z];
+                                                        end
+                                                    end
+                                                else
+                                                    points_set_convex{i}.points(4, :) = [0 y z];
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
+                                                        points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(3, 1) y z];
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [0 0 1]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(1, 2) z];
+                                                        end
+                                                    end
+                                                end                                                                                        
+                                            end
+                                        else
+                                            %%%% Desarrollar
                                         end
                                     else
-                                        if points_actual(2, 3) <= z %%%11/01
-                                            N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
-                                            C = dot(N, [1 0 0]);
-                                            if points_set_convex{i}.points(2, 1) == 0
-                                                points_set_convex{i}.points(2, :) = [0 y z];
-                                            else
-                                                points_set_convex{i}.points(4, :) = [0 y z];
+                                        if points_set_convex{i}.points(1, 1) == 0
+                                            if points_actual(2, 3) <= z && points_actual(2, 2) >= y%%%11/01
+                                                N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                C = dot(N, [1 0 0]);
+                                                if points_set_convex{i}.points(2, 1) == 0
+                                                    points_set_convex{i}.points(2, :) = [0 y z];
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) y z];
+                                                        points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [0 1 0]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y points_set_convex{i}.points(4, 3)];
+                                                        end
+                                                    end
+                                                else
+                                                    points_set_convex{i}.points(4, :) = [0 y z];
+                                                    if all(C(:) == 0)
+                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) y z];
+                                                        points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
+                                                    else
+                                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                                        C = dot(N, [0 1 0]);
+                                                        if all(C(:) == 0)
+                                                            points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(2, 1) y points_set_convex{i}.points(2, 3)];
+                                                        end
+                                                    end
+                                                end                                               
                                             end
-                                            
-                                            if all(C(:) == 0)
-                                                points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) y z];
-                                                points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
-                                                %table_copy(i, :) = table_copy(j, :);
-                                                %points_set_nonred{i} = points_set_nonred{j};
-                                                %points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                            end
+                                        else
+                                            %%%% Desarrollar
                                         end
                                     end
                                 else
                                     if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) && ...
-                                            points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
-                                            % && points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
-                                        if points_set_convex{i}.points(2, 1) == 0
-                                            points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
-                                        end
-                                        if points_set_convex{i}.points(1, 1) == 0
-                                            points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
-                                        end
+                                            points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) && ...
+                                            points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
+                                            if points_set_convex{i}.points(2, 1) == 0
+                                                points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
+                                            end
+                                            if points_set_convex{i}.points(1, 1) == 0
+                                                points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
+                                            end
                                         
-                                        if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
-                                            points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);
-                                              if all(points_set_convex{j}.points(4, :) == points_set_convex{j}.points(3, :))
-                                                points_set_convex{i}.points(4, :) = points_set_convex{j}.points(3, :);
-                                              else
-                                                  points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
-                                              end
-                                              table_copy(i, :) = table_copy(j, :);
-                                              points_set_nonred{i} = points_set_nonred{j};
-                                              points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                        end
+                                        %if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
+                                          points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);
+                                          if all(points_set_convex{j}.points(4, :) == points_set_convex{j}.points(3, :))
+                                            points_set_convex{i}.points(4, :) = points_set_convex{j}.points(3, :);
+                                          else
+                                              points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
+                                          end
+                                          table_copy(i, :) = table_copy(j, :);
+                                          points_set_nonred{i} = points_set_nonred{j};
+                                          points_set_convex{i}.tipo = points_set_convex{j}.tipo;
+                                        %end
                                     end
                                 end                 
                             else
