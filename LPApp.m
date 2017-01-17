@@ -3186,9 +3186,10 @@ for i = 1:Dimension(1)+3
                                         end
                                     end
                                 else
-                                    if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
-                                        points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) && ...
-                                        points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
+                                    if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
+                                    %if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
+                                    %    points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) && ...
+                                    %    points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
                                         if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :)) %%%12/01  %%%14/01
                                             points_set_convex{i}.points(4, :) = points_set_convex{j}.points(3, :);    
                                         end
@@ -3196,7 +3197,7 @@ for i = 1:Dimension(1)+3
                                         points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);                                                                        
                                         points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :); 
                                         
-                                        if points_set_nonred{i}.points(4, 3) > points_set_nonred{j}.points(4, 3) %%% Revisar
+                                        %if points_set_nonred{i}.points(4, 3) > points_set_nonred{j}.points(4, 3) %%% Revisar
                                             if ~all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
                                                 points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
                                             end
@@ -3204,7 +3205,7 @@ for i = 1:Dimension(1)+3
                                             table_copy(i, :) = table_copy(j, :);
                                             points_set_nonred{i} = points_set_nonred{j};
                                             points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                        end
+                                        %end
                                     end
                                 end
                             else
@@ -3356,9 +3357,10 @@ for i = 1:Dimension(1)+3
                                         end
                                     end
                                 else
-                                    if points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) && ...
-                                            points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
-                                            points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
+                                    if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
+                                    %if points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) && ...
+                                    %       points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
+                                    %        points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
                                         if points_set_convex{i}.points(3, 2) == 0
                                             points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);
                                             if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :)) %%%12/01 %%%14/01
@@ -3367,7 +3369,7 @@ for i = 1:Dimension(1)+3
                                         end
                                         points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
                                          
-                                        if points_set_nonred{i}.points(4, 2) >= points_set_nonred{j}.points(4, 2) %%%% En revisión
+                                        %if points_set_nonred{i}.points(4, 2) >= points_set_nonred{j}.points(4, 2) %%%% En revisión
                                             points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
                                             if ~all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
                                                 points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
@@ -3375,7 +3377,7 @@ for i = 1:Dimension(1)+3
                                             table_copy(i, :) = table_copy(j, :);
                                             points_set_nonred{i} = points_set_nonred{j};
                                             points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                        end
+                                        %end
                                     end
                                 end
                             else
@@ -3521,9 +3523,10 @@ for i = 1:Dimension(1)+3
                                         end
                                     end
                                 else
-                                    if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) && ...
-                                            points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) && ...
-                                            points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
+                                    if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
+                                    %if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) && ...
+                                    %        points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) && ...
+                                    %        points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
                                             if points_set_convex{i}.points(2, 1) == 0
                                                 points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
                                             end
@@ -3531,7 +3534,7 @@ for i = 1:Dimension(1)+3
                                                 points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
                                             end
                                         
-                                        if points_set_nonred{i}.points(4, 1) >= points_set_nonred{j}.points(4, 1) %%%%  En revisión
+                                        %if points_set_nonred{i}.points(4, 1) >= points_set_nonred{j}.points(4, 1) %%%%  En revisión
                                               points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);
                                               if all(points_set_convex{j}.points(4, :) == points_set_convex{j}.points(3, :))
                                                 points_set_convex{i}.points(4, :) = points_set_convex{j}.points(3, :);
@@ -3541,7 +3544,7 @@ for i = 1:Dimension(1)+3
                                               table_copy(i, :) = table_copy(j, :);
                                               points_set_nonred{i} = points_set_nonred{j};
                                               points_set_convex{i}.tipo = points_set_convex{j}.tipo;
-                                        end
+                                        %end
                                     end
                                 end                 
                             else
