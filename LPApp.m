@@ -958,8 +958,11 @@ spreadsheet = cell(100,100);
 spreadsheet(1:Dimension(1), 1:Dimension(2)) = num2cell(All_display);
 set(handles.table_simplexdisplay, 'data', spreadsheet);
 
-set(handles.Restriction_nonnegativity, 'Enable', 'off');
-set(handles.Uncut_planes, 'Enable', 'off');
+%set(handles.Restriction_nonnegativity, 'Enable', 'off');
+%set(handles.Uncut_planes, 'Enable', 'off');
+set(handles.Saveimage, 'Enable', 'off');
+set(handles.Saveimage, 'Enable', 'off');
+set(handles.Generate_latex, 'Enable', 'on');
 if Dimension(2)- Dimension(1) == 3
     set(handles.Mode_geo3D, 'Enable', 'on');    
 else
@@ -1042,7 +1045,7 @@ function Loadproblem_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-[filename, Y, Z] = uigetfile('*.mat', 'Selecciona un nombre de archivo válido'); %#ok<NASGU>
+[filename, Y, Z] = uigetfile('*.mat', 'Selecciona un nombre de archivo válido', './Problemas'); %#ok<NASGU>
 if filename ~= 0
     S = load([Y, filename]);
     
@@ -1083,7 +1086,8 @@ elseif handles.Method == 2
 end
 %AGREGADO(27/12/2016)
 
-uisave(cellstr(char('Matrix_problem', 'Method')), 'LProblem');
+mkdir('Problemas');
+uisave(cellstr(char('Matrix_problem', 'Method')), './Problemas/LProblem1');
 %uisave('Matrix_problem', 'LProblem');
 
 
@@ -1827,6 +1831,10 @@ latexfile = [latexfile, '\usepackage{amsmath}'];
 latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '\usepackage[spanish,activeacute,es-noindentfirst]{babel}'];
 latexfile = sprintf('%s \r', latexfile);
+latexfile = [latexfile, '\usepackage[pdftex]{graphicx}'];
+latexfile = sprintf('%s \r', latexfile);
+latexfile = [latexfile, '\DeclareGraphicsExtensions{.bmp,.png,.pdf,.jpg}'];
+latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '\title{Archivo generado por Asistente Simplex + 2016}'];
 latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '\author{Profesor M.Sc. Porfirio Armando Rodríguez}'];
@@ -1842,9 +1850,14 @@ latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '\end{document}'];
 
 %latex = handles.latex;
-handles.latexfile = ['LProblem', num2str(now),'.tex'];
-dlmwrite(handles.latexfile, latexfile, '');
-msgbox(['Se generó el siguiente archivo LaTex:', handles.latexfile, '.'],'Archivo LaTex generado', 'modal');
+mkdir('LaTex');
+[FileName,PathName,FilterIndex] = uiputfile({'*.tex','Archivo de imagen (*.tex)'},'Guardar informe LaTex',...
+          './LaTex/ReporteLaTex1.tex'); %#ok<ASGLU,NASGU>
+handles.latexfile = ['./LaTex/', FileName];
+
+if FileName ~= 0
+    dlmwrite(handles.latexfile, latexfile, '');
+end
 
 function generar_latexsimplexnext()
 global Tableau latex;
@@ -2455,6 +2468,7 @@ if strcmp(get(hObject, 'Checked'), 'on')
     set(handles.pushbutton_asignall, 'Enable', 'off');
     set(handles.Restriction_nonnegativity, 'Enable', 'off');
     set(handles.Uncut_planes, 'Enable', 'off');
+    set(handles.Saveimage, 'Enable', 'off');
     hold off;
     handles_surf = [];
     handles_norm = [];
@@ -2476,6 +2490,7 @@ else
     set(handles.pushbutton_asignall, 'String', 'Quitar');
     set(handles.pushbutton_asignall, 'Enable', 'on');
     set(handles.Restriction_nonnegativity, 'Enable', 'on');
+    set(handles.Saveimage, 'Enable', 'on');
 end
 
 function trace3D(handles)
@@ -2526,8 +2541,8 @@ for i = 1:(Dimension(1))
 end
 set(handles.popupmenu_selectvar2, 'string', char(Var));
 set(handles.popupmenu_selectvar2, 'value', 1);
-set(handles.pushbutton_asignall, 'Enable', 'on');
 set(handles.uipushtool1, 'Enable', 'on');
+set(handles.Uncut_planes, 'Enable', 'off');
 
 for i=1:Dimension(1)
     if strcmp(get(handles.Mode_geo3D, 'Checked'),'off') || i == Dimension(1)
@@ -2571,8 +2586,8 @@ for i=1:Dimension(1)
                 points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 1);
             elseif any([x31 y21 z11] > 0)
                 if all([x31 y21] > 0)
-                    inner_point1 = 2*[x31 0 0]-1*[0 0 z11];
-                    inner_point2 = 2*[0 y21 0]-1*[0 0 z11];
+                    inner_point1 = 4*[x31 0 0]-3*[0 0 z11];
+                    inner_point2 = 4*[0 y21 0]-3*[0 0 z11];
                     x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = x31; y3 = 0; z3 = 0;
@@ -2587,16 +2602,16 @@ for i=1:Dimension(1)
                     x4 = x31; y4 = 0; z4 = 0;
                     points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x4 y4 z4; x2 y2 z2], 'tipo', 3);
                 elseif all([y21 z11] > 0)
-                    inner_point1 = 2*[0 y21 0]-1*[x31 0 0];
-                    inner_point2 = 2*[0 0 z11]-1*[x31 0 0];
+                    inner_point1 = 4*[0 y21 0]-3*[x31 0 0];
+                    inner_point2 = 4*[0 0 z11]-3*[x31 0 0];
                     x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = 0; y3 = 0; z3 = z11;
                     x4 = 0; y4 = y21; z4 = 0;
                     points_set{i} = struct('points', [x3 y3 z3; x4 y4 z4; x1 y1 z1; x2 y2 z2], 'tipo', 4);
                 elseif x31 > 0
-                    inner_point1 = 2*[x31 0 0]-1*[0 0 z11];
-                    inner_point2 = 2*[x31 0 0]-1*[0 y21 0];
+                    inner_point1 = 4*[x31 0 0]-3*[0 0 z11];
+                    inner_point2 = 4*[x31 0 0]-3*[0 y21 0];
                     x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = x31; y3 = 0; z3 = 0;
@@ -2608,8 +2623,8 @@ for i=1:Dimension(1)
                     end
                     points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 5);
                 elseif y21 > 0
-                    inner_point1 = 2*[0 y21 0]-1*[0 0 z11];
-                    inner_point2 = 2*[0 y21 0]-1*[x31 0 0];
+                    inner_point1 = 4*[0 y21 0]-3*[0 0 z11];
+                    inner_point2 = 4*[0 y21 0]-3*[x31 0 0];
                     x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = 0; y3 = y21; z3 = 0;
@@ -2621,8 +2636,8 @@ for i=1:Dimension(1)
                     end
                     points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 6);
                 elseif z11 > 0
-                    inner_point1 = 2*[0 0 z11]-1*[0 y21 0];
-                    inner_point2 = 2*[0 0 z11]-1*[x31 0 0];
+                    inner_point1 = 4*[0 0 z11]-3*[0 y21 0];
+                    inner_point2 = 4*[0 0 z11]-3*[x31 0 0];
                     x1 = inner_point1(1); y1 = inner_point1(2); z1 = inner_point1(3);
                     x2 = inner_point2(1); y2 = inner_point2(2); z2 = inner_point2(3);
                     x3 = 0; y3 = 0; z3 = z11;
@@ -2636,9 +2651,9 @@ for i=1:Dimension(1)
                 end
                 %%%desarrollar
             elseif all([x31 y21 z11] == 0)
-                x_minmax(2) = max([x_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
-                y_minmax(2) = max([y_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
-                z_minmax(2) = max([z_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
+                x_minmax(2) = max([x_minmax(2), 0.30*max(table(1:Dimension(1),end))]);
+                y_minmax(2) = max([y_minmax(2), 0.30*max(table(1:Dimension(1),end))]);
+                z_minmax(2) = max([z_minmax(2), 0.30*max(table(1:Dimension(1),end))]);
                 isthereinterceptline = zeros(1,3);
                 
                 x11 = x_minmax(2); z11 =0; syms y11;
@@ -2730,9 +2745,9 @@ for i=1:Dimension(1)
                 points_set{i} = struct('points', [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4], 'tipo', 12);
             end            
         else
-            x_minmax(2) = max([x_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
-            y_minmax(2) = max([y_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
-            z_minmax(2) = max([z_minmax(2), 0.15*max(table(1:Dimension(1),end))]);
+            x_minmax(2) = max([x_minmax(2), 0.30*max(table(1:Dimension(1),end))]);
+            y_minmax(2) = max([y_minmax(2), 0.30*max(table(1:Dimension(1),end))]);
+            z_minmax(2) = max([z_minmax(2), 0.30*max(table(1:Dimension(1),end))]);
             if isthereintercept(1) == 1 && isthereintercept(2) == 1
                 if all([x31 y21] > 0) 
                     x1 = 0; y1 = y21; z1 = 0;
@@ -2742,7 +2757,7 @@ for i=1:Dimension(1)
                     points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x2 y2 z2; x4 y4 z4], 'tipo', 13);
                 elseif any([x31 y21] > 0) 
                     if x31 >0
-                        inner_point1 = 2*[x31 0 0]-1*[0 y21 0];                        
+                        inner_point1 = 4*[x31 0 0]-3*[0 y21 0];                        
                         
                         x1 = x31; y1 = 0; z1 = z_minmax(2);
                         x2 = inner_point1(1); y2 = inner_point1(2); z2 = z_minmax(2);
@@ -2806,7 +2821,7 @@ for i=1:Dimension(1)
                     points_set{i} = struct('points', [x1 y1 z1; x3 y3 z3; x2 y2 z2; x4 y4 z4], 'tipo', 18);
                 elseif any([x31 z11] > 0)
                     if x31 >0
-                        inner_point1 = 2*[x31 0 0]-1*[0 0 z11];  
+                        inner_point1 = 4*[x31 0 0]-3*[0 0 z11];  
                         
                         x1 = x31; y1 = y_minmax(2); z1 = 0;
                         x2 = inner_point1(1); y2 = y_minmax(2); z2 = inner_point1(3);
@@ -2870,7 +2885,7 @@ for i=1:Dimension(1)
                     points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x2 y2 z2; x4 y4 z4], 'tipo', 23);
                 elseif any([y21 z11] > 0)
                     if y21 >0
-                        inner_point1 = 2*[0 y21 0]-1*[0 0 z11];                        
+                        inner_point1 = 4*[0 y21 0]-3*[0 0 z11];                        
                         
                         x1 = x_minmax(2); y1 = y21; z1 = 0;
                         x2 = 0; y2 = y21; z2 = 0;
@@ -3073,11 +3088,11 @@ else
     visibility = 'on';
 end
 handles_surf(Dimension(1)+1) = patch('xdata',[0 x_minmax(2) x_minmax(2) 0],'ydata', [0 0 y_minmax(2) y_minmax(2)], ...
-    'zdata', [0 0 0 0], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on; % XY
+    'zdata', [0 0 0 0], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on; % XY
 handles_surf(Dimension(1)+2) = patch('xdata', [0 x_minmax(2) x_minmax(2) 0], 'ydata',[0 0 0 0], ... 
-    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on; % XZ
+    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on; % XZ
 handles_surf(Dimension(1)+3) = patch('xdata', [0 0 0 0],'ydata', [0 y_minmax(2) y_minmax(2) 0], ...
-    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on; %YZ
+    'zdata', [0 0 z_minmax(2) z_minmax(2)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on; %YZ
 
 
 % --------------------------------------------------------------------
@@ -3099,10 +3114,9 @@ function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<DEFNU,INU
 % hObject    handle to uipushtool1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global points_set Dimension table handles_surf handles_norm;
+global points_set Dimension table handles_surf handles_norm x_minmax y_minmax z_minmax minxyz;
 
 set(handles.Restriction_nonnegativity, 'Enable', 'off');
-set(handles.pushbutton_asignall, 'Enable', 'off');
 if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'on')
     set(handles_surf(Dimension(1)+1), 'visible', 'off');
     set(handles_surf(Dimension(1)+2), 'visible', 'off');
@@ -3112,6 +3126,10 @@ end
 points_set_nonred = points_set;
 points_set_convex = points_set_nonred;
 table_copy = table;
+
+%if isempty(minxyz) 
+    minxyz = [x_minmax(2) y_minmax(2) z_minmax(2)];
+%end
 
 for i = 1:Dimension(1)+3
     if i ~= Dimension(1)        
@@ -3151,11 +3169,13 @@ for i = 1:Dimension(1)+3
                                                 points_set_convex{i}.points(2, :) = [x y 0];                                            
 
                                                 if all(C(:) == 0)
-                                                    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(1, 3)];                                                    
-                                                    points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(3, 2) points_set_convex{i}.points(1, 3)];
+                                                    minxyz(3) = min([minxyz(3) points_set_convex{i}.points(1, 3)]);
+                                                    points_set_convex{i}.points(4, :) = [x y minxyz(3)];                                                    
+                                                    points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(3, 2) minxyz(3)];
                                                 else
                                                     C = dot(N, [0 1 0]);
                                                     if all(C(:) == 0)
+                                                        minxyz(2) = min([minxyz(2) min([y points_set_convex{i}.points(4, 2)])]);
                                                         points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) min([y points_set_convex{i}.points(4, 2)]) points_set_convex{i}.points(4, 3)];
                                                     end
                                                 end
@@ -3172,11 +3192,13 @@ for i = 1:Dimension(1)+3
                                                 points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01                                            
 
                                                 if all(C(:) == 0)
-                                                    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];                                                    
-                                                    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(2, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];
+                                                    minxyz(3) = min([minxyz(3) points_set_convex{i}.points(1, 3)]);
+                                                    points_set_convex{i}.points(1, :) = [x y minxyz(3)];                                                    
+                                                    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(2, 1) points_set_convex{i}.points(2, 2) minxyz(3)];
                                                 else
                                                     C = dot(N, [1 0 0]);
                                                     if all(C(:) == 0)
+                                                        minxyz(1) = min([minxyz(1) min([x points_set_convex{i}.points(4, 1)])]);
                                                         points_set_convex{i}.points(4, :) = [min([x points_set_convex{i}.points(4, 1)]) points_set_convex{i}.points(4, 2) points_set_convex{i}.points(4, 3)];
                                                     end
                                                 end
@@ -3246,7 +3268,8 @@ for i = 1:Dimension(1)+3
                                            points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
                                        end
                                        points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
-                                       if points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3)
+                                       if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
+                                       %if points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) %%% Revisar
                                             points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
                                             table_copy(i, :) = table_copy(j, :);
                                             points_set_nonred{i} = points_set_nonred{j};
@@ -3291,12 +3314,14 @@ for i = 1:Dimension(1)+3
                                                     points_set_convex{i}.points(1, :) = [x 0 z];
 
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(3, 3)];
-                                                        points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(2, 2) z];                                                    
+                                                        minxyz(2) = min([minxyz(2) points_set_convex{i}.points(2, 2)]);
+                                                        points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(3, 1) minxyz(2) points_set_convex{i}.points(3, 3)];
+                                                        points_set_convex{i}.points(4, :) = [x minxyz(2) z];                                                    
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [0 0 1]);
                                                         if all(C(:) == 0)
+                                                            minxyz(3) = min([minxyz(3) min([z points_set_convex{i}.points(4, 3)])]);
                                                             points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) points_set_convex{i}.points(4, 2) min([z points_set_convex{i}.points(4, 3)])];
                                                         end
                                                     end
@@ -3304,12 +3329,14 @@ for i = 1:Dimension(1)+3
                                                     points_set_convex{i}.points(4, :) = [x 0 z];
 
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];
+                                                        minxyz(2) = min([minxyz(2) points_set_convex{i}.points(2, 2)]);
+                                                        points_set_convex{i}.points(2, :) = [x minxyz(2) z];
+                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(1, 1) minxyz(2) points_set_convex{i}.points(1, 3)];
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [0 0 1]);
                                                         if all(C(:) == 0)
+                                                            minxyz(3) = min([minxyz(3) min([z points_set_convex{i}.points(1, 3)])]);
                                                             points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(1, 2) min([z points_set_convex{i}.points(1, 3)])];
                                                         end
                                                     end
@@ -3329,24 +3356,28 @@ for i = 1:Dimension(1)+3
                                                         points_set_convex{i}.points(4, :) = [x 0 z];
                                                     end
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                        points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(1, 3)];                                                    
+                                                        minxyz(2) = min([minxyz(2) points_set_convex{i}.points(2, 2)]);
+                                                        points_set_convex{i}.points(2, :) = [x minxyz(2) z];
+                                                        points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(1, 1) minxyz(2) points_set_convex{i}.points(1, 3)];                                                    
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [1 0 0]);
                                                         if all(C(:) == 0)
+                                                            minxyz(1) = min([minxyz(1) min([x points_set_convex{i}.points(4, 1)])]);
                                                             points_set_convex{i}.points(4, :) = [min([x points_set_convex{i}.points(4, 1)]) points_set_convex{i}.points(4, 2) points_set_convex{i}.points(4, 3)];
                                                         end
                                                     end
                                                 else
                                                     points_set_convex{i}.points(4, :) = [x 0 z]; %%%7/01  
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                        points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(3, 3)];
+                                                        minxyz(2) = min([minxyz(2) points_set_convex{i}.points(2, 2)]);
+                                                        points_set_convex{i}.points(2, :) = [x minxyz(2) z];
+                                                        points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) minxyz(2) points_set_convex{i}.points(3, 3)];
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [1 0 0]);
                                                         if all(C(:) == 0)
+                                                            minxyz(1) = min([minxyz(1) min([x points_set_convex{i}.points(3, 1)])]);
                                                             points_set_convex{i}.points(3, :) = [min([x points_set_convex{i}.points(3, 1)]) points_set_convex{i}.points(3, 2) points_set_convex{i}.points(3, 3)];
                                                         end
                                                     end
@@ -3417,7 +3448,8 @@ for i = 1:Dimension(1)+3
                                       else
                                           points_set_convex{i}.points(4, :) = points_set_convex{j}.points(4, :);
                                       end
-                                      if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2)
+                                      if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
+                                      %if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) %%% Revisar
                                         points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
                                         table_copy(i, :) = table_copy(j, :);
                                         points_set_nonred{i} = points_set_nonred{j};
@@ -3461,24 +3493,28 @@ for i = 1:Dimension(1)+3
                                                 if points_set_convex{i}.points(1, 1) == 0
                                                     points_set_convex{i}.points(1, :) = [0 y z];
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(2, 3)];
-                                                        points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(3, 1) y z];
+                                                        minxyz(1) = min([minxyz(1) points_set_convex{i}.points(3, 1)]);
+                                                        points_set_convex{i}.points(3, :) = [minxyz(1) points_set_convex{i}.points(2, 2) points_set_convex{i}.points(2, 3)];
+                                                        points_set_convex{i}.points(4, :) = [minxyz(1) y z];
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [0 0 1]);
                                                         if all(C(:) == 0)
+                                                            minxyz(3) = min([minxyz(3) min([z points_set_convex{i}.points(4, 3)])]);
                                                             points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) points_set_convex{i}.points(4, 2) min([z points_set_convex{i}.points(4, 3)])];
                                                         end
                                                     end
                                                 else
                                                     points_set_convex{i}.points(4, :) = [0 y z];
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
-                                                        points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(3, 1) y z];
+                                                        minxyz(1) = min([minxyz(1) points_set_convex{i}.points(3, 1)]);
+                                                        points_set_convex{i}.points(3, :) = [minxyz(1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
+                                                        points_set_convex{i}.points(2, :) = [minxyz(1) y z];
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [0 0 1]);
                                                         if all(C(:) == 0)
+                                                            minxyz(3) = min([minxyz(3) min([z points_set_convex{i}.points(1, 3)])]);
                                                             points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(1, 1) points_set_convex{i}.points(1, 2) min([z points_set_convex{i}.points(1, 3)])];
                                                         end
                                                     end
@@ -3495,24 +3531,28 @@ for i = 1:Dimension(1)+3
                                                 if points_set_convex{i}.points(2, 1) == 0
                                                     points_set_convex{i}.points(2, :) = [0 y z];
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) y z];
-                                                        points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
+                                                        minxyz(1) = min([minxyz(1) points_set_convex{i}.points(3, 1)]);
+                                                        points_set_convex{i}.points(3, :) = [minxyz(1) y z];
+                                                        points_set_convex{i}.points(4, :) = [minxyz(1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [0 1 0]);
                                                         if all(C(:) == 0)
+                                                            minxyz(2) = min([minxyz(2) min([y points_set_convex{i}.points(4, 2)])]);
                                                             points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) min([y points_set_convex{i}.points(4, 2)]) points_set_convex{i}.points(4, 3)];
                                                         end
                                                     end
                                                 else
                                                     points_set_convex{i}.points(4, :) = [0 y z];
                                                     if all(C(:) == 0)
-                                                        points_set_convex{i}.points(3, :) = [points_set_convex{i}.points(3, 1) y z];
-                                                        points_set_convex{i}.points(1, :) = [points_set_convex{i}.points(3, 1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
+                                                        minxyz(1) = min([minxyz(1) points_set_convex{i}.points(3, 1)]);
+                                                        points_set_convex{i}.points(3, :) = [minxyz(1) y z];
+                                                        points_set_convex{i}.points(1, :) = [minxyz(1) points_set_convex{i}.points(1, 2) points_set_convex{i}.points(1, 3)];
                                                     else
                                                         N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
                                                         C = dot(N, [0 1 0]);
                                                         if all(C(:) == 0)
+                                                            minxyz(2) = min([minxyz(2) min([y points_set_convex{i}.points(2, 2)])]);
                                                             points_set_convex{i}.points(2, :) = [points_set_convex{i}.points(2, 1) min([y points_set_convex{i}.points(2, 2)]) points_set_convex{i}.points(2, 3)];
                                                         end
                                                     end
@@ -3579,7 +3619,8 @@ for i = 1:Dimension(1)+3
                                    elseif points_set_convex{i}.tipo == 23
                                        points_set_convex{i}.points(2, :) = points_set_convex{j}.points(2, :);
                                        points_set_convex{i}.points(1, :) = points_set_convex{j}.points(1, :);
-                                       if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1)
+                                       if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
+                                       %if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) %%% Revisar
                                            points_set_convex{i}.points(3, :) = points_set_convex{j}.points(3, :);
                                            if all(points_set_convex{j}.points(4, :) == points_set_convex{j}.points(3, :))
                                                 points_set_convex{i}.points(4, :) = points_set_convex{j}.points(3, :);
@@ -3631,10 +3672,10 @@ for i = 1:Dimension(1)+3
                         %    'zdata', [p(1,3) p(2,3); p(3,3) p(4,3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;
                         if K_dim(1) == 5
                             patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on;
+                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;
                         else
                             patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'b', 'visible', visibility, 'FaceAlpha', .5); hold on;
+                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;
                         end
                         %quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
                     end
@@ -3645,6 +3686,7 @@ for i = 1:Dimension(1)+3
 end
 
 set(handles.Uncut_planes, 'Enable', 'on');
+set(handles.uipushtool1, 'Enable', 'off');
 
 
 %%%
@@ -3806,3 +3848,36 @@ set(handles.Mode_geo3D, 'Checked','on');
 set(handles.Restriction_nonnegativity, 'Enable','on');
 set(hObject, 'Enable','off');
 set(handles.pushbutton_asignall, 'Enable', 'on');
+
+
+% --------------------------------------------------------------------
+function Saveimage_Callback(hObject, eventdata, handles) %#ok<INUSL,DEFNU>
+% hObject    handle to Saveimage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+%global latex;
+
+mkdir('Recursos');
+[FileName,PathName,FilterIndex] = uiputfile({'*.eps','Archivo de imagen (*.eps)'},'Guardar imagen',...
+          './Recursos/NuevoPoliedro1.eps'); %#ok<ASGLU,NASGU>
+if FileName ~= 0
+    saveas(gcf, ['./Recursos/', FileName], 'eps');
+    
+    suffix = num2str(now);
+    latex = '';
+    latex = sprintf('%s \r La siguiente representación gráfica 3D ', latex);
+    latex = [latex, '(\ref{fig:poli',suffix, '}) es el problema equivalente en forma de desigualdades:'];
+    latex = sprintf('%s \r', latex);
+    latex = [latex, '\begin{figure}[htbp]'];
+    latex = sprintf('%s \r', latex);
+    latex = [latex, '\centering'];
+    latex = sprintf('%s \r', latex);
+    latex = [latex, '\includegraphics [width = 0.8\textwidth] {', ['../Recursos/', FileName], '}']; 
+    latex = sprintf('%s \r', latex);
+    latex = [latex, '\caption{Representación gráfica 3D (X1, X2, X3).} \label{fig:poli', suffix, '}']; 
+    latex = sprintf('%s \r', latex);
+    latex = [latex, '\end{figure}'];
+    latex = sprintf('%s \r', latex);
+    handles.latex = [handles.latex, latex];
+    guidata(handles.output, handles);
+end

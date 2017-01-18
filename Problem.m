@@ -157,6 +157,18 @@ if ~iscorrectform(handles)
 end
 
 handles.LPApphandle.Method = handles.LPApphandle.Newmethod;
+
+handles.LPApphandle.latexproblem = '';
+handles.LPApphandle.latexIIphasesproblem = '';
+handles.LPApphandle.latexfile = '';
+handles.LPApphandle.gui_Matrix_problem = []; % se comparte la especificación del problema
+handles.LPApphandle.First_Matrix_problem = [];
+handles.LPApphandle.istwophases = 0;
+handles.LPApphandle.whatphase = 1;
+handles.LPApphandle.isinit_secondphase = 0;
+handles.LPApphandle.Orig_Matrix_problem = [];
+handles.LPApphandle.maxcanon_vector = 0;
+
 if handles.LPApphandle.Method ~= 3
     latex = '';
     generar_latexspecification('\section{Especificación del problema}');
@@ -210,7 +222,19 @@ if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
     end
 end
 %AGREGADO(27/12/2016)
- 
+
+handles.LPApphandle.latex = '';
+handles.LPApphandle.latexproblem = '';
+handles.LPApphandle.latexIIphasesproblem = '';
+handles.LPApphandle.latexfile = '';
+handles.LPApphandle.gui_Matrix_problem = []; % se comparte la especificación del problema
+handles.LPApphandle.First_Matrix_problem = [];
+handles.LPApphandle.istwophases = 0;
+handles.LPApphandle.whatphase = 1;
+handles.LPApphandle.isinit_secondphase = 0;
+handles.LPApphandle.Orig_Matrix_problem = [];
+handles.LPApphandle.maxcanon_vector = 0;
+
 handles.LPApphandle.Order_initial = Order_initial; % se comparte el orden inicial
 handles.LPApphandle.setProblem(Matrix_problem, handles.LPApphandle); % se establece el problema actual
 if strcmp(get(handles.LPApphandle.Mode_geo3D, 'Checked'), 'on')
