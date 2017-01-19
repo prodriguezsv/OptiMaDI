@@ -771,7 +771,7 @@ operations = pivote_operation;
 
 latex = '';
 latex = sprintf('%s \r', latex);
-latex = [latex, 'El elemento (', num2str(p), ',', num2str(q), ') de la matriz es el pivote: $\bf{', num2str(Ypq), '}$.']; 
+latex = [latex, 'El elemento (', num2str(p), ',', num2str(q), ') de la matriz es el pivote: $\bf{', rats(Ypq), '}$.']; 
 latex = sprintf('%s \r', latex);
 latex = [latex, 'Las operaciones de pivoteo son: \\ \\']; 
 latex = sprintf('%s \r', latex);
@@ -3282,6 +3282,18 @@ for i = 1:Dimension(1)+3
                                             points_set_nonred{i} = points_set_nonred{j};
                                             points_set_convex{i}.tipo = points_set_convex{j}.tipo;
                                         %end
+                                    else
+                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                        C = dot(N, [0 0 1]);
+                                        if all(C(:) == 0)
+                                            if x == 0
+                                                points_set_convex{i}.points(2, :) = [x y 0];
+                                                points_set_convex{i}.points(4, :) = [x y 0];
+                                            elseif y == 0
+                                                points_set_convex{i}.points(3, :) = [x y 0];
+                                                points_set_convex{i}.points(4, :) = [x y 0];
+                                            end
+                                        end
                                     end
                                 end
                             else
@@ -3463,6 +3475,18 @@ for i = 1:Dimension(1)+3
                                             points_set_nonred{i} = points_set_nonred{j};
                                             points_set_convex{i}.tipo = points_set_convex{j}.tipo;
                                         %end
+                                    else
+                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                        C = dot(N, [0 1 0]);
+                                        if all(C(:) == 0)
+                                            if x == 0
+                                                points_set_convex{i}.points(1, :) = [x 0 z];
+                                                points_set_convex{i}.points(4, :) = [x 0 z];
+                                            elseif z == 0
+                                                points_set_convex{i}.points(3, :) = [x 0 z];
+                                                points_set_convex{i}.points(4, :) = [x 0 z];
+                                            end
+                                        end
                                     end
                                 end
                             else
@@ -3639,6 +3663,18 @@ for i = 1:Dimension(1)+3
                                               points_set_nonred{i} = points_set_nonred{j};
                                               points_set_convex{i}.tipo = points_set_convex{j}.tipo;
                                         %end
+                                    else
+                                        N = cross(points_actual(1,:)-points_actual(2,:), points_actual(1,:)-points_actual(3,:));
+                                        C = dot(N, [1 0 0]);
+                                        if all(C(:) == 0)
+                                            if y == 0
+                                                points_set_convex{i}.points(1, :) = [0 y z];
+                                                points_set_convex{i}.points(4, :) = [0 y z];
+                                            elseif z == 0
+                                                points_set_convex{i}.points(2, :) = [0 y z];
+                                                points_set_convex{i}.points(4, :) = [0 y z];
+                                            end
+                                        end
                                     end
                                 end                 
                             else
