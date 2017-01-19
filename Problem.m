@@ -169,6 +169,10 @@ handles.LPApphandle.isinit_secondphase = 0;
 handles.LPApphandle.Orig_Matrix_problem = [];
 handles.LPApphandle.maxcanon_vector = 0;
 
+set(handles.LPApphandle.Restriction_nonnegativity, 'checked', 'off');
+set(handles.LPApphandle.Restriction_nonnegativity, 'Enable', 'off');
+set(handles.LPApphandle.Uncut_planes, 'Enable', 'off');
+
 if handles.LPApphandle.Method ~= 3
     latex = '';
     generar_latexspecification('\section{Especificación del problema}');
@@ -222,18 +226,6 @@ if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
     end
 end
 %AGREGADO(27/12/2016)
-
-handles.LPApphandle.latex = '';
-handles.LPApphandle.latexproblem = '';
-handles.LPApphandle.latexIIphasesproblem = '';
-handles.LPApphandle.latexfile = '';
-handles.LPApphandle.gui_Matrix_problem = []; % se comparte la especificación del problema
-handles.LPApphandle.First_Matrix_problem = [];
-handles.LPApphandle.istwophases = 0;
-handles.LPApphandle.whatphase = 1;
-handles.LPApphandle.isinit_secondphase = 0;
-handles.LPApphandle.Orig_Matrix_problem = [];
-handles.LPApphandle.maxcanon_vector = 0;
 
 handles.LPApphandle.Order_initial = Order_initial; % se comparte el orden inicial
 handles.LPApphandle.setProblem(Matrix_problem, handles.LPApphandle); % se establece el problema actual
@@ -413,15 +405,15 @@ for j = 1:dim(2) - 1
     if Matrix_problem(dim(1), j) > 0
         if inicial == 1
             latex = [latex, ...
-            '+', num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+            '+', rats(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
         else 
             latex = [latex, ...
-            num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+            rats(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
         end
         inicial = 1;
     elseif Matrix_problem(dim(1), j) < 0
         latex = [latex, ...
-        num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+        rats(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
         inicial = 1;
     end
     if j == dim(2) - 1
@@ -437,21 +429,22 @@ for i = 1:dim(1) - 1
         if Matrix_problem(i, j) > 0
             if inicial == 1
                 latex = [latex, ...
-                '+', num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+                '+', rats(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
             else
                 latex = [latex, ...
-                num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+                rats(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
             end
             inicial = 1;
         elseif Matrix_problem(i, j) < 0
             latex = [latex, ...
-            num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+            rats(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
             inicial = 1;
         else
             latex = [latex, ' & '];
         end           
     end
-    latex = [latex, ' = & ', num2str(Matrix_problem(i, dim(2))), '\\'];
+    inicial = 0;
+    latex = [latex, ' = & ', rats(Matrix_problem(i, dim(2))), '\\'];
     latex = sprintf('%s \r', latex);
 end
 latex = [latex, '\multicolumn{',num2str(dim(2)+1),'}{l}{x_j \ge 0 \ (j = 1, \dots,', num2str(dim(2)-1), ')}'];
@@ -495,9 +488,9 @@ latex = sprintf('%s} \r', latex);
 for i = 1:dim(1)
     for j = 1:dim(2)
         if j == 1        
-            latex = [latex, num2str(Tableau(i, j))]; %#ok<AGROW>
+            latex = [latex, rats(Tableau(i, j))]; %#ok<AGROW>
         else
-            latex = [latex,'& ', num2str(Tableau(i, j))];                 %#ok<AGROW>
+            latex = [latex,'& ', rats(Tableau(i, j))];                 %#ok<AGROW>
         end
     end
     latex = [latex, ' \\']; %#ok<AGROW>
@@ -562,9 +555,9 @@ for i = 1:dim(1)+1
             if j == 1        
                 latex = [latex, '\multicolumn{1}{c|}{} ']; %#ok<AGROW>
             elseif j < dim(2)+1
-                latex = [latex, '&  \multicolumn{1}{c}{',num2str(Matrix_problem(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
+                latex = [latex, '&  \multicolumn{1}{c}{',rats(Matrix_problem(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
             else
-                latex = [latex, '& \multicolumn{1}{c|}{',num2str(Matrix_problem(i-1, j-1)),'} \\']; %#ok<AGROW>                
+                latex = [latex, '& \multicolumn{1}{c|}{',rats(Matrix_problem(i-1, j-1)),'} \\']; %#ok<AGROW>                
             end
         end
         latex = sprintf('%s \r', latex);
@@ -574,7 +567,7 @@ for i = 1:dim(1)+1
     else
         for j = 1:dim(2)
             if j > 1        
-                latex = [latex, '&  \multicolumn{1}{c}{', num2str(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
+                latex = [latex, '&  \multicolumn{1}{c}{', rats(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
             else
                 latex = [latex, '\multicolumn{1}{c|}{Demanda} ']; %#ok<AGROW>                           
             end            

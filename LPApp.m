@@ -68,6 +68,7 @@ function LPApp_OpeningFcn(hObject, eventdata, handles, varargin) %#ok<INUSL>
 
 handles.output = hObject;
 
+format long;
 handles.Method = 0;
 handles.Newmethod = 0;
 handles.latex = '';
@@ -98,6 +99,8 @@ function varargout = LPApp_OutputFcn(hObject, eventdata, handles) %#ok<INUSL>
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+format short;
+
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
@@ -114,7 +117,7 @@ if strcmp(environmentname, 'next')
     set(handles.slider_increment, 'value', 0);
     set(handles.Saveproblem, 'enable', 'on');
     set(handles.popupmenu_selectvar3, 'Enable', 'on');
-    set(handles.Restriction_nonnegativity, 'Enable', 'off');
+    %set(handles.Restriction_nonnegativity, 'Checked', 'off');
     set(handles.Uncut_planes, 'Enable', 'off');   
     set(handles.pushbutton_asignall, 'Enable', 'off');
     set(handles.uipushtool1, 'Enable', 'off');
@@ -130,8 +133,7 @@ elseif strcmp(environmentname, 'end')
         set(handles.Sensibility, 'enable', 'on');
         set(handles.Postoptimality, 'enable', 'on');
     end
-    set(handles.slider_increment, 'value', 0);
-    val_switches = ['off';'off';'on ';'off';'on '; 'off'];
+    set(handles.slider_increment, 'value', 0);    
     set(handles.Saveproblem, 'enable', 'on');
     set(handles.Next_value, 'Enable', 'off');
     set(handles.pushbutton_asignall, 'Enable', 'off');
@@ -145,6 +147,7 @@ elseif strcmp(environmentname, 'end')
     set(handles.popupmenu_selectvar3, 'Enable', 'off');
     set(handles.popupmenu_selectvar3, 'string', char(' ', ' '));
     set(handles.popupmenu_selectvar3, 'value', 1);
+    val_switches = ['off';'off';'on ';'off';'on '; 'off'];
 elseif strcmp(environmentname, 'next_assign')
     set(handles.Restriction_nonnegativity, 'Enable', 'off');
     set(handles.Uncut_planes, 'Enable', 'off');
@@ -256,8 +259,10 @@ guidata(handles.output, handles);
 
 % Configura la tabla inicial del Método Simplex
 % handles.Order_initial = Order_initial;
-setProblem(Matrix_problem, handles)
+setProblem(Matrix_problem, handles);
 if strcmp(get(handles.Mode_geo3D, 'Checked'), 'on')
+    %set(handles.Restriction_nonnegativity, 'Checked', 'off')
+    %set(handles.Restriction_nonnegativity, 'Enable', 'on')
     trace3D(handles);
 end
 
@@ -661,12 +666,13 @@ if handles.Method ~= 3
     if strcmp(get(handles.Mode_geo3D, 'Checked'), 'on')
         trace3D(handles);
         set(handles.popupmenu_selectvar2, 'Enable', 'on');
+        set(handles.pushbutton_asignall, 'Enable', 'on');
     end
 end
     
 % --- Se ejecuta el método simplex primal
 function simplex_primal(handles)
-global Tableau Order_current operations Dimension;
+global Tableau Order_current operations Dimension latex;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -687,7 +693,15 @@ if ~isnan(p_aux) % si existe algún yij que cumple el criterio de factibilidad
     generar_latexsimplexnext()
     %AGREGADO(27/12/201
 else
-    msgbox('El conjunto representado por las restricciones no es acotado.', 'El valor objetivo decrece sin limite','modal');
+    operations = char('El conjunto representado por las restricciones no es acotado:', 'El valor objetivo decrece sin limite.');
+    if strcmp(get(handles.Mode_geo3D, 'Checked'), 'off')
+        msgbox('El conjunto representado por las restricciones no es acotado.', 'El valor objetivo decrece sin limite','modal');
+    end
+    latex = '';
+    latex = sprintf('%s \r', latex);
+    latex = [latex, 'El conjunto representado por las restricciones no es acotado: {\bf El valor objetivo decrece sin limite.} \\']; 
+    latex = sprintf('%s \r', latex);
+    set(handles.listbox_operations, 'string', operations);
     return;
 end
 % se actualiza la tabla de la interfaz
@@ -699,7 +713,7 @@ set(handles.table_simplexdisplay, 'data', spreadsheet);
 
 % --- Se ejecuta el método simplex primal
 function simplex_dual(handles)
-global Tableau Order_current operations Dimension;
+global Tableau Order_current operations Dimension latex;
 
 % recupera el índice de la variable no básica seleccionada asociada a la
 % columna que ingresará a la base
@@ -721,7 +735,14 @@ if ~isnan(q) % si existe algún yij que cumple el criterio de factibilidad
     generar_latexsimplexnext()
     %AGREGADO(27/12/2016)
 else
-    msgbox('El conjunto representado por las restricciones es vacío.', 'No hay solución','modal');
+    operations = char('El conjunto representado por las restricciones es vacío:', 'No hay solución.');
+    if strcmp(get(handles.Mode_geo3D, 'Checked'), 'off')
+        msgbox('El conjunto representado por las restricciones es vacío.', 'No hay solución','modal');
+    end
+    latex = '';
+    latex = sprintf('%s \r', latex);
+    latex = [latex, 'El conjunto representado por las restricciones es vacío: {\bf No hay solución.} \\']; 
+    latex = sprintf('%s \r', latex);
     return;
 end
 
@@ -743,8 +764,8 @@ fp = Tableau(p, :); % recupera la fila p actual
 fp = fp/Ypq;
 
 %AGREGADO(27/12/2016)
-[num, den] = numden(sym(1/Ypq, 'r'));
-fraction = double([num, den]);
+%[num, den] = numden(sym(1/Ypq, 'r'));
+%fraction = double([num, den]);
 pivote_operation = sprintf('Se efectuaron las siguientes operaciones de pivoteo:\r');
 operations = pivote_operation;
 
@@ -755,13 +776,13 @@ latex = sprintf('%s \r', latex);
 latex = [latex, 'Las operaciones de pivoteo son: \\ \\']; 
 latex = sprintf('%s \r', latex);
 
-if fraction(2) == 1
-    pivote_operation = sprintf('f%d <= (%d) x f%d', p, fraction(1), p);
-    latex = [latex, '$f_', num2str(p), '\leftarrow ', '(', num2str(fraction(1)), ')f_', num2str(p), '$\\'];     
-else
-    pivote_operation = sprintf('f%d <= (%d/%d) x f%d', p, fraction(1), fraction(2), p);
-    latex = [latex, '$f_', num2str(p), '\leftarrow ', '(\frac{', num2str(fraction(1)), '}{', num2str(fraction(2)), '})f_', num2str(p), '$\\']; 
-end
+%if fraction(2) == 1    
+    pivote_operation = sprintf('f%d <= (%s) x f%d', p, rats(1/Ypq), p);    
+    latex = [latex, '$f_', num2str(p), '\leftarrow ', '(', rats(1/Ypq), ')f_', num2str(p), '$\\'];     
+%else
+%    pivote_operation = sprintf('f%d <= (%d/%d) x f%d', p, fraction(1), fraction(2), p);
+%    latex = [latex, '$f_', num2str(p), '\leftarrow ', '(\frac{', num2str(fraction(1)), '}{', num2str(fraction(2)), '})f_', num2str(p), '$\\']; 
+%end
 latex = sprintf('%s \r', latex);
 operations = char(operations, pivote_operation);
 %AGREGADO(27/12/2016)
@@ -775,15 +796,15 @@ for i = 1:Dimension(1)
         fi = fi - fp*Yiq;
         
         %AGREGADO(27/12/2016)
-        [num, den] = numden(sym(Yiq/Ypq, 'r'));
-        fraction = double([num, den]);
-        if fraction(2) == 1
-            pivote_operation = sprintf('f%d  <= f%d - (%d) x f%d', i, i, fraction(1), p);
-            latex = [latex, '$f_', num2str(i), '\leftarrow f_', num2str(i), '-(', num2str(fraction(1)), ')f_', num2str(p), '$\\'];
-        else
-            pivote_operation = sprintf('f%d  <= f%d - (%d/%d) x f%d', i, i, fraction(1), fraction(2), p);
-            latex = [latex, '$f_', num2str(i), '\leftarrow f_', num2str(i), '-(\frac{', num2str(fraction(1)), '}{', num2str(fraction(2)), '})f_', num2str(p), '$\\'];
-        end
+        %[num, den] = numden(sym(Yiq/Ypq, 'r'));
+        %fraction = double([num, den]);
+        %if fraction(2) == 1
+            pivote_operation = sprintf('f%d  <= f%d - (%s) x f%d', i, i, rats(Yiq/Ypq), p);
+            latex = [latex, '$f_', num2str(i), '\leftarrow f_', num2str(i), '-(', rats(Yiq/Ypq), ')f_', num2str(p), '$\\'];
+        %else
+        %    pivote_operation = sprintf('f%d  <= f%d - (%d/%d) x f%d', i, i, fraction(1), fraction(2), p);
+        %    latex = [latex, '$f_', num2str(i), '\leftarrow f_', num2str(i), '-(\frac{', num2str(fraction(1)), '}{', num2str(fraction(2)), '})f_', num2str(p), '$\\'];
+        %end
         latex = sprintf('%s \r', latex);
         operations = char(operations, pivote_operation);
         %AGREGADO(27/12/2016)
@@ -908,13 +929,12 @@ end
 function setProblem(Problem, handles)
 % Problem especificación del problema
 % handles estructura de manejadores y datos de usuario
-global Dimension Matrix_problem Tableau Order_current Order_initial Node_current Solution T_Tableau Num_assignation;
+global Dimension Matrix_problem Tableau Order_current Order_initial Node_current Solution T_Tableau Num_assignation latex;
 
 % se actualizan algunas variables globales previamente descritas
 Matrix_problem = Problem;
 Dimension = size(Matrix_problem);
 %AGREGADO(27/12/2016)
-set(handles.Next_value, 'Enable', 'on');
 set(handles.listbox_operations, 'string', '');
 %AGREGADO(27/12/2016)
 
@@ -937,6 +957,7 @@ if handles.Method ~= 3
     %generar_latexsimplexbegin(handles);
     %AGREGADO(27/12/2016)
 else
+    set(handles.Next_value, 'Enable', 'on');
     Node_current = [0,0];
     Num_assignation = 0;
     Solution = zeros(Dimension(1)+Dimension(2)-3, 1, 3);
@@ -960,19 +981,23 @@ set(handles.table_simplexdisplay, 'data', spreadsheet);
 
 %set(handles.Restriction_nonnegativity, 'Enable', 'off');
 %set(handles.Uncut_planes, 'Enable', 'off');
-set(handles.Saveimage, 'Enable', 'off');
-set(handles.Saveimage, 'Enable', 'off');
+%set(handles.Saveimage, 'Enable', 'off');
+
 set(handles.Generate_latex, 'Enable', 'on');
-if Dimension(2)- Dimension(1) == 3
-    set(handles.Mode_geo3D, 'Enable', 'on');    
-else
-    set(handles.Mode_geo3D, 'Enable', 'off');
-end
 
 %set(handles.table_simplexdisplay, 'data', All_display); 
 %AGREGADO 1/01/2017
 % se calculan las nuevas variables no básicas si las hay
 calc_variables(handles);
+handles.latex = [handles.latex, latex];
+guidata(handles.output, handles);
+if Dimension(2)- Dimension(1) == 3
+    set(handles.Mode_geo3D, 'Enable', 'on'); 
+    set(handles.pushbutton_asignall, 'Enable', 'on')
+else
+    set(handles.Mode_geo3D, 'Enable', 'off');
+    set(handles.Saveimage, 'Enable', 'off');
+end
 
 
 % ----se rotulan las columnas y las filas de manera
@@ -1819,6 +1844,8 @@ function Generate_latex_Callback(hObject, eventdata, handles) %#ok<DEFNU,INUSL>
 
 latexfile = '% OJO: El documento está guardado en codificación de caracteres ISO-8859-1';
 latexfile = sprintf('%s \r', latexfile);
+latexfile = [latexfile, '% ¡¡Compilar de LaTex->DVI->pdf!!'];
+latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '\documentclass[11pt]{article}'];
 latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '%configuración para idioma español'];
@@ -1831,9 +1858,9 @@ latexfile = [latexfile, '\usepackage{amsmath}'];
 latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '\usepackage[spanish,activeacute,es-noindentfirst]{babel}'];
 latexfile = sprintf('%s \r', latexfile);
-latexfile = [latexfile, '\usepackage[pdftex]{graphicx}'];
+latexfile = [latexfile, '\usepackage{graphicx}'];
 latexfile = sprintf('%s \r', latexfile);
-latexfile = [latexfile, '\DeclareGraphicsExtensions{.bmp,.png,.pdf,.jpg}'];
+latexfile = [latexfile, '\usepackage{epstopdf}'];
 latexfile = sprintf('%s \r', latexfile);
 latexfile = [latexfile, '\title{Archivo generado por Asistente Simplex + 2016}'];
 latexfile = sprintf('%s \r', latexfile);
@@ -1879,9 +1906,11 @@ latex = sprintf('%s} \r', latex);
 for i = 1:dim(1)
     for j = 1:dim(2)
         if j == 1        
-            latex = [latex, num2str(Tableau(i, j))]; %#ok<*AGROW>
+            %latex = [latex, num2str(Tableau(i, j))]; %#ok<*AGROW>
+            latex = [latex, rats(Tableau(i, j))];
         else
-            latex = [latex,'& ', num2str(Tableau(i, j))];                
+            %latex = [latex,'& ', num2str(Tableau(i, j))];
+            latex = [latex,'& ', rats(Tableau(i, j))];
         end
     end
     latex = [latex, ' \\'];
@@ -1898,7 +1927,8 @@ global Tableau latex;
 latex = sprintf('%s \r', latex);
 latex = [latex, title];
 latex = sprintf('%s \r El valor óptimo es: ', latex);
-latex = [latex, '$\bf{', num2str(-Tableau(end, end)),'}$.'];
+%latex = [latex, '$\bf{', num2str(-Tableau(end, end)),'}$.'];
+latex = [latex, '$\bf{', rats(-Tableau(end, end)),'}$.'];
 latex = sprintf('%s \r', latex);
 
 
@@ -1927,16 +1957,22 @@ inicial = 0;
 for j = 1:dim(2) - 1
     if Matrix_problem(dim(1), j) > 0
         if inicial == 1
+            %latex = [latex, ...
+            %'+', num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
             latex = [latex, ...
-            '+', num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+            '+', rats(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
         else 
+            %latex = [latex, ...
+            %num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
             latex = [latex, ...
-            num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+            rats(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
         end
         inicial = 1;
     elseif Matrix_problem(dim(1), j) < 0
+        %latex = [latex, ...
+        %num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
         latex = [latex, ...
-        num2str(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
+        rats(Matrix_problem(dim(1), j)), 'x_',num2str(j)];
         inicial = 1;
     end
     if j == dim(2) - 1
@@ -1951,22 +1987,30 @@ for i = 1:dim(1) - 1
     for j = 1:dim(2) - 1
         if Matrix_problem(i, j) > 0
             if inicial == 1
+                %latex = [latex, ...
+                %'+', num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
                 latex = [latex, ...
-                '+', num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+                '+', rats(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
             else
+                %latex = [latex, ...
+                %num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
                 latex = [latex, ...
-                num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+                rats(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
             end
             inicial = 1;
         elseif Matrix_problem(i, j) < 0
+            %latex = [latex, ...
+            %num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
             latex = [latex, ...
-            num2str(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
+            rats(Matrix_problem(i, j)), 'x_',num2str(j), ' & '];
             inicial = 1;
         else
             latex = [latex, ' & '];
         end           
     end
-    latex = [latex, ' = & ', num2str(Matrix_problem(i, dim(2))), '\\'];
+    inicial = 0;
+    %latex = [latex, ' = & ', num2str(Matrix_problem(i, dim(2))), '\\'];
+    latex = [latex, ' = & ', rats(Matrix_problem(i, dim(2))), '\\'];
     latex = sprintf('%s \r', latex);
 end
 latex = [latex, '\multicolumn{',num2str(dim(2)+1),'}{l}{x_j \ge 0 \ (j = 1, \dots,', num2str(dim(2)-1), ')}'];
@@ -2010,9 +2054,11 @@ latex = sprintf('%s} \r', latex);
 for i = 1:dim(1)
     for j = 1:dim(2)
         if j == 1        
-            latex = [latex, num2str(Tableau(i, j))]; %#ok<AGROW>
+            %latex = [latex, num2str(Tableau(i, j))]; %#ok<AGROW>
+            latex = [latex, rats(Tableau(i, j))]; %#ok<AGROW>
         else
-            latex = [latex,'& ', num2str(Tableau(i, j))];                 %#ok<AGROW>
+            %latex = [latex,'& ', num2str(Tableau(i, j))]; %#ok<AGROW>
+            latex = [latex,'& ', rats(Tableau(i, j))]; %#ok<AGROW>
         end
     end
     latex = [latex, ' \\']; %#ok<AGROW>
@@ -2080,9 +2126,9 @@ for i = 1:dim(1)+1
             if j == 1        
                 latex = [latex, '\multicolumn{1}{c|}{} ']; %#ok<AGROW>
             elseif j < dim(2)+1
-                latex = [latex, '&  \multicolumn{1}{c}{',num2str(Matrix_solution(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
+                latex = [latex, '&  \multicolumn{1}{c}{',rats(Matrix_solution(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
             else
-                latex = [latex, '& \multicolumn{1}{c|}{',num2str(Matrix_problem(i-1, j-1)),'} \\']; %#ok<AGROW>                
+                latex = [latex, '& \multicolumn{1}{c|}{',rats(Matrix_problem(i-1, j-1)),'} \\']; %#ok<AGROW>                
             end
         end
         latex = sprintf('%s \r', latex);
@@ -2093,15 +2139,15 @@ for i = 1:dim(1)+1
         for j = 1:dim(2)
             if j > 1 
                 if j < dim(2)
-                    latex = [latex, '&  \multicolumn{1}{c}{', num2str(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
+                    latex = [latex, '&  \multicolumn{1}{c}{', rats(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
                 else
-                    latex = [latex, '&  \multicolumn{1}{c}{', num2str(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} '];
+                    latex = [latex, '&  \multicolumn{1}{c}{', rats(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} '];
                 end
             else
                 latex = [latex, '\multicolumn{1}{c|}{Demanda} ']; %#ok<AGROW>                           
             end            
         end
-        latex = [latex, '&  \multicolumn{1}{c|}{',num2str(Matrix_solution(i-1, j)),'} \\'];
+        latex = [latex, '&  \multicolumn{1}{c|}{',rats(Matrix_solution(i-1, j)),'} \\'];
         latex = sprintf('%s \r', latex);
         for j = 2:2*dim(2)
             latex = [latex, '\cline{', num2str(j), '-', num2str(j), '} ']; %#ok<AGROW>            
@@ -2167,9 +2213,9 @@ for i = 1:dim(1)+1
             if j == 1        
                 latex = [latex, '\multicolumn{1}{c|}{} ']; %#ok<AGROW>
             elseif j < dim(2)+1
-                latex = [latex, '&  \multicolumn{1}{c}{',num2str(T_Tableau(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
+                latex = [latex, '&  \multicolumn{1}{c}{',rats(T_Tableau(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
             else
-                latex = [latex, '& \multicolumn{1}{c|}{',num2str(T_Tableau(i-1, j-1)),'} \\']; %#ok<AGROW>                
+                latex = [latex, '& \multicolumn{1}{c|}{',rats(T_Tableau(i-1, j-1)),'} \\']; %#ok<AGROW>                
             end
         end
         latex = sprintf('%s \r', latex);
@@ -2179,7 +2225,7 @@ for i = 1:dim(1)+1
     else
         for j = 1:dim(2)
             if j > 1        
-                latex = [latex, '&  \multicolumn{1}{c}{', num2str(T_Tableau(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
+                latex = [latex, '&  \multicolumn{1}{c}{', rats(T_Tableau(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
             else
                 latex = [latex, '\multicolumn{1}{c|}{$v_j$} ']; %#ok<AGROW>                           
             end            
@@ -2249,9 +2295,9 @@ for i = 1:dim(1)+1
             if j == 1        
                 latex = [latex, '\multicolumn{1}{c|}{} ']; %#ok<AGROW>
             elseif j < dim(2)+1
-                latex = [latex, '&  \multicolumn{1}{c}{',num2str(T_Tableau(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
+                latex = [latex, '&  \multicolumn{1}{c}{',rats(T_Tableau(i-1, j-1)),'} & \multicolumn{1}{c|}{} ']; %#ok<AGROW>                
             else
-                latex = [latex, '& \multicolumn{1}{c|}{',num2str(T_Tableau(i-1, j-1)),'} \\']; %#ok<AGROW>                
+                latex = [latex, '& \multicolumn{1}{c|}{',rats(T_Tableau(i-1, j-1)),'} \\']; %#ok<AGROW>                
             end
         end
         latex = sprintf('%s \r', latex);
@@ -2261,7 +2307,7 @@ for i = 1:dim(1)+1
     else
         for j = 1:dim(2)
             if j > 1        
-                latex = [latex, '&  \multicolumn{1}{c}{', num2str(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
+                latex = [latex, '&  \multicolumn{1}{c}{', rats(Matrix_problem(i-1, j-1)), '} &  \multicolumn{1}{c|}{} ']; %#ok<AGROW>
             else
                 latex = [latex, '\multicolumn{1}{c|}{Demanda} ']; %#ok<AGROW>                           
             end            
@@ -2466,6 +2512,7 @@ if strcmp(get(hObject, 'Checked'), 'on')
     set(handles.popupmenu_selectvar2, 'value', 1);
     set(handles.pushbutton_asignall, 'String', 'Asignar todas');
     set(handles.pushbutton_asignall, 'Enable', 'off');
+    set(handles.Restriction_nonnegativity, 'Checked', 'off');
     set(handles.Restriction_nonnegativity, 'Enable', 'off');
     set(handles.Uncut_planes, 'Enable', 'off');
     set(handles.Saveimage, 'Enable', 'off');
@@ -2480,6 +2527,7 @@ else
     y_minmax = zeros(1,2);
     z_minmax = zeros(1,2);
     
+    set(handles.Restriction_nonnegativity, 'Enable', 'on');
     trace3D(handles);
     set(hObject, 'Checked', 'on');
     set(handles.uipushtool1, 'Enable', 'on');
@@ -2488,8 +2536,7 @@ else
     set(handles.popupmenu_selectvar2, 'Enable', 'on');    
     set(handles.text_selectvar2, 'string', 'Plano');    
     set(handles.pushbutton_asignall, 'String', 'Quitar');
-    set(handles.pushbutton_asignall, 'Enable', 'on');
-    set(handles.Restriction_nonnegativity, 'Enable', 'on');
+    set(handles.pushbutton_asignall, 'Enable', 'on');   
     set(handles.Saveimage, 'Enable', 'on');
 end
 
@@ -2541,8 +2588,7 @@ for i = 1:(Dimension(1))
 end
 set(handles.popupmenu_selectvar2, 'string', char(Var));
 set(handles.popupmenu_selectvar2, 'value', 1);
-set(handles.uipushtool1, 'Enable', 'on');
-set(handles.Uncut_planes, 'Enable', 'off');
+
 
 for i=1:Dimension(1)
     if strcmp(get(handles.Mode_geo3D, 'Checked'),'off') || i == Dimension(1)
@@ -3031,7 +3077,8 @@ for i=1:Dimension(1)
             end
         end
         
-        p = [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4];
+        %p = [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4];
+        p = points_set{i}.points;
         if ~(all(p(1,:) == p(2,:)) || all( p(1,:) == p(3,:)) || all(p(2,:) == p(3,:)))
             K = convex_hull(p);
             K_dim = size(K);
@@ -3081,12 +3128,19 @@ if strcmp(get(handles.Mode_geo3D, 'Checked'),'on')
     end
 end
 
-if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'off') || (strcmp(get(handles.Mode_geo3D, 'Checked'),'on') && ...
-        strcmp(get(handles.Uncut_planes, 'Enable'), 'on'))
+if strcmp(get(handles.Restriction_nonnegativity, 'Enable'), 'on')
+    set(handles.uipushtool1, 'Enable', 'on');
+    set(handles.Uncut_planes, 'Enable', 'off');
+else
+    set(handles.uipushtool1, 'Enable', 'off');
+    set(handles.Uncut_planes, 'Enable', 'on');
+end
+if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'off') || strcmp(get(handles.Restriction_nonnegativity, 'Enable'), 'off')    
     visibility = 'off';
 else
     visibility = 'on';
 end
+
 handles_surf(Dimension(1)+1) = patch('xdata',[0 x_minmax(2) x_minmax(2) 0],'ydata', [0 0 y_minmax(2) y_minmax(2)], ...
     'zdata', [0 0 0 0], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on; % XY
 handles_surf(Dimension(1)+2) = patch('xdata', [0 x_minmax(2) x_minmax(2) 0], 'ydata',[0 0 0 0], ... 
@@ -3699,8 +3753,13 @@ C = dot(N, [0 0 1]);
 if (C == 0)
     
     points_copy = sortrows(points(1:3,:), 3);
-    punto1 = points_copy(1,:);
-    punto2 = points_copy(2,:);
+    if ~(abs(points_copy(1, 1) - points_copy(2, 1)) < e  || abs(points_copy(1, 2) - points_copy(2, 2)) < e)
+        punto1 = points_copy(1,:);
+        punto2 = points_copy(2,:);
+    else
+        punto1 = points_copy(1,:);
+        punto2 = points_copy(3,:);
+    end
 
     if (abs(points_copy(1,3) - points_copy(2,3)) < e && abs(points_copy(2,3) - points_copy(3,3)) < e)
             theta = 0;
@@ -3841,11 +3900,14 @@ handles_norm = [];
 cla(handles.axes_simplex3D); 
 
 set(handles.Mode_geo3D, 'Checked','off'); %Truco para correr función trace3D
+set(handles.Restriction_nonnegativity, 'Enable','on');
 
 trace3D(handles);    
 
 set(handles.Mode_geo3D, 'Checked','on');
-set(handles.Restriction_nonnegativity, 'Enable','on');
+
+%set(handles.Uncut_planes, 'Enable','off');
+set(handles.uipushtool1, 'Enable', 'on');
 set(hObject, 'Enable','off');
 set(handles.pushbutton_asignall, 'Enable', 'on');
 
@@ -3861,12 +3923,18 @@ mkdir('Recursos');
 [FileName,PathName,FilterIndex] = uiputfile({'*.eps','Archivo de imagen (*.eps)'},'Guardar imagen',...
           './Recursos/NuevoPoliedro1.eps'); %#ok<ASGLU,NASGU>
 if FileName ~= 0
+    pos1 = get(handles.panel_enhancement, 'Position');
+    pos1_aux = pos1;
+    pos2 = get(handles.LPApp, 'Position');
+    pos1(1) = pos2(3);
+    pos1(2) = pos2(4);
+    set(handles.panel_enhancement, 'Position', pos1);
     saveas(gcf, ['./Recursos/', FileName], 'eps');
     
     suffix = num2str(now);
     latex = '';
-    latex = sprintf('%s \r La siguiente representación gráfica 3D ', latex);
-    latex = [latex, '(\ref{fig:poli',suffix, '}) es el problema equivalente en forma de desigualdades:'];
+    latex = sprintf('%s \r La representación gráfica 3D ', latex);
+    latex = [latex, '(\ref{fig:poli',suffix, '}) es el problema equivalente en forma de desigualdades.'];
     latex = sprintf('%s \r', latex);
     latex = [latex, '\begin{figure}[htbp]'];
     latex = sprintf('%s \r', latex);
@@ -3880,4 +3948,5 @@ if FileName ~= 0
     latex = sprintf('%s \r', latex);
     handles.latex = [handles.latex, latex];
     guidata(handles.output, handles);
+    set(handles.panel_enhancement, 'Position', pos1_aux);
 end
