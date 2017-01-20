@@ -3190,7 +3190,7 @@ for i = 1:Dimension(1)+3
         for j = 1:Dimension(1)-1
             pasar = 1;
             if j ~= i && ~all(table_copy(i,:) == table_copy(j,:))
-                syms x1 y1 x2 z2 y3 z3;
+                syms x1 y1 z1 x2 y2 z2 x3 y3 z3;
                 points_actual = points_set_convex{i}.points;
                 % Plano XY 
                 if points_set_convex{i}.tipo == 1 || points_set_convex{i}.tipo == 2 || points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 13 || ...
@@ -3236,6 +3236,21 @@ for i = 1:Dimension(1)+3
                                             end
                                         else
                                             %%% Desarrollar
+                                            d = points_set_convex{i}.points(3, :)-points_set_convex{i}.points(2, :);
+                                            p1 = points_set_convex{i}.points(3, :);
+                                            
+                                            sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+                                                [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+                                                [num2str(d(2)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(y1-', num2str(p1(2)), ') = 0'], ...
+                                                [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);                                                                                        
+                                            if ~isempty(sol)
+                                                sol = [sol.x1 sol.y1 sol.z1];
+                                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                                if all([x y z] > 0)
+                                                    dim = size(points_set_convex{i}.points);
+                                                    points_set_convex{i}.points(dim(1)+1, :) = [x y z];
+                                                end
+                                            end
                                         end
                                     else
                                         if points_set_convex{i}.points(2, 3) == 0
@@ -3259,6 +3274,21 @@ for i = 1:Dimension(1)+3
                                             end
                                         else
                                             %%% Desarrollar
+                                            d = points_set_convex{i}.points(3, :)-points_set_convex{i}.points(2, :);
+                                            p1 = points_set_convex{i}.points(3, :);
+                                            
+                                            sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+                                                [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+                                                [num2str(d(2)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(y1-', num2str(p1(2)), ') = 0'], ...
+                                                [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+                                            if ~isempty(sol)
+                                                sol = [sol.x1 sol.y1 sol.z1];
+                                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                                if all([x y z] > 0)
+                                                    dim = size(points_set_convex{i}.points);
+                                                    points_set_convex{i}.points(dim(1)+1, :) = [x y z];
+                                                end
+                                            end
                                         end
                                     end
                                 else
@@ -3410,6 +3440,21 @@ for i = 1:Dimension(1)+3
                                             end
                                         else
                                              %%% Desarrollar
+                                            d = points_set_convex{i}.points(3, :)-points_set_convex{i}.points(1, :);
+                                            p1 = points_set_convex{i}.points(3, :);
+
+                                            sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+                                                [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+                                                [num2str(d(2)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(y1-', num2str(p1(2)), ') = 0'], ...
+                                                [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+                                            if ~isempty(sol)
+                                                sol = [sol.x1 sol.y1 sol.z1];
+                                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                                if all([x y z] > 0)
+                                                    dim = size(points_set_convex{i}.points);
+                                                    points_set_convex{i}.points(dim(1)+1, :) = [x y z];
+                                                end
+                                            end
                                         end
                                     else
                                         if points_set_convex{i}.points(1, 2) == 0
@@ -3451,6 +3496,21 @@ for i = 1:Dimension(1)+3
                                             end 
                                         else
                                             %%% Desarrollar
+                                            d = points_set_convex{i}.points(3, :)-points_set_convex{i}.points(1, :);
+                                            p1 = points_set_convex{i}.points(3, :);
+
+                                            sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+                                                [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+                                                [num2str(d(2)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(y1-', num2str(p1(2)), ') = 0'], ...
+                                                [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+                                            if ~isempty(sol)
+                                                sol = [sol.x1 sol.y1 sol.z1];
+                                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                                if all([x y z] > 0)
+                                                    dim = size(points_set_convex{i}.points);
+                                                    points_set_convex{i}.points(dim(1)+1, :) = [x y z];
+                                                end
+                                            end
                                         end
                                     end
                                 else
@@ -3600,6 +3660,21 @@ for i = 1:Dimension(1)+3
                                             end
                                         else
                                             %%%% Desarrollar
+                                            d = points_set_convex{i}.points(2, :)-points_set_convex{i}.points(1, :);
+                                            p1 = points_set_convex{i}.points(2, :);
+
+                                            sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+                                                [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+                                                [num2str(d(2)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(y1-', num2str(p1(2)), ') = 0'], ...
+                                                [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+                                            if ~isempty(sol)
+                                                sol = [sol.x1 sol.y1 sol.z1];
+                                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                                if all([x y z] > 0)
+                                                    dim = size(points_set_convex{i}.points);
+                                                    points_set_convex{i}.points(dim(1)+1, :) = [x y z];
+                                                end
+                                            end                                                                                      
                                         end
                                     else
                                         if points_set_convex{i}.points(1, 1) == 0
@@ -3638,6 +3713,21 @@ for i = 1:Dimension(1)+3
                                             end
                                         else
                                             %%%% Desarrollar
+                                            d = points_set_convex{i}.points(2, :)-points_set_convex{i}.points(1, :);
+                                            p1 = points_set_convex{i}.points(2, :);
+
+                                            sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+                                                [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+                                                [num2str(d(2)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(y1-', num2str(p1(2)), ') = 0'], ...
+                                                [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+                                            if ~isempty(sol)
+                                                sol = [sol.x1 sol.y1 sol.z1];
+                                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                                if all([x y z] > 0)
+                                                    dim = size(points_set_convex{i}.points);
+                                                    points_set_convex{i}.points(dim(1)+1, :) = [x y z];
+                                                end
+                                            end
                                         end
                                     end
                                 else
@@ -3736,7 +3826,7 @@ for i = 1:Dimension(1)+3
                 if  any(p(:)~=0) && pasar
                     
                     mean_point = 0.3*[p(1,1) p(1,2) p(1,3)]+0.3*[p(2,1) p(2,2) p(2,3)]+0.4*[p(3,1) p(3,2) p(3,3)];
-                    K = convex_hull([p(1,1) p(1,2) p(1,3); p(2,1) p(2,2) p(2,3); p(3,1) p(3,2) p(3,3); p(4,1) p(4,2) p(4,3)]);
+                    K = convex_hull(p);
                     K_dim = size(K);
                     if i < Dimension(1)
                         set(handles_surf(i), 'Visible', 'off');
@@ -3744,13 +3834,15 @@ for i = 1:Dimension(1)+3
 
                         %handles_surf(i) = surf(handles.axes_simplex3D, 'xdata',[p(K(1),1) p(K(2),1); p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2); p(K(3),2) p(K(4),2)], ...
                         %  'zdata', [p(K(1),3) p(K(2),3); p(K(3),3) p(K(4),3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;
-                        if K_dim(1) == 5
-                            handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'g'); hold on; 
-                        else
-                            handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'g'); hold on; 
-                        end
+                        %if K_dim(1) == 5
+                        %    handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
+                        %        'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'g'); hold on; 
+                        %else
+                        %    handles_surf(i) = patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
+                        %        'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'g'); hold on; 
+                        %end
+                        handles_surf(i) = patch('xdata',p(K(1:K_dim(1)-1),1), 'ydata',p(K(1:K_dim(1)-1),2), ...
+                                'zdata', p(K(1:K_dim(1)-1),3), 'FaceColor', 'g'); hold on;
                         handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
                     else
                         if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'off')
@@ -3760,13 +3852,15 @@ for i = 1:Dimension(1)+3
                         end
                         %surf(handles.axes_simplex3D, 'xdata',[p(1,1) p(2,1); p(3,1) p(4,1)], 'ydata',[p(1,2) p(2,2); p(3,2) p(4,2)], ...
                         %    'zdata', [p(1,3) p(2,3); p(3,3) p(4,3)], 'cdata', [round(p(1,1)) round(p(2,1)); round(p(3,1)) round(p(4,1))]); hold on;
-                        if K_dim(1) == 5
-                            patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;
-                        else
-                            patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
-                                'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;
-                        end
+                        %if K_dim(1) == 5
+                        %    patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1) p(K(5),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2) p(K(5),2)], ...
+                        %        'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3) p(K(5),3)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;
+                        %else
+                        %    patch('xdata',[p(K(1),1) p(K(2),1) p(K(3),1) p(K(4),1)], 'ydata',[p(K(1),2) p(K(2),2) p(K(3),2) p(K(4),2)], ...
+                        %        'zdata', [p(K(1),3) p(K(2),3) p(K(3),3) p(K(4),3)], 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;
+                        %end
+                        handles_surf(i) = patch('xdata',p(K(1:K_dim(1)-1),1), 'ydata',p(K(1:K_dim(1)-1),2), ...
+                                'zdata', p(K(1:K_dim(1)-1),3), 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;
                         %quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table(i, 1), table(i, 2), table(i, 3), 'Color', 'red');
                     end
                 end               
