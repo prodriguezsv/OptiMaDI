@@ -2997,7 +2997,7 @@ for i=1:Dimension(1)
                     x2 = x31; y2 = 0; z2 = z_minmax(2); 
                     x3 = x31; y3 = y_minmax(2); z3 = 0;
                     x4 = x31; y4 = y_minmax(2); z4 = z_minmax(2);
-                    points_set{i} = struct('points', [x2 y2 z2; x4 y4 z4; x1 y1 z1; x3 y3 z3], 'tipo', 29);
+                    points_set{i} = struct('points', [x2 y2 z2; x4 y4 z4; x1 y1 z1; x3 y3 z3], 'tipo', 29); %%%% Referencia Plano XZ
                 elseif x31 == 0 % Plano YZ
                     if i == Dimension(1)                         
                         x1 = 0; y1 = 0; z1 = 0;
@@ -3051,7 +3051,7 @@ for i=1:Dimension(1)
                     x2 = x_minmax(2); y2 = y_minmax(2); z2 = z11;
                     x3 = 0; y3 = 0; z3 = z11;
                     x4 = x_minmax(2); y4 = 0; z4 = z11;
-                    points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x2 y2 z2; x4 y4 z4], 'tipo', 35);
+                    points_set{i} = struct('points', [x3 y3 z3; x1 y1 z1; x4 y4 z4; x2 y2 z2], 'tipo', 35);
                 elseif z11 == 0 % Plano XY
                     if i == Dimension(1) 
                         x1 = 0; y1 = 0; z1 = 0; 
@@ -3186,8 +3186,8 @@ else
     indexset1 = [1:Dimension(1)-1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
     indexset2 = 1:Dimension(1)-1; 
     indexset2_copy = indexset2;
-    %indexset1 = [3,2,4,1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
-    %indexset2 = [3,1,2,4];  
+    %indexset1 = [3,1,2, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
+    %indexset2 = [3,1,2];  
     %indexset2_copy = indexset2;
 end
 
@@ -3223,13 +3223,15 @@ for i = indexset1
                             sol = [];
                         end
                         
-                        if (points_set_convex{i}.tipo == 29)
-                            points_set_convex{i}.points = points_set_convex{i}.points([2 4 3 1],:); 
-                            points_actual_i = points_set_convex{i}.points;                            
+                        if (points_set_convex{i}.tipo == 29 || points_set_convex{i}.tipo == 18)
+                            points_set_convex{i}.points = points_set_convex{i}.points([2 4 3 1],:);
+                            points_actual_i = points_set_convex{i}.points;
+                            points_set_nonred{i}.points = points_set_nonred{i}.points([2 4 3 1],:);    
                         end
-                        if (points_set_convex{j}.tipo == 29)
+                        if (points_set_convex{j}.tipo == 29 || points_set_convex{j}.tipo == 18)
                             points_set_convex{j}.points = points_set_convex{j}.points([2 4 3 1],:);
                             points_actual_j = points_set_convex{j}.points;
+                            points_set_nonred{j}.points = points_set_nonred{j}.points([2 4 3 1],:);    
                         end
                         if ~isempty(sol)
                             sol = [sol.x1 sol.y1];
@@ -3238,11 +3240,7 @@ for i = indexset1
                                 if x > 0 && y > 0
                                     m_i = (points_actual_i(2,2)-points_actual_i(3,2))/(points_actual_i(2,1)-points_actual_i(3,1));
                                     m_j = (points_actual_j(2,2)-points_actual_j(3,2))/(points_actual_j(2,1)-points_actual_j(3,1));
-                                    if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...
-                                            ((m_i < 0 || m_i == Inf)&& (m_j > 0 && (points_set_convex{j}.tipo ==3 || ...
-                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 14))) || ...
-                                            ((m_j < 0 || m_j == Inf)&& (m_i > 0 && (points_set_convex{i}.tipo ==3 || ...
-                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 14))) || ...
+                                    if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...                                            
                                             (m_i == 0 && (points_set_convex{i}.tipo == 33 || points_set_convex{i}.tipo == 30))
                                         
                                         if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
@@ -3326,17 +3324,87 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         end                                        
-                                    elseif (m_i < 0 && m_j > 0) || (m_i > 0 && m_j < 0)
+                                    elseif (m_i < 0 && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==3 || ...
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 14))) || ...
+                                            (m_j < 0 && ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==3 || ...
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 14)))
                                         %%%%%%%
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                            char('La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
-                                    elseif (m_i > 0)&& (m_j > 0)
-                                        %%%%%
+                                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
+                                    elseif (m_i < 0 && (m_j >= 0 && (points_set_convex{j}.tipo ==3 || ... %%%% Cambiar tipo a plano j
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 14))) || ...
+                                           (m_j < 0 && (m_i >= 0 && (points_set_convex{i}.tipo ==3 || ... %%%% Cambiar tipo a plano i
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 14)))
+                                        %%%%%%%
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                            char('La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                    elseif (m_i <= 0&& (m_j < 0 || m_j == Inf)) || (m_j <= 0 && (m_i < 0 || m_i == Inf))
+                                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
+                                    elseif (m_i >= 0 && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==3 || ... %%%%% Agregar tipo a plano i
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 29))) ||...
+                                           (m_j >= 0 && ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==3 || ... %%%%% Agregar tipo a plano j
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29)))
+                                            N = cross(points_actual_i(1,:)-points_actual_i(2,:), points_actual_i(1,:)-points_actual_i(3,:));
+                                            C = dot(N, [0 0 1]);
+                                            
+                                            if m_i >= 0 && m_i ~= Inf
+                                                if points_set_convex{i}.points(3, 1) >= x && points_set_convex{i}.points(3, 2) >= y
+                                                    points_set_convex{i}.points(3, :) = [x y 0];
+                                                end
+                                                if abs(C < e)
+                                                    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
+                                                else
+                                                    s = get(handles.listbox_operations, 'string');
+                                                    set(handles.listbox_operations, 'string', ...
+                                                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                end
+                                                if points_set_convex{j}.points(2, 1) >= x && points_set_convex{j}.points(2, 2) >= y
+                                                    points_set_convex{j}.points(2, :) = [x y 0];
+                                                end
+                                                if abs(C < e)
+                                                    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
+                                                else
+                                                    s = get(handles.listbox_operations, 'string');
+                                                    set(handles.listbox_operations, 'string', ...
+                                                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                end
+                                            else
+                                                if points_set_convex{i}.points(2, 1) >= x && points_set_convex{i}.points(2, 2) >= y
+                                                    points_set_convex{i}.points(2, :) = [x y 0];
+                                                end
+                                                if abs(C < e)
+                                                    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
+                                                else
+                                                    s = get(handles.listbox_operations, 'string');
+                                                    set(handles.listbox_operations, 'string', ...
+                                                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                end
+                                                if points_set_convex{j}.points(3, 1) >= x && points_set_convex{j}.points(3, 2) >= y
+                                                    points_set_convex{j}.points(3, :) = [x y 0];
+                                                end
+                                                if abs(C < e)
+                                                    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
+                                                else
+                                                    s = get(handles.listbox_operations, 'string');
+                                                    set(handles.listbox_operations, 'string', ...
+                                                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                end
+                                            end                                        
+                                    elseif (m_i >= 0 && m_j >= 0) || (m_j >= 0 && m_i >= 0) %%%% Agregar tipo a ambos planos
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                            char('La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                    elseif (((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==3 || ...
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 14)) && ...
+                                            ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==3 || ...
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 14))) || ...
+                                            (((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==3 || ...
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 14)) && ...
+                                            ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==3 || ...
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 14)))
+                                        s = get(handles.listbox_operations, 'string');
+                                        set(handles.listbox_operations, 'string', ...
+                                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
                                     end
                                 else
                                     if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
@@ -3400,25 +3468,11 @@ for i = indexset1
                                                 points_set_convex{j}.points(4, :) = points_set_convex{i}.points(3, :);
                                         else 
                                             if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)                                            
-                                                %%%%%%%%%%%%%
-                                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 2, 3, 4, 1);
-                                                %%%%%%%%%%%%
-                                                %%%%%%%%%%%%%
                                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                                     i, j, 2, 3, 4, 1);
-                                                %%%%%%%%%%%%%
-                                                %set(handles.listbox_operations, 'string', ...
-                                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                                             else
-                                                %%%%%%%%%%%%%
-                                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 3, 2, 4, 1);
-                                                %%%%%%%%%%%%
-                                                %%%%%%%%%%%%%
                                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                                     i, j, 3, 2, 4, 1);
-                                                %%%%%%%%%%%%%
-                                                %set(handles.listbox_operations, 'string', ...
-                                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                                             end
                                         end                                      
                                     end
@@ -3516,34 +3570,22 @@ for i = indexset1
                             end
                         else
                             if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                %%%%%%%%%%%%%
-                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 2, 3, 4, 1);
-                                %%%%%%%%%%%%%
-                                %%%%%%%%%%%%%
                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                     i, j, 2, 3, 4, 1);
-                                %%%%%%%%%%%%%
-                                %set(handles.listbox_operations, 'string', ...
-                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                             else
-                                %%%%%%%%%%%%%
-                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 3, 2, 4, 1);
-                                %%%%%%%%%%%%%
-                                %%%%%%%%%%%%%
                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                     i, j, 3, 2, 4, 1);
-                                %%%%%%%%%%%%%
-                                %set(handles.listbox_operations, 'string', ...
-                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                             end
                         end
-                        if (points_set_convex{i}.tipo == 29)
+                        if (points_set_convex{i}.tipo == 29 || points_set_convex{i}.tipo == 18)
                             points_set_convex{i}.points = points_set_convex{i}.points([4 1 3 2],:); 
-                            points_actual_i = points_actual_i([4 1 3 2],:);  
+                            points_actual_i = points_actual_i([4 1 3 2],:); 
+                            points_set_nonred{i}.points = points_set_nonred{i}.points([4 1 3 2],:);    
                         end
-                        if (points_set_convex{j}.tipo == 29)
+                        if (points_set_convex{j}.tipo == 29 || points_set_convex{j}.tipo == 18)
                             points_set_convex{j}.points = points_set_convex{j}.points([4 1 3 2],:);
                             points_actual_j = points_actual_j([4 1 3 2],:);  
+                            points_set_nonred{j}.points = points_set_nonred{j}.points([4 1 3 2],:);    
                         end
                     end
                 end
@@ -3573,15 +3615,13 @@ for i = indexset1
                                 if x > 0 && z > 0
                                     m_i = (points_actual_i(1,3)-points_actual_i(3,3))/(points_actual_i(1,1)-points_actual_i(3,1));
                                     m_j = (points_actual_j(1,3)-points_actual_j(3,3))/(points_actual_j(1,1)-points_actual_j(3,1));
-                                    if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...
-                                            ((m_i < 0 || m_i == Inf)&& (m_j > 0 && (points_set_convex{j}.tipo ==2 || ...
-                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 19))) || ...
-                                            ((m_j < 0 || m_j == Inf)&& (m_i > 0 && (points_set_convex{i}.tipo ==2 || ...
-                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19))) || ...
+                                    if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...                                            
                                             (m_i == 0 && (points_set_convex{i}.tipo == 36||points_set_convex{i}.tipo == 30))
                                         if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                            if points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 ) %%%% OJO
-                                                if points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 ) %%%% OJO                                                    
+                                            if points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && ...
+                                                    points_set_convex{i}.points(4, 2) == 0 ) %%%% OJO
+                                                if points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && ...
+                                                        points_set_convex{j}.points(4, 2) == 0 ) %%%% OJO
                                                     if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z %%%%11/01
                                                         if points_set_convex{i}.points(1, 2) == 0 
                                                             %%%%%%
@@ -3734,17 +3774,82 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         end
-                                    elseif (m_i < 0 && m_j > 0) || (m_i > 0 && m_j < 0)
+                                    elseif (m_i < 0 && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ...
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 19))) || ...
+                                            (m_j < 0 && ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19)))
                                         %%%%%%%
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                                char('La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
-                                    elseif (m_i > 0)&& (m_j > 0)
-                                        %%%%%
+                                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
+                                    elseif (m_i < 0 && (m_j >= 0 && (points_set_convex{j}.tipo ==2 || ... % Cambiar tipo de plano j
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 19))) || ...
+                                           (m_j < 0 && (m_i >= 0 && (points_set_convex{i}.tipo ==2 || ... % Cambiar tipo de plano i
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19)))                                    
+                                    elseif (m_i >= 0 && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ... % Agregar tipo de plano i
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 19 || points_set_convex{j}.tipo == 29))) ||...
+                                           (m_j >= 0 && ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ... % Agregar tipo de plano j
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29)))
+                                        N = cross(points_actual_i(1,:)-points_actual_i(2,:), points_actual_i(1,:)-points_actual_i(3,:));
+                                        C = dot(N, [0 1 0]);
+                                        if m_i >= 0 && m_i ~= Inf
+                                            if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z
+                                                points_set_convex{i}.points(3, :) = [x 0 z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(handles.listbox_operations, 'string', ...
+                                                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                            end
+                                            if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z
+                                                points_set_convex{j}.points(1, :) = [x 0 z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(handles.listbox_operations, 'string', ...
+                                                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                            end
+                                        else
+                                            if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z
+                                                points_set_convex{i}.points(1, :) = [x 0 z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(s, handles.listbox_operations, 'string', ...
+                                                    char('La reconstrucción puede ser incompleta.', 'Caso3 de tipo de plano en desarrollo.'));
+                                            end
+                                            if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z
+                                                points_set_convex{j}.points(3, :) = [x 0 z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(handles.listbox_operations, 'string', ...
+                                                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                            end
+                                        end                                        
+                                    elseif (m_i >= 0 && m_j >= 0) || (m_j >= 0 && m_i >= 0) %%%% Agregar tipo a ambos planos
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                                char('La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                    elseif (m_i <= 0 && (m_j < 0 || m_j == Inf)) || (m_j <= 0 && (m_i < 0 || m_i == Inf))
+                                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));                                        
+                                    elseif (((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19)) && ...
+                                            ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ...
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 19))) || ...
+                                            (((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ...
+                                            points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 19)) && ...
+                                            ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
+                                            points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19)))
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                            char('La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
+                                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));                                        
                                     end
                                 else
                                     if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
@@ -3810,25 +3915,11 @@ for i = indexset1
                                                 points_set_convex{j}.points(4, :) = points_set_convex{j}.points(3, :);
                                         else
                                             if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                                %%%%%%%%%%%%%
-                                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 1, 3, 4, 2);
-                                                %%%%%%%%%%%%%
-                                                %%%%%%%%%%%%%
                                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                                     i, j, 1, 3, 4, 2);
-                                                %%%%%%%%%%%%%
-                                                %set(handles.listbox_operations, 'string', ...
-                                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                                             else
-                                                %%%%%%%%%%%%%
-                                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 3, 1, 4, 2);
-                                                %%%%%%%%%%%%%
-                                                %%%%%%%%%%%%%
                                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                                     i, j, 3, 1, 4, 2);
-                                                %%%%%%%%%%%%%
-                                                %set(handles.listbox_operations, 'string', ...
-                                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                                             end
                                         end
                                     end
@@ -3926,25 +4017,11 @@ for i = indexset1
                             end
                         else
                             if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                %%%%%%%%%%%%%
-                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 1, 3, 4, 2);
-                                %%%%%%%%%%%%
-                                %%%%%%%%%%%%%
                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                     i, j, 1, 3, 4, 2);
-                                %%%%%%%%%%%%%
-                                %set(handles.listbox_operations, 'string', ...
-                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                             else
-                                %%%%%%%%%%%%%
-                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 3, 1, 4, 2);
-                                %%%%%%%%%%%%
-                                %%%%%%%%%%%%%
                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                     i, j, 3, 1, 4, 2);
-                                %%%%%%%%%%%%%
-                                %set(handles.listbox_operations, 'string', ...
-                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                             end
                         end
                      end
@@ -3974,11 +4051,7 @@ for i = indexset1
                                 if y > 0 && z > 0
                                     m_i = (points_actual_i(1,3)-points_actual_i(2,3))/(points_actual_i(1,2)-points_actual_i(2,2));
                                     m_j = (points_actual_j(1,3)-points_actual_j(2,3))/(points_actual_j(1,2)-points_actual_j(2,2));
-                                    if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...
-                                            ((m_i < 0 || m_i == Inf)&& (m_j > 0 && (points_set_convex{j}.tipo ==2 || ...
-                                            points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 24))) || ...
-                                            ((m_j < 0 || m_j == Inf)&& (m_i > 0 && (points_set_convex{i}.tipo ==2 || ...
-                                            points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 24))) || ...
+                                    if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...                                           
                                             (m_i == 0 && (points_set_convex{i}.tipo == 36 || points_set_convex{i}.tipo == 33))
                                         if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
                                             if points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 ) %%%% OJO
@@ -4119,17 +4192,81 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         end
-                                    elseif (m_i < 0 && m_j > 0) || (m_i > 0 && m_j < 0)
+                                    elseif (m_i < 0 && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ...
+                                            points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 24))) || ...
+                                            (m_j < 0 && ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
+                                            points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 24)))
                                         %%%%%%%
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                                char('La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
-                                    elseif (m_i > 0)&& (m_j > 0)
+                                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 1 de tipo de plano en desarrollo.'));
+                                    elseif (m_i < 0 && (m_j >= 0 && (points_set_convex{j}.tipo ==2 || ... %%%% Cambiar tipo a plano i
+                                            points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 24))) ||...
+                                           (m_j < 0 && (m_i >= 0 && (points_set_convex{i}.tipo ==2 || ... %%%% Cambiar tipo a plano j
+                                            points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 24)))
                                         %%%%%
+                                        s = get(handles.listbox_operations, 'string');
                                         set(handles.listbox_operations, 'string', ...
-                                                char('La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                    elseif (m_i <= 0 && (m_j < 0 || m_j == Inf)) || (m_j <= 0 && (m_i < 0 || m_i == Inf))
-                                        set(handles.listbox_operations, 'string', ...
-                                            char('La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));                                    
+                                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                    elseif (m_i >= 0 && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ... %%%% Agregar tipo a plano i
+                                            points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 24 || points_set_convex{j}.tipo == 32))) ||...
+                                           (m_j >= 0 && ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ... %%%% Agregar tipo a plano j
+                                            points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 24 || points_set_convex{i}.tipo == 32)))
+                                        N = cross(points_actual_i(1,:)-points_actual_i(2,:), points_actual_i(1,:)-points_actual_i(3,:));
+                                        C = dot(N, [1 0 0]);
+                                        if m_i >= 0 && m_i ~= Inf
+                                            if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
+                                                points_set_convex{i}.points(2, :) = [0 y z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(handles.listbox_operations, 'string', ...
+                                                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                            end
+                                            if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
+                                                points_set_convex{j}.points(1, :) = [0 y z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];                                             
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(handles.listbox_operations, 'string', ...
+                                                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                            end
+                                        else
+                                            if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
+                                                points_set_convex{i}.points(1, :) = [0 y z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(handles.listbox_operations, 'string', ...
+                                                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                            end
+                                            if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
+                                                points_set_convex{j}.points(2, :) = [0 y z];
+                                            end
+                                            if abs(C < e)
+                                                points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                            else
+                                                s = get(handles.listbox_operations, 'string');
+                                                set(handles.listbox_operations, 'string', ...
+                                                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                            end
+                                        end                                        
+                                    elseif (m_i >= 0 && m_j >= 0) || (m_j >= 0 && m_i >= 0) %%%% Agregar tipo a ambos planos
+                                        %%%%%%
+                                    elseif (((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
+                                            points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 24)) && ...
+                                            ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ...
+                                            points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 24))) || ...
+                                            (((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ...
+                                            points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 24)) && ...
+                                            ((m_i > 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
+                                            points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 24)))                                        
                                     end
                                 else
                                     if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4))
@@ -4196,25 +4333,11 @@ for i = indexset1
                                                 points_set_convex{j}.points(4, :) = points_set_convex{j}.points(3, :);
                                         else
                                             if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
-                                                %%%%%%%%%%%%%
-                                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 1, 2, 4, 3);
-                                                %%%%%%%%%%%
-                                                %%%%%%%%%%%%%
                                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                                     i, j, 1, 2, 4, 3);
-                                                %%%%%%%%%%%%%
-                                                %set(handles.listbox_operations, 'string', ...
-                                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                                             else
-                                                %%%%%%%%%%%%%
-                                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j, 2, 1, 4, 3);
-                                                %%%%%%%%%%%
-                                                %%%%%%%%%%%%%
                                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                                     i, j, 2, 1, 4, 3);  
-                                                %%%%%%%%%%%%%
-                                                %set(handles.listbox_operations, 'string', ...
-                                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                                             end
                                         end
                                     end
@@ -4310,25 +4433,11 @@ for i = indexset1
                             end
                         else
                             if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
-                                %%%%%%%%%%%%%
-                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j);
-                                %%%%%%%%%%%%%
-                                %%%%%%%%%%%%%
                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                     i, j, 1, 2, 4, 3);
-                                %%%%%%%%%%%%%
-                                %set(handles.listbox_operations, 'string', ...
-                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                             else
-                                %%%%%%%%%%%%%
-                                %[points_set_convex{i}.points,points_set_convex{j}.points] = OctantInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, i, j);
-                                %%%%%%%%%%%%%
-                                %%%%%%%%%%%%%
                                 [points_set_convex{i}.points, points_set_convex{j}.points] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                     i, j, 2, 1, 4, 3);  
-                                %%%%%%%%%%%%%
-                                %set(handles.listbox_operations, 'string', ...
-                                %    char('La reconstrucción puede ser incompleta.', 'Caso en desarrollo.'));
                             end
                         end
                       end                     
@@ -4400,8 +4509,9 @@ C = dot(N, [0 0 1]);
 
 if (abs(C) < e) && (abs(C2) < e)
     %%%% Desarrollar
+    s = get(handles.listbox_operations, 'string');
     set(handles.listbox_operations, 'string', ...
-         char('La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
+         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
 elseif (abs(C2) < e && points_set_nonred{i}.tipo == 1)
     %if points_set_i(index_2, index_coor) < points_set_j(index_2, index_coor)                                                            
     if (points_set_i(3, 3) > 0 || (points_set_i(3, 3) == 0 && points_set_i(4, 3) > 0)) ||...
@@ -4450,8 +4560,9 @@ elseif (abs(C) < e && points_set_nonred{j}.tipo == 1)
     end
 elseif ((abs(C) < e && points_set_nonred{j}.tipo ~= 1) || (abs(C2) < e && points_set_nonred{i}.tipo ~= 1))
     %%%%% Desarrollar
+    s = get(handles.listbox_operations, 'string');
     set(handles.listbox_operations, 'string', ...
-            char('La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
+            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
 end
 
 
@@ -4459,12 +4570,6 @@ end
 function [points_set_i, points_set_j] = calcIntersect(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
 global points_set_nonred;
 %%%%%%%%
-if (points_set_nonred{i}.tipo == 29)
-    points_set_nonred{i}.points = points_set_nonred{i}.points([2 4 3 1],:);    
-end
-if (points_set_nonred{j}.tipo == 29)
-    points_set_nonred{j}.points = points_set_nonred{j}.points([2 4 3 1],:);  
-end
 
 if points_set_i(4, 1) == 0
     index_copy = 2;
@@ -4503,6 +4608,7 @@ else
         frontier = [frontier; points_set_i(4,:); points_set_i(3,:)];
     end
 end
+
 outer_points = frontier*table_copy(j, 1:3)' > table_copy(j, 4);
 if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
     index_first = find(outer_points(:), 1, 'first');
@@ -4521,13 +4627,35 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                         frontier = [frontier; frontier_aux(index_first:dim(1)-1,:)];
                     else
                         frontier(index_first, :) = [x y z];
-                    end
-                                                                                                         
+                    end                   
                     m_j = (points_set_nonred{j}.points(index_2, 2)-points_set_nonred{j}.points(index_1, 2))/...
                             (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
+                    m_i = (frontier(index_first-1, 2)-frontier(index_first, 2))/...
+                        (frontier(index_first-1, 1)-frontier(index_first, 1));
+                    
+                    if index_copy == 2 || index_copy == 4
+                        if (m_i > 0) && m_j < 0
+                            index_1 = 2; index_2 = 3;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = 3; index_2 = 2;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = 3; index_2 = 2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = 3; index_2 = 2;
+                        end
+                    elseif index_copy == 3
+                        if (m_i > 0) && m_j < 0
+                            index_1 = 3; index_2 = 2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = 2; index_2 = 3;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = 2; index_2 = 3;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = 2; index_2 = 3;
+                        end
+                    end
                     if index_1 == 2
-                        if (((points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y && (m_j < 0 || m_j == abs(Inf)))) || ...
-                            (points_set_j(index_2, 1) >= x && points_set_j(index_2, 2) <= y && (m_j >= 0))) && ...
+                        if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y) && ...
                             (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
                             points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2))
                             if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
@@ -4546,55 +4674,41 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 sol = [sol.x1 sol.y1 sol.z1];
                                 if isempty(symvar(sol))
                                     x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_first == dim(1)-1                             
-                                            frontier(index_first,:) = [x y z]; 
-                                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                                            else
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                                            end
-                                            
-                                            if ~(isempty(sol))
-                                                sol = [sol.x1 sol.y1 sol.z1];
-                                                if isempty(symvar(sol))
-                                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                                    if all([x y z] >= 0)
-                                                        frontier(index_first+1,:) = [x y z]; 
-                                                    end
-                                                end
-                                            end
+                                    if all([x y z] > 0)                                                                                                 
+                                        frontier(index_first, :) = [x y z];
+                                    end
+                                end
+                            end
+                        end
+                        
+                        if index_first >= dim(1)-2 
+                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
+                            else
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
+                            end        
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        if index_first == dim(1)-1
+                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
+                                                frontier(dim(1), :) = [x y z];
+                                            %end
                                         else
-                                            frontier(index_first, :) = [x y z];
+                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
+                                                frontier(dim(1)-1, :) = [x y z];
+                                            %end
                                         end
                                     end
                                 end
                             end
                         end
-                        if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                        end
-
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    if index_first == dim(1)-1 
-                                        frontier(dim(1), :) = [x y z];
-                                    else
-                                        frontier(dim(1)-1, :) = [x y z];
-                                    end
-                                end
-                            end
-                        end                        
                     elseif index_1 == 3
-                        if ((points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y && (m_j < 0 || m_j == abs(Inf))) || ...
-                            (points_set_j(index_2, 1) >= x && points_set_j(index_2, 2) <= y && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_2, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2))
+                        if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y && ...                            
+                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
+                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2)))
                         %if (points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y)
                             if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
                                 points_set_j(index_3, :) = [x y z];
@@ -4616,45 +4730,32 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 if isempty(symvar(sol))
                                     x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
                                     if all([x y z] > 0)
-                                        if index_first == dim(1)-1                                                       
-                                            frontier(index_first,:) = [x y z]; 
-                                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-                                            else
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(3,:), table_copy, i, j);
-                                            end
-
-                                            if ~(isempty(sol))
-                                                sol = [sol.x1 sol.y1 sol.z1];
-                                                if isempty(symvar(sol))
-                                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                                    if all([x y z] >= 0)
-                                                        frontier(index_first+1,:) = [x y z]; 
-                                                    end
-                                                end
-                                            end
-                                        else
-                                            frontier(index_first, :) = [x y z];
-                                        end
+                                        frontier(index_first,:) = [x y z];
                                     end
                                 end
                             end
-                        end
-                        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(3,:), table_copy, i, j);
-                        end
+                        end                        
 
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    if index_first == dim(1)-1
-                                        frontier(dim(1),:) = [x y z];                         
-                                    else
-                                        frontier(dim(1)-1, :) = [x y z];
+                        if index_first >= dim(1)-2 
+                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
+                            else
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
+                            end
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        if index_first == dim(1)-1
+                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
+                                                frontier(dim(1),:) = [x y z];
+                                            %end
+                                        else
+                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
+                                                frontier(dim(1)-1, :) = [x y z];
+                                            %end
+                                        end
                                     end
                                 end
                             end
@@ -4682,11 +4783,34 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                     
                     m_j = (points_set_nonred{j}.points(index_2, 2)-points_set_nonred{j}.points(index_1, 2))/...
                             (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
+                    m_i = (frontier(index_last+1, 2)-frontier(index_last, 2))/...
+                        (frontier(index_last+1, 1)-frontier(index_last, 1));
+                    
+                    if index_copy == 2 || index_copy == 4
+                        if (m_i > 0) && m_j < 0
+                            index_1 = 2; index_2 = 3;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = 3; index_2 = 2;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = 3; index_2 = 2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = 3; index_2 = 2;
+                        end
+                    elseif index_copy == 3
+                        if (m_i > 0) && m_j < 0
+                            index_1 = 3; index_2 = 2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = 2; index_2 = 3;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = 2; index_2 = 3;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = 2; index_2 = 3;
+                        end
+                    end
                     if index_1 == 2
-                        if (((points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y && (m_j < 0 || m_j == abs(Inf)))) || ...
-                            (points_set_j(index_1, 1) >= x && points_set_j(index_1, 2) <= y && (m_j >= 0))) && ...
+                        if (points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y && ...                            
                             (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2))
+                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2)))
                         %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
                             if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
                                 points_set_j(index_3, :) = [x y z];
@@ -4715,11 +4839,29 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 end
                             end
                         end
+                        if index_last == 1 
+                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
+                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
+                            else
+                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
+                            end
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
+                                            frontier(index_last, :) = [x y z];
+                                        %end
+                                    end
+                                end
+                            end
+                        end
                     elseif index_1 == 3
-                        if ((points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y && (m_j < 0 || m_j == abs(Inf))) || ...
-                            (points_set_j(index_1, 1) >= x && points_set_j(index_1, 2) <= y && (m_j >= 0))) && ...
+                        
+                        if ((points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y) &&...
                             (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2))
+                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2)))
                         %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
                             if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
                                 points_set_j(index_4, :) = [x y z];
@@ -4739,12 +4881,30 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 if isempty(symvar(sol))
                                     x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
                                     if all([x y z] > 0)
-                                        if index_last == index_first
+                                        %if index_last == index_first
                                             frontier(index_last+1,:) = [x y z];
-                                        else
+                                        %else
                                             frontier(index_last, :) = [x y z];
-                                        end
+                                        %end
                                     end
+                                end
+                            end
+                        end
+                    end
+                    if index_last == 1 
+                        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
+                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
+                        else
+                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
+                        end
+                        if ~(isempty(sol))
+                            sol = [sol.x1 sol.y1 sol.z1];
+                            if isempty(symvar(sol))
+                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                if all([x y z] >= 0)
+                                    %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
+                                        frontier(index_last, :) = [x y z];
+                                    %end
                                 end
                             end
                         end
@@ -4766,7 +4926,7 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
         points_set_i = [points_set_i;frontier(1,:);frontier(dim(1),:);frontier(dim(1)-1,:)];
     end
     for k = 2:dim(1)-2
-        points_set_i(3+k, :) = frontier(2,:);
+        points_set_i(3+k, :) = frontier(k,:);
     end
 elseif all(outer_points(:)==1)
     points_set_i = points_set_i(1:4, :);
@@ -4783,17 +4943,11 @@ elseif all(outer_points(:)==1)
     %%%%%
 end
 
-if (points_set_nonred{i}.tipo == 29)
-    points_set_nonred{i}.points = points_set_nonred{i}.points([4 1 3 2],:);    
-end
-if (points_set_nonred{j}.tipo == 29)
-    points_set_nonred{j}.points = points_set_nonred{j}.points([4 1 3 2],:);  
-end
-
 
 
 %%%%%%%%
 function [points_set_i, points_set_j] = calcIntersect2(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
+%%%%%%%
 sol = findIntercept(points_set_i(index_1, :), points_set_i(index_2, :), table_copy, i, j);
 if ~isempty(sol) 
     sol = [sol.x1 sol.y1 sol.z1];
@@ -4809,18 +4963,25 @@ if ~isempty(sol)
                     points_set_i(4, :) = [x y z];                           
                 end
             end
-
+            m_j = (points_set_j(index_1, 2)-points_set_j(index_2, 2))/...
+                (points_set_j(index_1, 1)-points_set_j(index_2, 1));
+            m_i = (points_set_i(index_1, 2)-points_set_i(index_2, 2))/...
+                (points_set_i(index_1, 1)-points_set_i(index_2, 1));          
+            
             outer_points = [points_set_i(index_1, :); points_set_i(index_2, :)]*table_copy(j, 1:3)' > table_copy(j, 4);
             index_first = find(outer_points(:)==0, 1, 'first');
-            if index_first == 1
-                index_first = index_1;
-                index_second = index_2;
-            else
-                index_first = index_2;
-                index_second = index_1;
+            if (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 1)
+                index_first = 3; index_second = 2;
+            elseif (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 2)
+                index_first = 2; index_second = 3;
+            elseif (m_i < 0 && m_j > 0)
+                index_first = 2; index_second = 3;            
             end
-            if (points_set_j(index_first, 1) <= x && points_set_j(index_first, 2) >= y && index_first==index_2) || ...
-                    (points_set_j(index_first, 1) >= x && points_set_j(index_first, 2) <= y && index_first==index_1)
+            
+            if (points_set_j(index_first, 1) <= x && points_set_j(index_first, 2) >= y) || ...
+                    (points_set_j(index_first, 1) >= x && points_set_j(index_first, 2) <= y) && ...
+                    (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
+                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2))
             %if points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y
                 if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 2) == points_set_j(index_second, 2)
                 %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
@@ -4849,23 +5010,22 @@ if ~isempty(sol)
                     end
                 end
             end
-        end
-    end
-    
-    if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 2) == points_set_j(index_second, 2)        
-        sol = findIntercept(points_set_j(index_3, :), points_set_j(index_second, :), table_copy, i, j);
-    else
-        sol = findIntercept(points_set_j(index_4, :), points_set_j(index_second, :), table_copy, i, j);                    
-    end
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                points_set_i(index_2, :) = [x y z];
+            if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 2) == points_set_j(index_second, 2)        
+                sol = findIntercept(points_set_j(index_3, :), points_set_j(index_second, :), table_copy, i, j);
+            else
+                sol = findIntercept(points_set_j(index_4, :), points_set_j(index_second, :), table_copy, i, j);                    
             end
-        end
-    end
+            if ~(isempty(sol))
+                sol = [sol.x1 sol.y1 sol.z1];
+                if isempty(symvar(sol))
+                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                    if all([x y z] > 0)
+                        points_set_i(index_2, :) = [x y z];
+                    end
+                end
+            end
+        end        
+    end        
 end
 
 %%%%%
@@ -4999,109 +5159,113 @@ C = dot(N, [0 1 0]);
 
 if (abs(C) < e) && (abs(C2) < e)
     %%%% Desarrollar
+    s = get(handles.listbox_operations, 'string');
     set(handles.listbox_operations, 'string', ...
-         char('La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
+         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
 elseif (abs(C2) < e && points_set_nonred{i}.tipo == 1)
     %if points_set_i(index_2, index_coor) < points_set_j(index_2, index_coor)                                                            
     if (points_set_i(3, 2) > 0 || (points_set_i(3, 2) == 0 && points_set_i(4, 2) > 0)) ||...
             (points_set_i(1, 2) > 0 || (points_set_i(1, 2) == 0 && points_set_i(4, 2) > 0))
         if index_1 == 1
             if all(points_set_i(3, :) == points_set_i(4, :))                
-                [points_set_i, points_set_j] = calcIntersect2_XZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);            
+                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);            
             else                                    
-                [points_set_i, points_set_j] = calcIntersect_XZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
+                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
             end
         elseif index_1 == 3
             if all(points_set_i(3, :) == points_set_i(4, :))
-                [points_set_i, points_set_j] = calcIntersect2_XZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
+                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
             else
-                [points_set_i, points_set_j] = calcIntersect_XZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
+                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
             end
         end                    
     elseif (points_set_j(1, 2) > 0 || (points_set_j(1, 2) == 0 && points_set_j(4, 2) > 0)) ||...
             (points_set_j(3, 2) > 0 || (points_set_j(3, 2) == 0 && points_set_j(4, 2) > 0))
-        [points_set_i, points_set_j] = calcIntersect3_XZ(points_set_i, points_set_j, table_copy, i, j);        
+        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);        
     elseif points_set_i(1, 2) == 0 && points_set_i(3, 2) == 0
-        [points_set_i, points_set_j] = calcIntersect3_XZ(points_set_i, points_set_j, table_copy, i, j);                
+        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);                
     end
 elseif (abs(C) < e && points_set_nonred{j}.tipo == 1)   
     if (points_set_j(3, 2) > 0 || (points_set_j(3, 2) == 0 && points_set_j(4, 2) > 0)) ||...
             (points_set_j(1, 2) > 0 || (points_set_j(1, 2) == 0 && points_set_j(4, 2) > 0))
         if index_1 == 1           
             if all(points_set_j(3, :) == points_set_j(4, :))
-                [points_set_j, points_set_i] = calcIntersect2_XZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             else
-                [points_set_j, points_set_i] = calcIntersect_XZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             end
         elseif index_1 == 3
             if all(points_set_j(3, :) == points_set_j(4, :))                
-                [points_set_j, points_set_i] = calcIntersect2_XZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             else
-                [points_set_j, points_set_i] = calcIntersect_XZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             end
         end                    
     elseif (points_set_i(3, 2) > 0 || (points_set_i(3, 2) == 0 && points_set_i(4, 2) > 0)) ||...
             (points_set_i(1, 2) > 0 || (points_set_i(1, 2) == 0 && points_set_i(4, 2) > 0))
-        [points_set_j, points_set_i] = calcIntersect3_XZ(points_set_j, points_set_i, table_copy, j, i);
+        [points_set_j, points_set_i] = calcIntersect3_XZ_YZ(points_set_j, points_set_i, table_copy, j, i);
                 
     elseif points_set_j(1, 2) == 0 && points_set_j(3, 2) == 0       
-        [points_set_j, points_set_i] = calcIntersect3_XZ(points_set_j, points_set_i, table_copy, j, i);
+        [points_set_j, points_set_i] = calcIntersect3_XZ__YZ(points_set_j, points_set_i, table_copy, j, i);
     end
 elseif ((abs(C) < e && points_set_nonred{j}.tipo ~= 1) || (abs(C2) < e && points_set_nonred{i}.tipo ~= 1))
     %%%%% Desarrollar
+    s = get(handles.listbox_operations, 'string');
     set(handles.listbox_operations, 'string', ...
-            char('La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
+            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
 end
 
 
 %%%%%%
-function [points_set_i, points_set_j] = calcIntersect_XZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
+function [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
 global points_set_nonred;
 %%%%%%%%
-if (points_set_nonred{i}.tipo == 29)
-    points_set_nonred{i}.points = points_set_nonred{i}.points([2 4 3 1],:);    
-end
-if (points_set_nonred{j}.tipo == 29)
-    points_set_nonred{j}.points = points_set_nonred{j}.points([2 4 3 1],:);  
-end
 
-if points_set_i(4, 1) == 0
-    index_copy = 1;
-    frontier = points_set_i(4,:);
+if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+    index_var1 = 1; index_var2 = 3;
+    index_comp1 = 1; index_comp2 = 3;
+elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+    index_var1 = 1; index_var2 = 2;
+    index_comp1 = 2; index_comp2 = 3;
+end
+if points_set_i(index_3, index_comp1) == 0
+    index_copy = index_var1;
+    frontier = points_set_i(index_3,:);
     dim = size(points_set_i);
     if dim(1) == 4
-        frontier = [frontier; points_set_i(1,:); points_set_i(3,:)];
+        frontier = [frontier; points_set_i(index_var1,:); points_set_i(index_var2,:)];
     else
         for k = 5:dim(1)
             frontier = [frontier; points_set_i(k,:)];
         end
-        frontier = [frontier; points_set_i(1,:); points_set_i(3,:)];
+        frontier = [frontier; points_set_i(index_var1,:); points_set_i(index_var2,:)];
     end
-elseif points_set_i(4, 3) == 0
-    index_copy = 3;
-    frontier = points_set_i(4,:);
+elseif points_set_i(index_3, index_comp2) == 0
+    index_copy = index_var2;
+    frontier = points_set_i(index_3,:);
     dim = size(points_set_i);
     if dim(1) == 4
-        frontier = [frontier; points_set_i(3,:); points_set_i(1,:)];
+        frontier = [frontier; points_set_i(index_var2,:); points_set_i(index_var1,:)];
     else
         for k = 5:dim(1)
             frontier = [frontier; points_set_i(k,:)];
         end
-        frontier = [frontier; points_set_i(3,:); points_set_i(1,:)];
+        frontier = [frontier; points_set_i(index_var2,:); points_set_i(index_var1,:)];
     end
 else
     index_copy = 4;
-    frontier = points_set_i(1,:);
+    frontier = points_set_i(index_var1,:);
     dim = size(points_set_i);
     if dim(1) == 4
-        frontier = [frontier; points_set_i(4,:); points_set_i(3,:)];
+        frontier = [frontier; points_set_i(index_3,:); points_set_i(index_var2,:)];
     else
         for k = 5:dim(1)
             frontier = [frontier; points_set_i(k,:)];
         end
-        frontier = [frontier; points_set_i(4,:); points_set_i(3,:)];
+        frontier = [frontier; points_set_i(index_3,:); points_set_i(index_var2,:)];
     end
 end
+
 outer_points = frontier*table_copy(j, 1:3)' > table_copy(j, 4);
 if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
     index_first = find(outer_points(:), 1, 'first');
@@ -5120,23 +5284,54 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                         frontier = [frontier; frontier_aux(index_first:dim(1)-1,:)];
                     else
                         frontier(index_first, :) = [x y z];
+                    end                   
+                    m_j = (points_set_nonred{j}.points(index_2, index_comp2)-points_set_nonred{j}.points(index_1, index_comp2))/...
+                            (points_set_nonred{j}.points(index_2, index_comp1)-points_set_nonred{j}.points(index_1, index_comp1));
+                    m_i = (frontier(index_first-1, index_comp2)-frontier(index_first, index_comp2))/...
+                        (frontier(index_first-1, index_comp1)-frontier(index_first, index_comp1));
+                    
+                    if index_copy == index_var1 || index_copy == index_3 %%%% 4
+                        if (m_i > 0) && m_j < 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        end
+                    elseif index_copy == index_var2
+                        if (m_i > 0) && m_j < 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        end
                     end
-                                                                                                         
-                    m_j = (points_set_nonred{j}.points(index_2, 3)-points_set_nonred{j}.points(index_1, 3))/...
-                            (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
-                    if index_1 == 1
-                        if (((points_set_j(index_2, 1) <= x && points_set_j(index_2, 3) >= z && (m_j < 0 || m_j == abs(Inf)))) || ...
-                            (points_set_j(index_2, 1) >= x && points_set_j(index_2, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
+                    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                        var_first = x;                
+                    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                        var_first = y;
+                    end
+                    if index_1 == index_var1
+                        if (points_set_j(index_2, index_comp1) <= var_first && points_set_j(index_2, index_comp2) >= z) && ...
+                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
+                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2))
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
                                 points_set_j(index_4, :) = [x y z];
                             else
                                 points_set_j(index_3, :) = [x y z];
                             end
-                            points_set_j(index_2, :) = [x y 0];
+                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                                points_set_j(index_2, :) = [x 0 z];
+                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                                points_set_j(index_2, :) = [0 y z];
+                            end
                         else
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
                                 sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
                             else
                                 sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
@@ -5145,65 +5340,55 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 sol = [sol.x1 sol.y1 sol.z1];
                                 if isempty(symvar(sol))
                                     x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_first == dim(1)-1                             
-                                            frontier(index_first,:) = [x y z]; 
-                                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                                            else
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                                            end
-                                            
-                                            if ~(isempty(sol))
-                                                sol = [sol.x1 sol.y1 sol.z1];
-                                                if isempty(symvar(sol))
-                                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                                    if all([x y z] >= 0)
-                                                        frontier(index_first+1,:) = [x y z]; 
-                                                    end
-                                                end
-                                            end
+                                    if all([x y z] > 0)                                                                                                 
+                                        frontier(index_first, :) = [x y z];
+                                    end
+                                end
+                            end
+                        end
+                        
+                        if index_first >= dim(1)-2 
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
+                            else
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
+                            end        
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        if index_first == dim(1)-1
+                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
+                                                frontier(dim(1), :) = [x y z];
+                                            %end
                                         else
-                                            frontier(index_first, :) = [x y z];
+                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
+                                                frontier(dim(1)-1, :) = [x y z];
+                                            %end
                                         end
                                     end
                                 end
                             end
                         end
-                        if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                        end
-
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    if index_first == dim(1)-1 
-                                        frontier(dim(1), :) = [x y z];
-                                    else
-                                        frontier(dim(1)-1, :) = [x y z];
-                                    end
-                                end
-                            end
-                        end                        
-                    elseif index_1 == 3
-                        if ((points_set_j(index_2, 1) <= x && points_set_j(index_2, 3) >= z && (m_j < 0 || m_j == abs(Inf))) || ...
-                            (points_set_j(index_2, 1) >= x && points_set_j(index_2, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_2, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
+                    elseif index_1 == index_var2
+                        if (points_set_j(index_2, index_comp1) <= var_first && points_set_j(index_2, index_comp2) >= z && ...                            
+                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
+                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2)))
                         %if (points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
                                 points_set_j(index_3, :) = [x y z];
                             else
                                 points_set_j(index_4, :) = [x y z];
                             end
-                            points_set_j(index_2, :) = [x y 0];
+                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                                points_set_j(index_2, :) = [x 0 z];
+                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                                points_set_j(index_2, :) = [0 y z];
+                            end
                             %minxyz(3) = min([minxyz(3) z]);
                         else
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
                                 %frontier(index_first, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
                                 sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
                             else
@@ -5215,45 +5400,32 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 if isempty(symvar(sol))
                                     x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
                                     if all([x y z] > 0)
-                                        if index_first == dim(1)-1                                                       
-                                            frontier(index_first,:) = [x y z]; 
-                                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-                                            else
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(3,:), table_copy, i, j);
-                                            end
-
-                                            if ~(isempty(sol))
-                                                sol = [sol.x1 sol.y1 sol.z1];
-                                                if isempty(symvar(sol))
-                                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                                    if all([x y z] >= 0)
-                                                        frontier(index_first+1,:) = [x y z]; 
-                                                    end
-                                                end
-                                            end
-                                        else
-                                            frontier(index_first, :) = [x y z];
-                                        end
+                                        frontier(index_first,:) = [x y z];
                                     end
                                 end
                             end
-                        end
-                        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(3,:), table_copy, i, j);
-                        end
+                        end                        
 
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    if index_first == dim(1)-1
-                                        frontier(dim(1),:) = [x y z];                         
-                                    else
-                                        frontier(dim(1)-1, :) = [x y z];
+                        if index_first >= dim(1)-2 
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
+                            else
+                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
+                            end
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        if index_first == dim(1)-1
+                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
+                                                frontier(dim(1),:) = [x y z];
+                                            %end
+                                        else
+                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
+                                                frontier(dim(1)-1, :) = [x y z];
+                                            %end
+                                        end
                                     end
                                 end
                             end
@@ -5279,23 +5451,55 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                         frontier(index_last, :) = [x y z];
                     end
                     
-                    m_j = (points_set_nonred{j}.points(index_2, 3)-points_set_nonred{j}.points(index_1, 3))/...
-                            (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
-                    if index_1 == 2
-                        if (((points_set_j(index_1, 1) <= x && points_set_j(index_1, 3) >= z && (m_j < 0 || m_j == abs(Inf)))) || ...
-                            (points_set_j(index_1, 1) >= x && points_set_j(index_1, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
+                    m_j = (points_set_nonred{j}.points(index_2, index_comp2)-points_set_nonred{j}.points(index_1, index_comp2))/...
+                            (points_set_nonred{j}.points(index_2, index_comp1)-points_set_nonred{j}.points(index_1, index_comp1));
+                    m_i = (frontier(index_last+1, index_comp2)-frontier(index_last, index_comp2))/...
+                        (frontier(index_last+1, index_comp1)-frontier(index_last, index_comp1));
+                    
+                    if index_copy == index_var1 || index_copy == index_3 %%%% 4
+                        if (m_i > 0) && m_j < 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        end
+                    elseif index_copy == index_var2
+                        if (m_i > 0) && m_j < 0
+                            index_1 = index_var2; index_2 = index_var1;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        elseif (m_i > 0) && m_j > 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
+                            index_1 = index_var1; index_2 = index_var2;
+                        end
+                    end
+                    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                        var_first = x;                
+                    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                        var_first = y;
+                    end
+                    if index_1 == index_var1
+                        if (points_set_j(index_1, index_comp1) <= var_first && points_set_j(index_1, index_comp2) >= z && ...                            
+                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
+                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2)))
                         %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
                                 points_set_j(index_3, :) = [x y z];
                             else
                                 points_set_j(index_4, :) = [x y z];
                             end
-                            points_set_j(index_1, :) = [x y 0];
+                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                                points_set_j(index_1, :) = [x 0 z];
+                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                                points_set_j(index_1, :) = [0 y z];
+                            end
                             %minxyz(3) = min([minxyz(3) z]);
                         else
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
                                 sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
                             else
                                 sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
@@ -5314,21 +5518,43 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 end
                             end
                         end
-                    elseif index_1 == 3
-                        if ((points_set_j(index_1, 1) <= x && points_set_j(index_1, 3) >= z && (m_j < 0 || m_j == abs(Inf))) || ...
-                            (points_set_j(index_1, 1) >= x && points_set_j(index_1, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
+                        if index_last == 1 
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
+                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
+                            else
+                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
+                            end
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
+                                            frontier(index_last, :) = [x y z];
+                                        %end
+                                    end
+                                end
+                            end
+                        end
+                    elseif index_1 == index_var2
+                        
+                        if ((points_set_j(index_1, index_comp1) <= var_first && points_set_j(index_1, index_comp2) >= z) &&...
+                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
+                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2)))
                         %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
                                 points_set_j(index_4, :) = [x y z];
                             else
                                 points_set_j(index_3, :) = [x y z];
                             end
-                            points_set_j(index_1, :) = [x y 0];
+                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                                points_set_j(index_1, :) = [x 0 z];
+                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                                points_set_j(index_1, :) = [0 y z];
+                            end                            
                             %minxyz(3) = min([minxyz(3) z]);
                         else
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
+                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
                                 sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
                             else
                                 sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
@@ -5338,12 +5564,30 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
                                 if isempty(symvar(sol))
                                     x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
                                     if all([x y z] > 0)
-                                        if index_last == index_first
+                                        %if index_last == index_first
                                             frontier(index_last+1,:) = [x y z];
-                                        else
+                                        %else
                                             frontier(index_last, :) = [x y z];
-                                        end
+                                        %end
                                     end
+                                end
+                            end
+                        end
+                    end
+                    if index_last == 1 
+                        if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
+                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
+                        else
+                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
+                        end
+                        if ~(isempty(sol))
+                            sol = [sol.x1 sol.y1 sol.z1];
+                            if isempty(symvar(sol))
+                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                if all([x y z] >= 0)
+                                    %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
+                                        frontier(index_last, :) = [x y z];
+                                    %end
                                 end
                             end
                         end
@@ -5356,81 +5600,109 @@ if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
         frontier = [frontier(1:index_first,:);frontier(index_last:dim(1)-1,:)];
     end
     dim = size(frontier);
-    points_set_i = points_set_i(1, :);
-    if index_copy == 3
-        points_set_i = [points_set_i;frontier(dim(1),:);frontier(dim(1)-1,:);frontier(1,:)];
-    elseif index_copy == 1
-        points_set_i = [points_set_i;frontier(dim(1)-1,:);frontier(dim(1),:);frontier(1,:)];
-    else
-        points_set_i = [points_set_i;frontier(1,:);frontier(dim(1),:);frontier(dim(1)-1,:)];
+    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+        points_set_i = points_set_i(2, :);
+        if index_copy == index_var2
+            points_set_i = [frontier(dim(1),:);points_set_i;frontier(dim(1)-1,:);frontier(1,:)];
+        elseif index_copy == index_var1
+            points_set_i = [frontier(dim(1)-1,:);points_set_i;frontier(dim(1),:);frontier(1,:)];
+        else
+            points_set_i = [frontier(dim(1),:);points_set_i;frontier(1,:);frontier(dim(1)-1,:)];
+        end       
+    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+        points_set_i = points_set_i(3, :);
+        if index_copy == index_var2
+            points_set_i = [frontier(dim(1),:);frontier(dim(1)-1,:);points_set_i;frontier(1,:)];
+        elseif index_copy == index_var1
+            points_set_i = [frontier(dim(1)-1,:);frontier(dim(1),:);points_set_i;frontier(1,:)];
+        else
+            points_set_i = [frontier(dim(1),:);frontier(1,:);points_set_i;frontier(dim(1)-1,:)];
+        end
     end
     for k = 2:dim(1)-2
-        points_set_i(3+k, :) = frontier(2,:);
+        points_set_i(3+k, :) = frontier(k,:);
     end
 elseif all(outer_points(:)==1)
     points_set_i = points_set_i(1:4, :);
-    if index_copy == 3
-        points_set_i(3,:) = points_set_i(4, :);
+    if index_copy == index_var2
+        points_set_i(index_var2,:) = points_set_i(4, :);
         points_set_i(4,:) = points_set_i(3, :);
-    elseif index_copy == 1
-        points_set_i(2,:) = points_set_i(4, :);
+    elseif index_copy == index_var1
+        points_set_i(index_var1,:) = points_set_i(4, :);
         points_set_i(4,:) = points_set_i(3, :);
     else                        
         points_set_i(4,:) = points_set_i(3, :);
     end
-    [points_set_i, points_set_j] = calcIntersect3_XZ(points_set_i, points_set_j, table_copy, i, j);
+    [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);
     %%%%%
 end
 
-if (points_set_nonred{i}.tipo == 29)
-    points_set_nonred{i}.points = points_set_nonred{i}.points([4 1 3 2],:);    
-end
-if (points_set_nonred{j}.tipo == 29)
-    points_set_nonred{j}.points = points_set_nonred{j}.points([4 1 3 2],:);  
-end
-
-
 
 %%%%%%%%
-function [points_set_i, points_set_j] = calcIntersect2_XZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
+function [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
+%%%%%
+if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+    index_var1 = 1; index_var2 = 3;
+    index_comp1 = 1; index_comp2 = 3;
+elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+    index_var1 = 1; index_var2 = 2;
+    index_comp1 = 2; index_comp2 = 3;
+end
+
 sol = findIntercept(points_set_i(index_1, :), points_set_i(index_2, :), table_copy, i, j);
 if ~isempty(sol) 
     sol = [sol.x1 sol.y1 sol.z1];
     if isempty(symvar(sol))                                                
         x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
         if all([x y z] > 0)
-            if index_1 == 2
-                if points_set_i(index_1, 1) <= x && points_set_i(index_1, 3) >= z
-                    points_set_i(4, :) = [x y z];                           
-                end
-            else
-                if points_set_i(index_1, 1) >= x && points_set_i(index_1, 3) <= z                                
-                    points_set_i(4, :) = [x y z];                           
-                end
+            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                var_first = x;                
+            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                var_first = y;
             end
-
+            if index_1 == index_var1
+                if points_set_i(index_1, index_comp1) <= var_first && points_set_i(index_1, index_comp2) >= z 
+                    points_set_i(4, :) = [x y z];        
+                end
+            else                
+                if points_set_i(index_1, index_comp1) >= var_first && points_set_i(index_1, index_comp2) <= z 
+                    points_set_i(4, :) = [x y z];                           
+                end                
+            end
+            m_j = (points_set_j(index_1, index_comp2)-points_set_j(index_2, index_comp2))/...
+                (points_set_j(index_1, index_comp1)-points_set_j(index_2, index_comp1));
+            m_i = (points_set_i(index_1, index_comp2)-points_set_i(index_2, index_comp2))/...
+                (points_set_i(index_1, index_comp1)-points_set_i(index_2, index_comp1));          
+            
             outer_points = [points_set_i(index_1, :); points_set_i(index_2, :)]*table_copy(j, 1:3)' > table_copy(j, 4);
             index_first = find(outer_points(:)==0, 1, 'first');
-            if index_first == 1
-                index_first = index_1;
-                index_second = index_2;
-            else
-                index_first = index_2;
-                index_second = index_1;
+            if (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 1)
+                index_first = index_var2; index_second = index_var1;
+            elseif (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 2)
+                index_first = index_var1; index_second = index_var2;
+            elseif (m_i < 0 && m_j > 0)
+                index_first = index_var1; index_second = index_var2;            
             end
-            if (points_set_j(index_first, 1) <= x && points_set_j(index_first, 3) >= z && index_first==index_2) || ...
-                    (points_set_j(index_first, 1) >= x && points_set_j(index_first, 3) <= z && index_first==index_1)
+            
+            if (points_set_j(index_first, index_comp1) <= var_first && points_set_j(index_first, index_comp2) >= z) || ...
+                    (points_set_j(index_first, index_comp1) >= var_first && points_set_j(index_first, index_comp2) <= z) && ...
+                    (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
+                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2))
             %if points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y
-                if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 3) == points_set_j(index_second, 3)
+                if points_set_j(index_3, index_comp1) == points_set_j(index_second, index_comp1) && points_set_j(index_3, index_comp2) == points_set_j(index_second, index_comp2)
                 %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
                     points_set_j(index_4, :) = [x y z];
                 else
                     points_set_j(index_3, :) = [x y z];                  
                 end
-                points_set_j(index_first, :) = [x y 0];
+                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                    points_set_j(index_first, :) = [x 0 z];
+                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                    points_set_j(index_first, :) = [0 y z];
+                end                
                 %minxyz(3) = min([minxyz(3) z]);                                
             else
-                if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 3) == points_set_j(index_second, 3)
+                if points_set_j(index_3, index_comp1) == points_set_j(index_second, index_comp1) && points_set_j(index_3, index_comp2) == points_set_j(index_second, index_comp2)
                 %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
                     %points_set_i(4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
                     sol = findIntercept(points_set_j(index_first, :), points_set_j(index_4, :), table_copy, i, j);
@@ -5448,67 +5720,102 @@ if ~isempty(sol)
                     end
                 end
             end
-        end
-    end
-    
-    if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 3) == points_set_j(index_second, 3)        
-        sol = findIntercept(points_set_j(index_3, :), points_set_j(index_second, :), table_copy, i, j);
-    else
-        sol = findIntercept(points_set_j(index_4, :), points_set_j(index_second, :), table_copy, i, j);                    
-    end
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                points_set_i(index_2, :) = [x y z];
+            if points_set_j(index_3, index_comp1) == points_set_j(index_second, index_comp1) && points_set_j(index_3, index_comp2) == points_set_j(index_second, index_comp2)        
+                sol = findIntercept(points_set_j(index_3, :), points_set_j(index_second, :), table_copy, i, j);
+            else
+                sol = findIntercept(points_set_j(index_4, :), points_set_j(index_second, :), table_copy, i, j);                    
             end
-        end
-    end
+            if ~(isempty(sol))
+                sol = [sol.x1 sol.y1 sol.z1];
+                if isempty(symvar(sol))
+                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                    if all([x y z] > 0)
+                        points_set_i(index_2, :) = [x y z];
+                    end
+                end
+            end
+        end        
+    end        
 end
 
 %%%%%
-function [points_set_i, points_set_j] = calcIntersect3_XZ(points_set_i, points_set_j, table_copy, i, j)
+function [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j)
 global points_set_nonred;
 
-if points_set_j(1,1) > 0
-    sol = findIntercept(points_set_j(2, :), points_set_j(1, :), table_copy, i, j);
+if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+    index_var1 = 1; index_var2 = 3;
+    index_comp1 = 1; index_comp2 = 3;
+elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+    index_var1 = 1; index_var2 = 2;
+    index_comp1 = 2; index_comp2 = 3;
+end
+
+if points_set_j(index_var1,index_comp1) > 0
+    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_4, :), table_copy, i, j);    
+    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_3, :), table_copy, i, j);    
+    end
+    
     if ~(isempty(sol))
         sol = [sol.x1 sol.y1 sol.z1];
         if isempty(symvar(sol))
             x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
             if all([x y z] > 0)
-                points_set_i(4, :) = [x y z];
-                points_set_j(1, :) = [x y z];
+                points_set_i(4, :) = [x y z]; %%%%index_3 = 4
+                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                    points_set_j(index_4, :) = [x y z];
+                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                    points_set_j(index_3, :) = [x y z];
+                end                
             end
         end
     end
-    sol = findIntercept(points_set_nonred{j}.points(2,:), points_set_nonred{j}.points(1,:), table_copy, i, j);
+    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+        sol = findIntercept(points_set_nonred{j}.points(index_var1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
+    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+        sol = findIntercept(points_set_nonred{j}.points(index_var1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
+    end
+    
     if ~(isempty(sol))
         sol = [sol.x1 sol.y1 sol.z1];
         if isempty(symvar(sol))
             x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
             if all([x y z] >= 0)
-                points_set_i(2, :) = [x y z];                
+                points_set_i(index_var1, :) = [x y z];
             end
         end
     end
 else
-    sol = findIntercept(points_set_j(2, :), points_set_j(1, :), table_copy, i, j);
+    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_4, :), table_copy, i, j);    
+    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_3, :), table_copy, i, j);    
+    end
+    
     if ~(isempty(sol))
         sol = [sol.x1 sol.y1 sol.z1];
         if isempty(symvar(sol))
             x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
             if all([x y z] >= 0)
-                points_set_i(2, :) = [x y z];
-                points_set_j(1, :) = [x y z];
+                points_set_i(index_var1, :) = [x y z];
+                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                    points_set_j(index_4, :) = [x y z];
+                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                    points_set_j(index_3, :) = [x y z];
+                end                
             end
         end
     end
 end
 
-if points_set_j(3,3) > 0
-    sol = findIntercept(points_set_j(3, :), points_set_j(4, :), table_copy, i, j);
+if points_set_j(index_var2,index_comp2) > 0
+    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
+    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
+    end    
+
     if ~(isempty(sol))
         sol = [sol.x1 sol.y1 sol.z1];
         if isempty(symvar(sol))
@@ -5519,39 +5826,62 @@ if points_set_j(3,3) > 0
                 else
                     points_set_i(5, :) = [x y z];
                 end
-                points_set_j(4, :) = [x y z];
+                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                    points_set_j(index_3, :) = [x y z];                    
+                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                    points_set_j(index_4, :) = [x y z];
+                end 
             end
         end
     end
-    sol = findIntercept(points_set_nonred{j}.points(3,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
+    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+        sol = findIntercept(points_set_nonred{j}.points(index_var2,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
+    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+        sol = findIntercept(points_set_nonred{j}.points(index_var2,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
+    end
+    
     if ~(isempty(sol))
         sol = [sol.x1 sol.y1 sol.z1];
         if isempty(symvar(sol))
             x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
             if all([x y z] >= 0)
-                if all(points_set_i(3, :) == points_set_i(4, :))
-                    points_set_i(4, :) = [x y z];
+                if index_2 == 3
+                    if all(points_set_i(3, :) == points_set_i(4, :))
+                        points_set_i(4, :) = [x y z];
+                    end
                 end
-                points_set_i(3, :) = [x y z];                
+                points_set_i(index_2, :) = [x y z];                
             end
         end
     end
 else
-    sol = findIntercept(points_set_j(3, :), points_set_j(4, :), table_copy, i, j);
+    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
+    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
+    end
+
     if ~(isempty(sol))
         sol = [sol.x1 sol.y1 sol.z1];
         if isempty(symvar(sol))
             x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
             if all([x y z] >= 0)
-                 if all(points_set_i(3, :) == points_set_i(4, :))
-                    points_set_i(4, :) = [x y z];
+                if index_2 == 3
+                    if all(points_set_i(3, :) == points_set_i(4, :))
+                        points_set_i(4, :) = [x y z];
+                    end
                 end
-                points_set_i(3, :) = [x y z];
-                points_set_j(4, :) = [x y z];
+                points_set_i(index_var2, :) = [x y z];
+                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
+                    points_set_j(index_3, :) = [x y z];                    
+                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
+                    points_set_j(index_4, :) = [x y z];
+                end 
             end
         end
     end
 end
+
 
 %%%%%%
 function [points_set_i,points_set_j] = PlaneCrossInterceptYZ(handles, points_set_i, points_set_j, table_copy, i, j, ...
@@ -5567,559 +5897,62 @@ C = dot(N, [1 0 0]);
 
 if (abs(C) < e) && (abs(C2) < e)
     %%%% Desarrollar
+    s = get(handles.listbox_operations, 'string');
     set(handles.listbox_operations, 'string', ...
-         char('La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
+         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
 elseif (abs(C2) < e && points_set_nonred{i}.tipo == 1)
     %if points_set_i(index_2, index_coor) < points_set_j(index_2, index_coor)                                                            
     if (points_set_i(2, 1) > 0 || (points_set_i(2, 1) == 0 && points_set_i(4, 1) > 0)) ||...
             (points_set_i(1, 1) > 0 || (points_set_i(1, 1) == 0 && points_set_i(4, 1) > 0))
         if index_1 == 1
             if all(points_set_i(3, :) == points_set_i(4, :))                
-                [points_set_i, points_set_j] = calcIntersect2_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);            
+                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);            
             else                                    
-                [points_set_i, points_set_j] = calcIntersect_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
+                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
             end
         elseif index_1 == 2
             if all(points_set_i(3, :) == points_set_i(4, :))
-                [points_set_i, points_set_j] = calcIntersect2_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
+                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
             else
-                [points_set_i, points_set_j] = calcIntersect_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
+                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
             end
         end                    
     elseif (points_set_j(1, 1) > 0 || (points_set_j(1, 1) == 0 && points_set_j(4, 1) > 0)) ||...
             (points_set_j(1, 1) > 0 || (points_set_j(2, 1) == 0 && points_set_j(4, 1) > 0))
-        [points_set_i, points_set_j] = calcIntersect3_YZ(points_set_i, points_set_j, table_copy, i, j);        
+        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);        
     elseif points_set_i(1, 1) == 0 && points_set_i(2, 1) == 0
-        [points_set_i, points_set_j] = calcIntersect3_YZ(points_set_i, points_set_j, table_copy, i, j);                
+        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);                
     end
 elseif (abs(C) < e && points_set_nonred{j}.tipo == 1)   
     if (points_set_j(2, 1) > 0 || (points_set_j(2, 1) == 0 && points_set_j(4, 1) > 0)) ||...
             (points_set_j(1, 1) > 0 || (points_set_j(1, 1) == 0 && points_set_j(4, 1) > 0))
         if index_1 == 1           
             if all(points_set_j(3, :) == points_set_j(4, :))
-                [points_set_j, points_set_i] = calcIntersect2_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             else
-                [points_set_j, points_set_i] = calcIntersect_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             end
         elseif index_1 == 2
             if all(points_set_j(3, :) == points_set_j(4, :))                
-                [points_set_j, points_set_i] = calcIntersect2_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             else
-                [points_set_j, points_set_i] = calcIntersect_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
+                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
             end
         end                    
     elseif (points_set_i(2, 1) > 0 || (points_set_i(2, 1) == 0 && points_set_i(4, 1) > 0)) ||...
             (points_set_i(1, 1) > 0 || (points_set_i(1, 1) == 0 && points_set_i(4, 1) > 0))
-        [points_set_j, points_set_i] = calcIntersect3_YZ(points_set_j, points_set_i, table_copy, j, i);
+        [points_set_j, points_set_i] = calcIntersect3_XZ_YZ(points_set_j, points_set_i, table_copy, j, i);
                 
     elseif points_set_j(1, 1) == 0 && points_set_j(2, 1) == 0       
-        [points_set_j, points_set_i] = calcIntersect3_YZ(points_set_j, points_set_i, table_copy, j, i);
+        [points_set_j, points_set_i] = calcIntersect3_XZ_YZ(points_set_j, points_set_i, table_copy, j, i);
     end
 elseif ((abs(C) < e && points_set_nonred{j}.tipo ~= 1) || (abs(C2) < e && points_set_nonred{i}.tipo ~= 1))
     %%%%% Desarrollar
+    s = get(handles.listbox_operations, 'string');
     set(handles.listbox_operations, 'string', ...
-            char('La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
+            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
 end
 
-
-%%%%%%
-function [points_set_i, points_set_j] = calcIntersect_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
-global points_set_nonred;
-%%%%%%%%
-if (points_set_nonred{i}.tipo == 29)
-    points_set_nonred{i}.points = points_set_nonred{i}.points([2 4 3 1],:);    
-end
-if (points_set_nonred{j}.tipo == 29)
-    points_set_nonred{j}.points = points_set_nonred{j}.points([2 4 3 1],:);  
-end
-
-if points_set_i(4, 1) == 0
-    index_copy = 1;
-    frontier = points_set_i(4,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(1,:); points_set_i(3,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(1,:); points_set_i(3,:)];
-    end
-elseif points_set_i(4, 3) == 0
-    index_copy = 3;
-    frontier = points_set_i(4,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(3,:); points_set_i(1,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(3,:); points_set_i(1,:)];
-    end
-else
-    index_copy = 4;
-    frontier = points_set_i(1,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(4,:); points_set_i(3,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(4,:); points_set_i(3,:)];
-    end
-end
-outer_points = frontier*table_copy(j, 1:3)' > table_copy(j, 4);
-if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
-    index_first = find(outer_points(:), 1, 'first');
-    index_last = find(outer_points(:), 1, 'last');
-    if index_first > 1
-        sol = findIntercept(frontier(index_first-1, :), frontier(index_first, :), table_copy, i, j);
-        if ~isempty(sol)
-            sol = [sol.x1 sol.y1 sol.z1];
-            if isempty(symvar(sol))                                                
-                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                if all([x y z] > 0)                                    
-                    if index_first == dim(1)-1
-                        frontier_aux = frontier;
-                        frontier = frontier(1:index_first-1,:);
-                        frontier(index_first,:) = [x y z];
-                        frontier = [frontier; frontier_aux(index_first:dim(1)-1,:)];
-                    else
-                        frontier(index_first, :) = [x y z];
-                    end
-                                                                                                         
-                    m_j = (points_set_nonred{j}.points(index_2, 3)-points_set_nonred{j}.points(index_1, 3))/...
-                            (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
-                    if index_1 == 1
-                        if (((points_set_j(index_2, 1) <= x && points_set_j(index_2, 3) >= z && (m_j < 0 || m_j == abs(Inf)))) || ...
-                            (points_set_j(index_2, 1) >= x && points_set_j(index_2, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                                points_set_j(index_4, :) = [x y z];
-                            else
-                                points_set_j(index_3, :) = [x y z];
-                            end
-                            points_set_j(index_2, :) = [x y 0];
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            end 
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_first == dim(1)-1                             
-                                            frontier(index_first,:) = [x y z]; 
-                                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                                            else
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                                            end
-                                            
-                                            if ~(isempty(sol))
-                                                sol = [sol.x1 sol.y1 sol.z1];
-                                                if isempty(symvar(sol))
-                                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                                    if all([x y z] >= 0)
-                                                        frontier(index_first+1,:) = [x y z]; 
-                                                    end
-                                                end
-                                            end
-                                        else
-                                            frontier(index_first, :) = [x y z];
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                        if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                        end
-
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    if index_first == dim(1)-1 
-                                        frontier(dim(1), :) = [x y z];
-                                    else
-                                        frontier(dim(1)-1, :) = [x y z];
-                                    end
-                                end
-                            end
-                        end                        
-                    elseif index_1 == 3
-                        if ((points_set_j(index_2, 1) <= x && points_set_j(index_2, 3) >= z && (m_j < 0 || m_j == abs(Inf))) || ...
-                            (points_set_j(index_2, 1) >= x && points_set_j(index_2, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_2, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
-                        %if (points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                                points_set_j(index_3, :) = [x y z];
-                            else
-                                points_set_j(index_4, :) = [x y z];
-                            end
-                            points_set_j(index_2, :) = [x y 0];
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                                %frontier(index_first, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            else
-                                %frontier(index_first, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z_1];
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            end  
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_first == dim(1)-1                                                       
-                                            frontier(index_first,:) = [x y z]; 
-                                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-                                            else
-                                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(3,:), table_copy, i, j);
-                                            end
-
-                                            if ~(isempty(sol))
-                                                sol = [sol.x1 sol.y1 sol.z1];
-                                                if isempty(symvar(sol))
-                                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                                    if all([x y z] >= 0)
-                                                        frontier(index_first+1,:) = [x y z]; 
-                                                    end
-                                                end
-                                            end
-                                        else
-                                            frontier(index_first, :) = [x y z];
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(3,:), table_copy, i, j);
-                        end
-
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    if index_first == dim(1)-1
-                                        frontier(dim(1),:) = [x y z];                         
-                                    else
-                                        frontier(dim(1)-1, :) = [x y z];
-                                    end
-                                end
-                            end
-                        end
-                    end                                        
-                end
-            end
-        end
-    end
-    if index_last < dim(1)-1
-        sol = findIntercept(frontier(index_last+1, :), frontier(index_last, :), table_copy, i, j);
-        if ~isempty(sol)
-            sol = [sol.x1 sol.y1 sol.z1];
-            if isempty(symvar(sol))                                                
-                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                if all([x y z] > 0)                           
-                    if index_last == index_first
-                        frontier_aux = frontier;
-                        frontier = frontier(1:index_last,:);
-                        frontier(index_last+1,:) = [x y z];
-                        frontier = [frontier; frontier_aux(index_last+1:dim(1)-1,:)];
-                    else
-                        frontier(index_last, :) = [x y z];
-                    end
-                    
-                    m_j = (points_set_nonred{j}.points(index_2, 3)-points_set_nonred{j}.points(index_1, 3))/...
-                            (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
-                    if index_1 == 2
-                        if (((points_set_j(index_1, 1) <= x && points_set_j(index_1, 3) >= z && (m_j < 0 || m_j == abs(Inf)))) || ...
-                            (points_set_j(index_1, 1) >= x && points_set_j(index_1, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
-                        %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                                points_set_j(index_3, :) = [x y z];
-                            else
-                                points_set_j(index_4, :) = [x y z];
-                            end
-                            points_set_j(index_1, :) = [x y 0];
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 3) == points_set_j(index_2, 3)
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
-                            end                                        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_last == index_first
-                                            frontier(index_last+1,:) = [x y z];
-                                        else
-                                            frontier(index_last, :) = [x y z];
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    elseif index_1 == 3
-                        if ((points_set_j(index_1, 1) <= x && points_set_j(index_1, 3) >= z && (m_j < 0 || m_j == abs(Inf))) || ...
-                            (points_set_j(index_1, 1) >= x && points_set_j(index_1, 3) <= z && (m_j >= 0))) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 3) <= z <= points_set_j(index_1, 3) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 3) <= z <= points_set_j(index_2, 3))
-                        %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                                points_set_j(index_4, :) = [x y z];
-                            else
-                                points_set_j(index_3, :) = [x y z];
-                            end
-                            points_set_j(index_1, :) = [x y 0];
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
-                            end                                        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_last == index_first
-                                            frontier(index_last+1,:) = [x y z];
-                                        else
-                                            frontier(index_last, :) = [x y z];
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if index_last - index_first > 1
-        frontier = [frontier(1:index_first,:);frontier(index_last:dim(1)-1,:)];
-    end
-    dim = size(frontier);
-    points_set_i = points_set_i(1, :);
-    if index_copy == 3
-        points_set_i = [points_set_i;frontier(dim(1),:);frontier(dim(1)-1,:);frontier(1,:)];
-    elseif index_copy == 1
-        points_set_i = [points_set_i;frontier(dim(1)-1,:);frontier(dim(1),:);frontier(1,:)];
-    else
-        points_set_i = [points_set_i;frontier(1,:);frontier(dim(1),:);frontier(dim(1)-1,:)];
-    end
-    for k = 2:dim(1)-2
-        points_set_i(3+k, :) = frontier(2,:);
-    end
-elseif all(outer_points(:)==1)
-    points_set_i = points_set_i(1:4, :);
-    if index_copy == 3
-        points_set_i(3,:) = points_set_i(4, :);
-        points_set_i(4,:) = points_set_i(3, :);
-    elseif index_copy == 1
-        points_set_i(2,:) = points_set_i(4, :);
-        points_set_i(4,:) = points_set_i(3, :);
-    else                        
-        points_set_i(4,:) = points_set_i(3, :);
-    end
-    [points_set_i, points_set_j] = calcIntersect3_YZ(points_set_i, points_set_j, table_copy, i, j);
-    %%%%%
-end
-
-if (points_set_nonred{i}.tipo == 29)
-    points_set_nonred{i}.points = points_set_nonred{i}.points([4 1 3 2],:);    
-end
-if (points_set_nonred{j}.tipo == 29)
-    points_set_nonred{j}.points = points_set_nonred{j}.points([4 1 3 2],:);  
-end
-
-
-
-%%%%%%%%
-function [points_set_i, points_set_j] = calcIntersect2_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
-sol = findIntercept(points_set_i(index_1, :), points_set_i(index_2, :), table_copy, i, j);
-if ~isempty(sol) 
-    sol = [sol.x1 sol.y1 sol.z1];
-    if isempty(symvar(sol))                                                
-        x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-        if all([x y z] > 0)
-            if index_1 == 2
-                if points_set_i(index_1, 1) <= x && points_set_i(index_1, 3) >= z
-                    points_set_i(4, :) = [x y z];                           
-                end
-            else
-                if points_set_i(index_1, 1) >= x && points_set_i(index_1, 3) <= z                                
-                    points_set_i(4, :) = [x y z];                           
-                end
-            end
-
-            outer_points = [points_set_i(index_1, :); points_set_i(index_2, :)]*table_copy(j, 1:3)' > table_copy(j, 4);
-            index_first = find(outer_points(:)==0, 1, 'first');
-            if index_first == 1
-                index_first = index_1;
-                index_second = index_2;
-            else
-                index_first = index_2;
-                index_second = index_1;
-            end
-            if (points_set_j(index_first, 1) <= x && points_set_j(index_first, 3) >= z && index_first==index_2) || ...
-                    (points_set_j(index_first, 1) >= x && points_set_j(index_first, 3) <= z && index_first==index_1)
-            %if points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y
-                if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 3) == points_set_j(index_second, 3)
-                %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
-                    points_set_j(index_4, :) = [x y z];
-                else
-                    points_set_j(index_3, :) = [x y z];                  
-                end
-                points_set_j(index_first, :) = [x y 0];
-                %minxyz(3) = min([minxyz(3) z]);                                
-            else
-                if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 3) == points_set_j(index_second, 3)
-                %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
-                    %points_set_i(4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
-                    sol = findIntercept(points_set_j(index_first, :), points_set_j(index_4, :), table_copy, i, j);
-                else
-                    %points_set_i(4, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z_1];
-                    sol = findIntercept(points_set_j(index_first, :), points_set_j(index_3, :), table_copy, i, j);
-                end                                
-                if ~(isempty(sol))
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))
-                        x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                        if all([x y z] > 0)
-                            points_set_i(4, :) = [x y z];
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 3) == points_set_j(index_second, 3)        
-        sol = findIntercept(points_set_j(index_3, :), points_set_j(index_second, :), table_copy, i, j);
-    else
-        sol = findIntercept(points_set_j(index_4, :), points_set_j(index_second, :), table_copy, i, j);                    
-    end
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                points_set_i(index_2, :) = [x y z];
-            end
-        end
-    end
-end
-
-%%%%%
-function [points_set_i, points_set_j] = calcIntersect3_YZ(points_set_i, points_set_j, table_copy, i, j)
-global points_set_nonred;
-
-if points_set_j(1,1) > 0
-    sol = findIntercept(points_set_j(2, :), points_set_j(1, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                points_set_i(4, :) = [x y z];
-                points_set_j(1, :) = [x y z];
-            end
-        end
-    end
-    sol = findIntercept(points_set_nonred{j}.points(2,:), points_set_nonred{j}.points(1,:), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                points_set_i(2, :) = [x y z];                
-            end
-        end
-    end
-else
-    sol = findIntercept(points_set_j(2, :), points_set_j(1, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                points_set_i(2, :) = [x y z];
-                points_set_j(1, :) = [x y z];
-            end
-        end
-    end
-end
-
-if points_set_j(3,3) > 0
-    sol = findIntercept(points_set_j(3, :), points_set_j(4, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                if all(points_set_i(4, :) == points_set_i(3, :))
-                    points_set_i(4, :) = [x y z];
-                else
-                    points_set_i(5, :) = [x y z];
-                end
-                points_set_j(4, :) = [x y z];
-            end
-        end
-    end
-    sol = findIntercept(points_set_nonred{j}.points(3,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                if all(points_set_i(3, :) == points_set_i(4, :))
-                    points_set_i(4, :) = [x y z];
-                end
-                points_set_i(3, :) = [x y z];                
-            end
-        end
-    end
-else
-    sol = findIntercept(points_set_j(3, :), points_set_j(4, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                 if all(points_set_i(3, :) == points_set_i(4, :))
-                    points_set_i(4, :) = [x y z];
-                end
-                points_set_i(3, :) = [x y z];
-                points_set_j(4, :) = [x y z];
-            end
-        end
-    end
-end
 
 %%%%%
 function [points_set_i, points_set_j] = ZParalelPlanesInterceptXY(handles, points_set_i, points_set_j, ...
@@ -6176,8 +6009,9 @@ if (abs(C2) < e)
                             points_set_i(index_3, :) = [x y points_set_i(index_3, 3)];
                             %points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2) points_set_i(index_4, 3)];
                             %%%%% Desarrollar
+                            s = get(handles.listbox_operations, 'string');
                             set(handles.listbox_operations, 'string', ...
-                                char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                         end
                     else
                         if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
@@ -6187,8 +6021,9 @@ if (abs(C2) < e)
                         %minxyz(3) = min([minxyz(3) z]);
                         points_set_i(index_3, :) = [x y points_set_i(index_3, 3)];
                         %points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2) points_set_i(index_4, 3)];
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                             char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                             char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 end
             else
@@ -6224,8 +6059,9 @@ if (abs(C2) < e)
                                 %points_set_j(index_3, :) = [points_set_j(index_1, 1) points_set_j(index_1, 2) points_set_j(index_3, 3)]; %%%
                             end
                         end
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 else
                     points_set_i(index_3, :) = [x y points_set_i(index_3, 3)];
@@ -6239,8 +6075,9 @@ if (abs(C2) < e)
                             %points_set_j(index_3, :) = [points_set_j(index_1, 1) points_set_j(index_1, 2) points_set_j(index_3, 3)]; %%%
                         end
                     end
+                    s = get(handles.listbox_operations, 'string');
                     set(handles.listbox_operations, 'string', ...
-                        char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
             end
         else
@@ -6282,8 +6119,9 @@ if (abs(C2) < e)
                             %minxyz(3) = min([minxyz(3) z]);
                             points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
                             %points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) points_set_i(index_3, 3)];
+                            s = get(handles.listbox_operations, 'string');
                             set(handles.listbox_operations, 'string', ...
-                                char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                         end
                     else
                         if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
@@ -6293,7 +6131,8 @@ if (abs(C2) < e)
                         %minxyz(3) = min([minxyz(3) z]);
                         points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
                         %points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) points_set_i(index_3, 3)];
-                        set(handles.listbox_operations, 'string', ...
+                        s = get(handles.listbox_operations, 'string');
+                        set(s, handles.listbox_operations, 'string', ...
                                 char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 end
@@ -6329,8 +6168,9 @@ if (abs(C2) < e)
                                 %points_set_j(index_4, :) = [points_set_j(index_1, 1) points_set_j(index_1, 2) points_set_j(index_4, 3)];
                             end
                         end
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                             char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                             char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 else
                     points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
@@ -6344,8 +6184,9 @@ if (abs(C2) < e)
                             %points_set_j(index_4, :) = [points_set_j(index_1, 1) points_set_j(index_1, 2) points_set_j(index_4, 3)];
                         end
                     end
+                    s = get(handles.listbox_operations, 'string');
                     set(handles.listbox_operations, 'string', ...
-                         char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
             end
         end
@@ -6354,8 +6195,9 @@ if (abs(C2) < e)
         
         if (abs(C2_Z) < e)
             %%%% Desarrollar
+            s = get(handles.listbox_operations, 'string');
             set(handles.listbox_operations, 'string', ...
-               char('La reconstrucción puede ser incompleta.', 'Caso 15 de colapso de plano paralelo a Z.'));
+               char(s, 'La reconstrucción puede ser incompleta.', 'Caso 15 de colapso de plano paralelo a Z.'));
         %    if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
         %        if points_set_j(index_3, 1) == points_set_j(index_1, 1) && points_set_j(index_3, 2) == points_set_j(index_1, 2)
         %            points_set_j(index_3, :) = [x y 0];
@@ -6393,8 +6235,9 @@ else
     
     if (abs(C_Z) < e)
         %%%% Desarrollar
+        s = get(handles.listbox_operations, 'string');
         set(handles.listbox_operations, 'string', ...
-               char('La reconstrucción puede ser incompleta.', 'Caso 15 de colapso de plano paralelo a Z.'));
+               char(s, 'La reconstrucción puede ser incompleta.', 'Caso 15 de colapso de plano paralelo a Z.'));
     %    if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 2) == points_set_i(index_2, 2)
     %        if points_set_i(index_4, 1) == points_set_i(index_1, 1) && points_set_i(index_4, 2) == points_set_i(index_1, 2)
     %            points_set_i(index_4, :) = [x y 0];
@@ -6473,15 +6316,17 @@ if (abs(C2) < e)
                             points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
                             
                             points_set_i(index_3, :) = [x points_set_i(index_3, 2) z];
+                            s = get(handles.listbox_operations, 'string');
                             set(handles.listbox_operations, 'string', ...
-                                char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                         end
                     else
                         points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
                             
                         points_set_i(index_3, :) = [x points_set_i(index_3, 2) z];
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 end
             else
@@ -6509,8 +6354,9 @@ if (abs(C2) < e)
                         else
                             points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
                         end
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 else
                     points_set_i(index_3, :) = [x points_set_i(index_3, 2) z];
@@ -6520,8 +6366,9 @@ if (abs(C2) < e)
                     else
                         points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
                     end
+                    s = get(handles.listbox_operations, 'string');
                     set(handles.listbox_operations, 'string', ...
-                         char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
             end
         else
@@ -6553,15 +6400,17 @@ if (abs(C2) < e)
                             points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
                             
                             points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
+                            s = get(handles.listbox_operations, 'string');
                             set(handles.listbox_operations, 'string', ...
-                                char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                         end
                     else
                         points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
                             
                         points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 end
             else
@@ -6590,8 +6439,9 @@ if (abs(C2) < e)
                         else
                             points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
                         end
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 else
                     points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
@@ -6602,8 +6452,9 @@ if (abs(C2) < e)
                     else
                         points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
                     end
+                    s = get(handles.listbox_operations, 'string');
                     set(handles.listbox_operations, 'string', ...
-                        char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
             end
         end
@@ -6613,8 +6464,9 @@ if (abs(C2) < e)
         
         if (abs(C2_Y) < e)
             %%%% Desarrollar
+            s = get(handles.listbox_operations, 'string');
             set(handles.listbox_operations, 'string', ...
-                char('La reconstrucción puede ser incompleta.', 'Caso 16 de colapso de plano paralelo a Y.'));
+                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 16 de colapso de plano paralelo a Y.'));
         %    if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
         %        if points_set_j(index_3, 1) == points_set_j(index_1, 1) && points_set_j(index_3, 3) == points_set_j(index_1, 3)
         %            points_set_j(index_3, :) = [x 0 z];
@@ -6654,8 +6506,9 @@ else
     
     if (abs(C_Y) < e)
         %%%% Desarrollar
+        s = get(handles.listbox_operations, 'string');
         set(handles.listbox_operations, 'string', ...
-             char('La reconstrucción puede ser incompleta.', 'Caso 16 de colapso de plano paralelo a Y.'));
+             char(s, 'La reconstrucción puede ser incompleta.', 'Caso 16 de colapso de plano paralelo a Y.'));
     %    if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
     %        if points_set_i(index_4, 1) == points_set_i(index_1, 1) && points_set_i(index_4, 3) == points_set_i(index_1, 3)
     %            points_set_i(index_4, :) = [x 0 z];
@@ -6732,15 +6585,17 @@ if (abs(C2) < e)
                             points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
                             %minxyz(3) = min([minxyz(3) z]);
                             points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
+                            s = get(handles.listbox_operations, 'string');
                             set(handles.listbox_operations, 'string', ...
-                                char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                         end
                     else                        
                         points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
                         %minxyz(3) = min([minxyz(3) z]);
                         points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 end
             else                
@@ -6768,8 +6623,9 @@ if (abs(C2) < e)
                         else
                             points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
                         end
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 else
                     points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
@@ -6779,8 +6635,9 @@ if (abs(C2) < e)
                     else
                         points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
                     end
+                    s = get(handles.listbox_operations, 'string');
                     set(handles.listbox_operations, 'string', ...
-                        char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
             end
         else
@@ -6810,15 +6667,17 @@ if (abs(C2) < e)
                             points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
                             %minxyz(3) = min([minxyz(3) z]);
                             points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
+                            s = get(handles.listbox_operations, 'string');
                             set(handles.listbox_operations, 'string', ...
-                                char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                         end
                     else
                         points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
                         %minxyz(3) = min([minxyz(3) z]);
                         points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 end
             else
@@ -6846,8 +6705,9 @@ if (abs(C2) < e)
                         else
                             points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
                         end
+                        s = get(handles.listbox_operations, 'string');
                         set(handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                     end
                 else
                     points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
@@ -6857,8 +6717,9 @@ if (abs(C2) < e)
                     else
                         points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
                     end
+                    s = get(handles.listbox_operations, 'string');
                     set(handles.listbox_operations, 'string', ...
-                        char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
+                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
             end
         end                                                        
@@ -6867,8 +6728,9 @@ if (abs(C2) < e)
         
         if (abs(C2_X) < e)
             %%%% Desarrollar
+            s = get(handles.listbox_operations, 'string');
             set(handles.listbox_operations, 'string', ...
-                char('La reconstrucción puede ser incompleta.', 'Caso 14 de colapso de plano paralelo a X.'));
+                char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de colapso de plano paralelo a X.'));
         %    if points_set_j(index_4, 2) == points_set_j(index_1, 2) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
         %        if points_set_j(index_3, 2) == points_set_j(index_1, 2) && points_set_j(index_3, 3) == points_set_j(index_1, 3)
         %            points_set_j(index_3, :) = [0 y z];
@@ -6906,8 +6768,9 @@ else
     
     if (abs(C_X) < e)
         %%%% Desarrollar
+        s = get(handles.listbox_operations, 'string');
         set(handles.listbox_operations, 'string', ...
-            char('La reconstrucción puede ser incompleta.', 'Caso 14 de colapso de plano paralelo a X.'));
+            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de colapso de plano paralelo a X.'));
     %    if points_set_i(index_3, 2) == points_set_i(index_2, 2) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
     %        if points_set_j(index_4, 2) == points_set_j(index_1, 2) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
     %            points_set_i(index_4, :) = [0 y z];
