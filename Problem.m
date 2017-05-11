@@ -1,4 +1,4 @@
-% Copyright 2011 2012 2016 M.Sc. Porfirio Armando Rodríguez
+% Copyright 2011 2012 2016 2017 M.Sc. Porfirio Armando Rodríguez
 
 % This file is part of LPApp
 % LPApp is free software: you can redistribute it and/or modify
@@ -80,7 +80,7 @@ end
 guidata(hObject, handles);
 
 if handles.LPApphandle.Newmethod ~= 3
-    setheading(handles, char('f', 'X', 'Yi0', 'Z'));
+    setheading(handles, char('f', 'X', 'Yi0', 'Z', 'lambdai'));
 else
     setheading(handles, char('Origen', 'Destino', 'Oferta', 'Demanda'));
 end
@@ -92,13 +92,24 @@ global Dimension;
 
 % se obtienen las dimensiones del problema
 Dimension = size(handles.LPApphandle.gui_Matrix_problem);
+Dim = size (headers);
+if Dim(1) == 5
+    col_plus = 1;
+    All_display = zeros(Dimension(1), Dimension(2));    
+else
+    col_plus = 0;
+end
 
 % se rotulan las filas y columnas de las tablas
-colName = cell(Dimension(2), 1);
+colName = cell(Dimension(2) + col_plus, 1);
 for i = 1:Dimension(2)-1
     colName(i) = cellstr(strcat(headers(2,:),num2str(i)));
 end
 colName(Dimension(2)) = cellstr(headers(3,:));
+if Dim(1) == 5
+    colName(Dimension(2)+1) = cellstr(headers(5,:));
+end
+
 set(handles.table_problem, 'columnname', colName);
 
 rowName=cell(1,Dimension(1));
@@ -108,8 +119,8 @@ end
 rowName(Dimension(1)) = cellstr(headers(4,:));
 set(handles.table_problem, 'rowname', rowName);
 % se establece el formato de las columnas
-colFormat=cell(1,Dimension(2));
-for i = 1:(Dimension(2))
+colFormat=cell(1,Dimension(2)+col_plus);
+for i = 1:(Dimension(2)+col_plus)
     colFormat(1,i) = cellstr('rat');
 end
 set(handles.table_problem, 'columnformat', colFormat);
@@ -117,7 +128,7 @@ set(handles.table_problem, 'columnformat', colFormat);
 colEdit = ones(1,Dimension(2));
 set(handles.table_problem, 'columneditable', (colEdit == 1));
 % se despliega la tabla para el ingreso de datos
-All_display = handles.LPApphandle.gui_Matrix_problem;
+All_display(1:Dimension(1), 1:Dimension(2)) = handles.LPApphandle.gui_Matrix_problem;
 set(handles.table_problem, 'data', All_display);
 
 % --- Outputs from this function are returned to the command line.
@@ -247,19 +258,42 @@ Order_initial = zeros(1, Dimension(2));
 if handles.LPApphandle.Newmethod == 3
     oferta = Matrix_problem(1:(Dimension(1)-1), end);
     demanda = Matrix_problem(end, 1:(Dimension(2)-1));
-    if sum(oferta)~= sum(demanda)
-        errordlg('El problema no está balanceado.','Problema no balanceado','modal');
+    if sum(oferta)~= sum(demanda) && ~isdegeneratedsolution(handles)
+        if sum(oferta) - sum(demanda) > 0
+            resp = questdlg(char('El problema no está balanceado. ¿Desea agregar un destino?'),'Problema no balanceado', ...
+                'De acuerdo','No','Cancelar','Cancelar');
+            if strcmp(resp, 'De acuerdo')
+                uipushtool2_ClickedCallback(handles.uipushtool2, handles, handles);
+                All_display = get(handles.table_problem, 'data');
+                % se obtienen las dimensiones del problema
+                Dimension = size(All_display);
+                All_display(end, Dimension(2)-1) = sum(oferta) - sum(demanda);
+                set(handles.table_problem, 'data', All_display);
+            end
+        else
+            resp = questdlg(char('El problema no está balanceado. ¿Desea agregar un origen?'),'Problema no balanceado', ...
+                'De acuerdo','No','Cancelar','Cancelar');
+            if strcmp(resp, 'De acuerdo')
+                uipushtool1_ClickedCallback(handles.uipushtool1, handles, handles);
+                All_display = get(handles.table_problem, 'data');
+                % se obtienen las dimensiones del problema
+                Dimension = size(All_display);
+                All_display(Dimension(1)- 1, end) = sum(demanda) - sum(oferta);
+                set(handles.table_problem, 'data', All_display);
+            end
+        end
+                    
         iscorrect = 0;
         return;
     end
     if all(Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1) == 0)
-        errordlg('El problema no tiene una función objetivo definida.','Método de transporte','modal');
+        errordlg(char('El problema no tiene una función objetivo definida.'),char('Método de transporte'),'modal');
         iscorrect = 0;
         return;
     end
         
 elseif rank(full(Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1))) ~= Dimension(1)-1
-   errordlg('El problema tiene restricciones redundantes.','Método Simplex','modal');
+   errordlg('El problema tiene restricciones redundantes.',char('Método Simplex'),'modal');
    iscorrect = 0;
    return;
 end
@@ -278,11 +312,11 @@ end
 
 if isdegeneratedsolution(handles)
     if handles.LPApphandle.Newmethod == 3
-        errordlg('La oferta (demanda) de algún origen (destino) es cero.','Origen o destino inútil','modal');
+        errordlg(char('La oferta (demanda) de algún origen (destino) es cero.'),char('Origen o destino inútil'),'modal');
         iscorrect = 0;
         return;
     else
-        errordlg('La solución inicial es degenerada.','Método simplex','modal');
+        errordlg(char('La solución inicial es degenerada.'),char('Método simplex'),'modal');
     end
 end
 
@@ -296,7 +330,7 @@ global Matrix_problem Dimension Order_initial;
 if handles.LPApphandle.Newmethod == 1    
     X0 = Matrix_problem(1:(Dimension(1)-1), end);
     if any(X0 < 0)
-        errordlg('La solución inicial no es primal factible.','Método Simplex Primal no aplicable','modal');
+        errordlg(char('La solución inicial no es primal factible.'),char('Método Simplex Primal no aplicable'),'modal');
         response = 0;
         return;
     end
@@ -310,7 +344,7 @@ elseif handles.LPApphandle.Newmethod == 2
     Rj = c - z;    
     if any(Rj < 0)
         response = 0;
-        errordlg('La solución inicial no es dual factible.','Método Simplex Dual no aplicable','modal');
+        errordlg(char('La solución inicial no es dual factible.'),char('Método Simplex Dual no aplicable'),'modal');
         return;
     end
 elseif handles.LPApphandle.Newmethod == 3
@@ -318,7 +352,7 @@ elseif handles.LPApphandle.Newmethod == 3
     demanda = Matrix_problem(end, 1:(Dimension(2)-1));
     if any(oferta < 0) || any(demanda < 0)
         response = 0;
-        errordlg('La solución inicial no será factible.','Método Simplex no aplicable','modal');
+        errordlg(char('La solución inicial no será factible.'),char('Método Simplex no aplicable'),'modal');
         return;
     end
 end
@@ -366,7 +400,17 @@ for i =1:(Dimension(1)-1)
     end
     if ~response
         %MODIFICADO(27/12/2016)
-        errordlg('La matriz no está en forma canónica. Se aplicará el método de dos fases','Método simplex de dos fases','modal');
+        resp = questdlg(char('La matriz no está en forma canónica. ¿Desea aplicar el método de dos fases?'),char('Método simplex de dos fases'), ...
+            'De acuerdo','No','Cancelar','Cancelar');
+        if ~isempty(resp)
+            if strcmp(resp, 'De acuerdo')
+                response = 0;                
+            elseif strcmp(resp, 'No') || strcmp(resp, 'Cancelar')
+                response = 1;
+            end
+        else
+            response = 1;
+        end
         %MODIFICADO(27/12/2016)
         return;
     end        
@@ -588,3 +632,103 @@ latex = sprintf('%s \r', latex);
 latex = [latex, '\section{Desarrollo del Método de Transporte}'];
 latex = sprintf('%s \r', latex);
 
+
+
+% --------------------------------------------------------------------
+function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<INUSL>
+% hObject    handle to uipushtool1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+%global Dimension;
+
+All_display = get(handles.table_problem, 'data');
+% se obtienen las dimensiones del problema
+Dimension = size(All_display);
+
+if  ~((Dimension(1) > Dimension(2) - 1 && handles.LPApphandle.Newmethod ~= 3) || (Dimension(1) > 96 || Dimension(2) - 1 > 96))
+    if handles.LPApphandle.Newmethod ~= 3
+        headers = char('f', 'X', 'Yi0', 'Z', 'lambdai');
+        %col_plus = 1;
+    else
+        headers = char('Origen', 'Destino', 'Oferta', 'Demanda');
+        %col_plus = 0;
+    end
+    
+    All_display_aux = All_display;
+    All_display(1:Dimension(1)+1,1:Dimension(2)) = zeros(Dimension(1)+1,Dimension(2));
+    All_display([1:(Dimension(1)-1), (Dimension(1)+1)],1:Dimension(2)) = ...
+        All_display_aux(1:Dimension(1),1:Dimension(2));
+    
+    set(handles.table_problem, 'data', All_display);
+    
+
+    rowName=cell(1,Dimension(1)+1);
+    for i = 1:Dimension(1)
+        rowName(1,i) = cellstr(strcat(headers(1,:),num2str(i)));
+    end
+    rowName(Dimension(1)+1) = cellstr(headers(4,:));
+    set(handles.table_problem, 'rowname', rowName);
+    
+    % se despliega la tabla para el ingreso de datos
+
+    set(handles.table_problem, 'data', All_display);
+end
+
+
+
+
+% --------------------------------------------------------------------
+function uipushtool2_ClickedCallback(hObject, eventdata, handles) %#ok<INUSL>
+% hObject    handle to uipushtool2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+%global Dimension;
+
+All_display = get(handles.table_problem, 'data');
+% se obtienen las dimensiones del problema
+Dimension = size(All_display);
+
+if  ~((Dimension(1) - 1 > Dimension(2) && handles.LPApphandle.Newmethod ~= 3) || (Dimension(1) > 96 || Dimension(2) - 1 > 96))
+    if handles.LPApphandle.Newmethod ~= 3
+        headers = char('f', 'X', 'Yi0', 'Z', 'lambdai');
+        col_plus = 1;
+    else
+        headers = char('Origen', 'Destino', 'Oferta', 'Demanda');
+        col_plus = 0;
+    end
+    
+    All_display_aux = All_display;
+    All_display(1:Dimension(1),1:Dimension(2)+1) = zeros(Dimension(1),Dimension(2)+1);
+    All_display(1:Dimension(1), [1:(Dimension(2)-1), (Dimension(2)+1)]) = ...
+        All_display_aux(1:Dimension(1),1:Dimension(2));
+    
+    set(handles.table_problem, 'data', All_display);
+    % se rotulan las filas y columnas de las tablas
+    colName = cell(Dimension(2)+1, 1);
+    for i = 1:Dimension(2)
+        colName(i) = cellstr(strcat(headers(2,:),num2str(i)));
+    end
+    colName(Dimension(2)+1) = cellstr(headers(3,:));
+    if col_plus == 1
+        colName(Dimension(2)+2) = cellstr(headers(5,:));
+    end
+    set(handles.table_problem, 'columnname', colName);
+
+    
+    % se establece el formato de las columnas
+    colFormat=cell(1,Dimension(2)+1);
+    for i = 1:(Dimension(2)+1)
+        colFormat(1,i) = cellstr('rat');
+    end
+    set(handles.table_problem, 'columnformat', colFormat);
+    % se configuran las columnas como editables
+    if col_plus == 1
+        colEdit = ones(1,Dimension(2)+1); %OJO
+    else
+        colEdit = ones(1,Dimension(2)+1);
+    end
+    set(handles.table_problem, 'columneditable', (colEdit == 1));
+    % se despliega la tabla para el ingreso de datos
+
+    set(handles.table_problem, 'data', All_display);
+end
