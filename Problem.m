@@ -198,22 +198,26 @@ end
 
 %AGREGADO(27/12/2016)
 if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
-    if ~iscanonicform()
+    resp = iscanonicform();
+    if resp == 0
         handles.LPApphandle.istwophases = 1;
         handles.LPApphandle.whatphase = 1;
         handles.LPApphandle.isinit_secondphase = 0;
         handles.LPApphandle.Orig_Matrix_problem = Matrix_problem;
-
-        handles.LPApphandle.maxcanon_vector = max(Order_initial);
+        daux = size(Order_initial(Order_initial>0));
+        handles.LPApphandle.maxcanon_vector = daux(2);
         aux = Matrix_problem(1:Dim(1)-1, Dim(2));
         Matrix_problem(Dim(1), :) = zeros(1, Dim(2));
-        j=0;
-        Order = max(Order_initial);
-        for i = (Order+1:Dim(1)-1)
-            Matrix_problem(1:Dim(1)-1, Dim(2) + j) = ident(:, i);
-            Matrix_problem(Dim(1), Dim(2) + j) = 1;
-            Order_initial(Dim(2) + j) = i;                
-            j=j+1;
+        j=0;       
+        %for i = (Order+1:Dim(1)-1)
+        for i = (1:Dim(1)-1)
+            ind = find(Order_initial==i, 1);
+            if isempty(ind)
+                Matrix_problem(1:Dim(1)-1, Dim(2) + j) = ident(:, i);
+                Matrix_problem(Dim(1), Dim(2) + j) = 1;
+                Order_initial(Dim(2) + j) = i;                
+                j=j+1;
+            end
         end
         Order_initial(Order_initial == 0) = Dim(1):Dim(2) + j - 1;
         Order_initial(Dim(2) + j) = Dim(2) + j;
@@ -229,11 +233,19 @@ if handles.LPApphandle.Method ~= 3 && handles.LPApphandle.Method ~= 2
         handles.LPApphandle.latex = [handles.LPApphandle.latex, latex];
         handles.LPApphandle.latexIIphasesproblem = handles.LPApphandle.latex;
         guidata(handles.LPApphandle.output, handles.LPApphandle);        
-    else
+    else        
+        if resp == 2
+            return;
+        end
         generar_latexsimplexbegin('\section{Desarrollo del Método Simplex}');
         handles.LPApphandle.latex = [handles.LPApphandle.latex, latex];    
         handles.LPApphandle.latexproblem = latex;
         guidata(handles.LPApphandle.output, handles.LPApphandle); 
+    end
+end
+if handles.LPApphandle.Method ~= 3
+    if isdegeneratedsolution(handles)        
+        errordlg(char('La solución inicial es degenerada.'),char('Método simplex'),'modal');
     end
 end
 %AGREGADO(27/12/2016)
@@ -298,8 +310,9 @@ elseif rank(full(Matrix_problem(1:Dimension(1)-1, 1:Dimension(2)-1))) ~= Dimensi
    return;
 end
 
-if handles.LPApphandle.Newmethod == 2    
-    if ~iscanonicform()
+if handles.LPApphandle.Newmethod == 2 
+    resp = iscanonicform();
+    if resp == 0 || resp == 2
         iscorrect = 0;
         return;
     end
@@ -314,9 +327,7 @@ if isdegeneratedsolution(handles)
     if handles.LPApphandle.Newmethod == 3
         errordlg(char('La oferta (demanda) de algún origen (destino) es cero.'),char('Origen o destino inútil'),'modal');
         iscorrect = 0;
-        return;
-    else
-        errordlg(char('La solución inicial es degenerada.'),char('Método simplex'),'modal');
+        return;    
     end
 end
 
@@ -389,31 +400,32 @@ global Matrix_problem Order_initial Dimension;
 identidad = eye(Dimension(1)-1);
 % se verifica que la matriz identidad este inmersa en la especifición del
 % problema
+response = zeros(1,Dimension(1)-1);
 for i =1:(Dimension(1)-1)
-    response = 0;
     for j = 1:(Dimension(2)-1)            
         if identidad(:, i) == Matrix_problem(1:Dimension(1)-1, j)
             Order_initial(j) = i;
-            response = 1;
-            break;
-        end           
-    end
-    if ~response
-        %MODIFICADO(27/12/2016)
-        resp = questdlg(char('La matriz no está en forma canónica. ¿Desea aplicar el método de dos fases?'),char('Método simplex de dos fases'), ...
-            'De acuerdo','No','Cancelar','Cancelar');
-        if ~isempty(resp)
-            if strcmp(resp, 'De acuerdo')
-                response = 0;                
-            elseif strcmp(resp, 'No') || strcmp(resp, 'Cancelar')
-                response = 1;
-            end
-        else
-            response = 1;
+            response(i) = 1;
+            break;        
         end
-        %MODIFICADO(27/12/2016)
-        return;
-    end        
+    end
+
+end
+if ~all(response(:)==1)
+    %MODIFICADO(27/12/2016)
+    resp = questdlg(char('La matriz no está en forma canónica. ¿Desea aplicar el método de dos fases?'),char('Método simplex de dos fases'), ...
+        'De acuerdo','No','Cancelar','Cancelar');
+    if ~isempty(resp)
+        if strcmp(resp, 'De acuerdo')
+            response = 0;                
+        elseif strcmp(resp, 'No') || strcmp(resp, 'Cancelar')
+            response = 2;
+        end
+    else
+        response = 2;
+    end
+    %MODIFICADO(27/12/2016)
+    return;
 end
 Order_initial(Order_initial == 0) = Dimension(1):Dimension(2); % se etiquetan las demás columnas
 response = 1;

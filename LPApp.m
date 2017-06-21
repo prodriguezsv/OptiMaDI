@@ -344,7 +344,7 @@ if handles.Method ~= 3
         maximo = max(find(Order_current < Dimension(1))); %#ok<MXFND>
         if ~isempty(Var) && handles.Method == 1 && ...
                 (((handles.istwophases == 1 && handles.whatphase == 1)  && ...
-                    maximo > Dimension(2)-handles.maxcanon_vector-2) || ...
+                    maximo > (Dimension(2)-1)-(Dimension(1)-handles.maxcanon_vector-1)) || ...
                     handles.istwophases == 0 || (handles.istwophases == 1 && ... 
                     handles.whatphase == 2)) % en el caso que haya Rj = 0        
             set(handles.popupmenu_selectvar, 'string', char(Var));
@@ -357,18 +357,19 @@ if handles.Method ~= 3
             generar_latexanalisis('\section{Análisis de resultados}');
         else % No hay Soluciones múltiples, no hay más opciones
             if (handles.istwophases == 1 && handles.whatphase == 1) 
-                if Tableau(end, end) == 0 && maximo <= Dimension(2)-(Dimension(1)-handles.maxcanon_vector-2)
+                if Tableau(end, end) == 0 && maximo <= (Dimension(2)-1)-(Dimension(1)-handles.maxcanon_vector-1) %%OJO
                     if strcmp(get(handles.Mode_geo3D, 'Checked'), 'off')
                         msgbox('La primera fase ha terminado. Haga clic en "Iniciar" para la segunda fase.',char('Método simplex de dos fases'),'modal');
                     end                    
                     generar_latexanalisis('\subsection{Análisis de resultados}');
-                    %Matrix_problem = zeros(size(handles.Orig_Matrix_problem));
+                    %Matrix_problem = zeros(size(handles.Orig_Matrix_problem)); 
+                    %mcv = handles.maxcanon_vector;
                     Matrix_problem = Tableau(:, 1:(Dimension(2)-(Dimension(1)-handles.maxcanon_vector-1)));
                     Matrix_problem(:, Dimension(2)-(Dimension(1)-handles.maxcanon_vector-1)) = Tableau(:,Dimension(2));
                     Matrix_problem(end, :) = handles.Orig_Matrix_problem(end, :);
                     Order_current = Order_current(1:(Dimension(2)-(Dimension(1)-handles.maxcanon_vector-1)));                    
                     Order_current(Dimension(2)-(Dimension(1)-handles.maxcanon_vector-1)) = Dimension(2)-(Dimension(1)-handles.maxcanon_vector-1);
-                    Order_current(Order_current > Dimension(1)) = Dimension(1):(Dimension(2)-(Dimension(1)-handles.maxcanon_vector-1));
+                    Order_current(Order_current > Dimension(1)-1) = Dimension(1):(Dimension(2)-(Dimension(1)-handles.maxcanon_vector-1));
                     handles.gui_Matrix_problem = Matrix_problem;
                     Dimension = size(Matrix_problem);
                     handles.Order_initial = Order_current;
@@ -378,7 +379,7 @@ if handles.Method ~= 3
                     %setProblem(Matrix_problem, handles)
                     %return;
                 else
-                    msgbox(char('La primera fase ha terminado. El problema original no tiene solución'),char('Método simplex de dos fases'),'modal');
+                    msgbox(char('La primera fase ha terminado. El problema original no tiene solución.'),char('Método simplex de dos fases'),'modal');
                 end
             elseif (handles.istwophases == 1 && handles.whatphase == 2)
                 if strcmp(get(handles.Mode_geo3D, 'Checked'), 'off')
@@ -776,10 +777,11 @@ set(handles.table_simplexdisplay, 'data', spreadsheet);
 function pivote_process(p, q)
 global Tableau Order_current Dimension operations latex;
 
+%format rat;
 % Ecuaciones de pivote
 Ypq = Tableau(p, q);
 fp = Tableau(p, :); % recupera la fila p actual
-fp = fp/Ypq;
+fp_t = fp/Ypq;
 
 %AGREGADO(27/12/2016)
 %[num, den] = numden(sym(1/Ypq, 'r'));
@@ -805,13 +807,13 @@ latex = sprintf('%s \r', latex);
 operations = char(operations, pivote_operation);
 %AGREGADO(27/12/2016)
 
-Tableau(p, :) = fp; % se actualiza la fila p en la tabla del Simplex
+Tableau(p, :) = fp_t; % se actualiza la fila p en la tabla del Simplex
 % se actualizan las demás filas
 for i = 1:Dimension(1)
     if i ~= p
         fi = Tableau(i, :);
         Yiq = Tableau(i, q);
-        fi = fi - fp*Yiq;
+        fi = eval(sym(str2num(rats(fi)))) - eval(sym(fp*str2num(rats(Yiq/Ypq)))); %#ok<ST2NM>
         
         %AGREGADO(27/12/2016)
         %[num, den] = numden(sym(Yiq/Ypq, 'r'));
@@ -975,7 +977,7 @@ if handles.Method ~= 3
     c = Tableau_sorted(end,:);
     z = Tableau_sorted(end, 1:(Dimension(1)-1))*Tableau_sorted(1:(Dimension(1)-1),:);
 
-    R = c - z;
+    R = eval(sym(str2num(rat(c)))) - eval(sym(str2num(rat(z)))); %#ok<ST2NM>
     Tableau(end, I) = R;
     %AGREGADO(27/12/2016)
     set(handles.listbox_operations, 'string', ...
@@ -8932,7 +8934,7 @@ function Simplex_multiplier_Callback(hObject, eventdata, handles) %#ok<INUSL,DEF
 % hObject    handle to Simplex_multiplier (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Order_initial Tableau;
+global Order_initial Tableau Order_current Matrix_problem;
 
 %Order_initial = LPApphandle.Order_initial(1, 1:(dim(2)-1));
 Dimension = size (Tableau);
@@ -8942,7 +8944,9 @@ Dimension = size (Tableau);
 %BInv = Tableau(1:(Dimension(1)-1), Basic_vector_initial==1);
 [Y, I] = sort(Order_initial); %#ok<ASGLU>
 Tableau_sorted = Tableau(:, I);
-c = Tableau_sorted(end,:);
+[Y, J] = sort(Order_current); %#ok<ASGLU>
+Matrix_sorted = Matrix_problem(:, J);
+c = Matrix_sorted(end,:);
 BInv = Tableau_sorted(1:(Dimension(1)-1), 1:(Dimension(1)-1));
 
 All_display = zeros(Dimension(1), Dimension(2)+2);
@@ -8953,7 +8957,8 @@ dim = size(T);
 
 All_display(:, 1:dim(2)) = cell2mat(sdisplay(1:dim(1), 1:dim(2)));
 lambda = c(1:(Dimension(1)-1))*BInv;
-All_display(1:(Dimension(1)-1), end) = lambda(Order_initial(Order_initial < Dimension(1)));
+%All_display(1:(Dimension(1)-1), end) = lambda(Order_initial(Order_initial < Dimension(1)));
+All_display(1:(Dimension(1)-1), end) = lambda;
 
 spreadsheet = cell(100,100);
 spreadsheet(1:Dimension(1), 1:Dimension(2)+2) = num2cell(All_display);
