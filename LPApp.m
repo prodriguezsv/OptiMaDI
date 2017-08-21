@@ -3825,7 +3825,8 @@ function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<DEFNU,INU
 % hObject    handle to uipushtool1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global points_set Dimension table handles_surf handles_norm x_minmax y_minmax z_minmax minxyz points_set_nonred m_i m_j;
+global points_set Dimension table handles_surf handles_norm x_minmax y_minmax z_minmax minxyz ...
+    points_set_nonred m_i m_j indexset1 points_set_convex all_points; %#ok<NUSED>
 %e = 0.00005; %%%% Cambiar si se cambia precisión
 
 points_set_nonred = points_set;
@@ -3838,12 +3839,12 @@ if strcmp(get(handles.uitoggletool6, 'state'), 'on')
     indexset2 = randperm(Dimension(1)-1);
     indexset2_copy = indexset2;
 else    
-    indexset1 = [1:Dimension(1)-1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
-    indexset2 = 1:Dimension(1)-1; 
-    indexset2_copy = indexset2;
-    %indexset1 = [1, 2, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
-    %indexset2 = [2, 1];  
+    %indexset1 = [1:Dimension(1)-1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
+    %indexset2 = 1:Dimension(1)-1; 
     %indexset2_copy = indexset2;
+    indexset1 = [2, 4, 1, 3, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3]; %% [2 3 1]; [1 2 3]
+    indexset2 = [1, 3, 4, 2];  
+    indexset2_copy = indexset2;
 end
     s = get(handles.listbox_operations, 'string');
     set(handles.listbox_operations, 'string', ...
@@ -3856,8 +3857,9 @@ for i = indexset1
         else
             indexset2 = setdiff(indexset2,indexset1(1:find(indexset1==i)));
         end
-        pasar = 1;
+        pasar = 1; %calc_intersect = 1; %#ok<NASGU>
         for j = indexset2            
+            calc_intersect = 0;
             if j ~= i && ~all(table_copy(i,:) == table_copy(j,:))
                 syms x1 y1 z1 x2 y2 z2 x3 y3 z3;
                 points_actual_i = points_set_convex{i}.points;
@@ -3932,6 +3934,8 @@ for i = indexset1
                             m_j = (points_set_nonred{j}.points(2,2)-points_set_nonred{j}.points(3,2))/(points_set_nonred{j}.points(2,1)-points_set_nonred{j}.points(3,1));
                         %end
                         %if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...
+                        InterchangeInterceptPoints(i, 1);
+                        InterchangeInterceptPoints(j, 1);
                         if (m_i < 0 && m_j < 0) || ...
                                 (points_set_convex{i}.tipo == 36 || points_set_convex{i}.tipo == 33 || points_set_convex{i}.tipo == 30)
                                 %((m_i == 0 || m_i == Inf) && (points_set_convex{i}.tipo == 36))
@@ -3993,6 +3997,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(2, 1) <= x && points_actual_i(2, 2) >= y
                                                                         points_set_convex{i}.points(1, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 2) <= y
                                                                         if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
@@ -4002,6 +4007,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -4010,9 +4016,10 @@ for i = indexset1
                                                 end
                                             else
                                                 %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 3, 4, 1);
+                                                %[points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+                                                %    i, j, 2, 3, 4, 1);
                                                 %%%%%%%%%%%%%
+                                                calc_intersect = 1;  
                                             end
                                         else
                                             if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
@@ -4061,6 +4068,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(2, 2) >= y && points_actual_j(2, 1) <= x
                                                                         points_set_convex{j}.points(1, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 2) <= y && points_actual_i(3, 1) >= x
                                                                         if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
@@ -4069,7 +4077,8 @@ for i = indexset1
                                                                         else
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
-                                                                        end                                                                    
+                                                                        end  
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -4078,26 +4087,27 @@ for i = indexset1
                                                 end
                                             else
                                                 %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 2, 4, 1);
+                                                %[points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+                                                %    i, j, 3, 2, 4, 1);
                                                 %%%%%%%%%%%%%
+                                                calc_intersect = 1;  
                                             end
                                         end                                    
                                     else
                                         %%%%%%
                                         caso = 1;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
+                                                    i, j, caso, calc_intersect);
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 3, 4, 1);
-                                            else
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 2, 4, 1);
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 3, 4, 1);
+%                                             else
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 2, 4, 1);
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -4106,13 +4116,14 @@ for i = indexset1
                                     %%%%%%%                                    
                                 end
                             else
-                                if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 3, 4, 1);
-                                else
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 2, 4, 1);
-                                end
+                                 calc_intersect = 1;
+%                                 if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 3, 4, 1);
+%                                 else
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 2, 4, 1);
+%                                 end
                             end                        
                         elseif ((m_i < 0 ) && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==3 || ...
                                 points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 18 || ...
@@ -4133,7 +4144,7 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]); C = dot(N, [0 0 1]);
 
                                         if m_i < 0
-                                            %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%%
+                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%%
                                                 if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
                                                     if points_set_convex{i}.points(3, 3) == 0                                                     
                                                         if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
@@ -4192,6 +4203,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
                                                                         if points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 29
@@ -4200,20 +4212,22 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end                                                                                                
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 2, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         else
-                                            %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%
+                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%
                                                 if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
                                                     if points_set_convex{j}.points(3, 3) == 0
                                                         if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
@@ -4272,6 +4286,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
                                                                         points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
                                                                         if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 29
@@ -4280,18 +4295,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 3, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         end
                                         %if any([x,y]==0)
                                             %%%%%%
@@ -4303,22 +4320,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 2;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
+                                                    i, j, caso, calc_intersect);
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1  
-                                            if m_i < 0
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 2, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 3, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1  
+%                                             if m_i < 0
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 2, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 3, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -4327,17 +4344,19 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < 0
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 2, 4, 1);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 3, 4, 1);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;
+%                             else
+%                                 if m_i < 0
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 2, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 3, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                            
                         elseif (m_i < 0 && (m_j >= 0 && (points_set_convex{j}.tipo ==4 || ...
                                 points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 23 ||...
@@ -4359,7 +4378,7 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]); C = dot(N, [0 0 1]);
                                         
                                         if m_i < 0 
-                                            %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%
+                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%
                                                 if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
                                                     if points_set_convex{i}.points(2, 3) == 0 
                                                         points_set_convex{i}.points(2, :) = [x y 0];
@@ -4423,6 +4442,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
                                                                         points_set_convex{i}.points(1, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
                                                                         if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 32
@@ -4431,6 +4451,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -4442,14 +4463,15 @@ for i = indexset1
                                                     points_actual_j = points_actual_j([1 2 3 4], :); 
                                                     points_set_convex{j}.points = points_set_convex{j}.points([1 2 3 4], :);
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 3, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         else
-                                            %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%%
+                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%%
                                                 if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
                                                     if points_set_convex{j}.points(2, 3) == 0 
                                                         points_set_convex{j}.points(2, :) = [x y 0];
@@ -4512,6 +4534,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
                                                                         points_set_convex{j}.points(1, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
                                                                         if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 32
@@ -4520,6 +4543,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -4531,12 +4555,13 @@ for i = indexset1
                                                     points_actual_i = points_actual_i([1 2 3 4], :);
                                                     points_set_convex{i}.points = points_set_convex{i}.points([1 2 3 4], :);
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 2, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         end
                                         %if any([x,y]==0)
                                             %%%%%%
@@ -4548,22 +4573,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 3;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1 
-                                            if m_i < 0 
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 3, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 2, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1 
+%                                             if m_i < 0 
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 3, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 2, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -4572,17 +4597,19 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < 0 
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 3, 4, 1);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 2, 4, 1);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;
+%                             else
+%                                 if m_i < 0 
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 3, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 2, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                            
                         elseif (((m_i >= 0 && (points_set_convex{i}.tipo ==4 || ...
                                 points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 23 ||...
@@ -4616,7 +4643,7 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]);
 
                                         if m_i < m_j
-                                            %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
+                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
                                                 if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
                                                     if all(points_actual_i(3, :) == points_actual_i(4, :))
                                                         points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
@@ -4663,6 +4690,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(2, 1) >= x && points_actual_j(2, 2) >= y
                                                                         points_set_convex{j}.points(1, :) = eval(sol); %%%4
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
                                                                         if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
@@ -4671,20 +4699,22 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 2, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
+                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
                                                 if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
                                                     points_set_convex{i}.points(2, :) = [x y 0];
                                                     
@@ -4731,6 +4761,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
                                                                         points_set_convex{i}.points(1, :) = eval(sol); %%4
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 2) >= y
                                                                         if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 32
@@ -4739,38 +4770,40 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 3, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                     else
                                         %%%%%%
                                         caso = 4;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1 
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 2, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 3, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1 
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 2, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 3, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -4779,17 +4812,19 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 2, 4, 1);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 3, 4, 1);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;
+%                             else
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 2, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 3, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                                                                        
                         elseif ((m_i >= 0 && (points_set_convex{i}.tipo ==4 || ...
                                 points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 23 ||...
@@ -4819,7 +4854,7 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]);
                                         
                                         if m_i < m_j
-                                            %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
+                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
                                                 if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
                                                     if points_set_convex{i}.points(2, 3) == 0 
                                                         points_set_convex{i}.points(2, :) = [x y 0];
@@ -4876,6 +4911,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
                                                                         points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
                                                                         if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
@@ -4884,20 +4920,22 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 3, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
+                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
                                                 if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
                                                     if points_set_convex{j}.points(2, 3) == 0 
                                                         points_set_convex{j}.points(2, :) = [x y 0];
@@ -4954,6 +4992,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
                                                                         points_set_convex{j}.points(1, :) = eval(sol); %%4
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
                                                                         if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
@@ -4962,18 +5001,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 2, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                         %if any([x,y]==0)
                                             %%%%%%
@@ -4985,22 +5026,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 5;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 3, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 2, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 3, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 2, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -5009,17 +5050,19 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 3, 4, 1);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 2, 4, 1);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;
+%                             else
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 3, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 2, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end
                         elseif (((m_i >= 0 || m_i == Inf) && (points_set_convex{i}.tipo ==3 || ...
                                 points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 18 || ...
@@ -5049,7 +5092,7 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]);
                                         
                                         if m_i < m_j
-                                            %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
+                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
                                                 if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
                                                     if points_set_convex{i}.points(2, 3) == 0 
                                                         points_set_convex{i}.points(2, :) = [x y 0];
@@ -5106,6 +5149,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(3, 1) <= x  && points_actual_j(3, 2) <= y
                                                                         points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
                                                                         if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
@@ -5114,18 +5158,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 3, 4, 1);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
                                             %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
                                                 if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
@@ -5184,6 +5230,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
                                                                         points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) <= x  && points_actual_i(3, 2) <= y
                                                                         if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
@@ -5192,6 +5239,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -5215,22 +5263,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 6;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_convex{i}, points_set_convex{j},  x, y, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 3, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 2, 4, 1);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 3, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 2, 4, 1);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -5239,17 +5287,19 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 3, 4, 1);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 2, 4, 1);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;
+%                             else
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 3, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 2, 4, 1);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end
                         end
                         if (points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29 || ...
@@ -5317,12 +5367,12 @@ for i = indexset1
                             points_actual_j = points_set_convex{j}.points;
                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 2 4 3],:);    
                         end
-                        if points_set_convex{i}.tipo == 2 %|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
+                        if points_set_convex{i}.tipo == 2 || points_set_convex{i}.tipo == 13%|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 3 1],:);
                             points_actual_i = points_set_convex{i}.points;
                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 3 1],:);    
                         end
-                        if points_set_convex{j}.tipo == 2 %|| points_set_convex{i}.tipo == 16
+                        if points_set_convex{j}.tipo == 2 || points_set_convex{j}.tipo == 13%|| points_set_convex{i}.tipo == 16
                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 3 1],:);
                             points_actual_j = points_set_convex{j}.points;
                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 3 1],:);    
@@ -5370,6 +5420,8 @@ for i = indexset1
                         %if isnan(m_j)
                             m_j = (points_set_nonred{j}.points(1,3)-points_set_nonred{j}.points(3,3))/(points_set_nonred{j}.points(1,1)-points_set_nonred{j}.points(3,1));
                         %end
+                        InterchangeInterceptPoints(i, 2);
+                        InterchangeInterceptPoints(j, 2);
                         if (m_i < 0 && m_j < 0 ) || ...
                                 (points_set_convex{i}.tipo == 36 || points_set_convex{i}.tipo == 33 || points_set_convex{i}.tipo == 30)
                                 %((m_i == 0 || m_i == Inf) && (points_set_convex{i}.tipo == 33))
@@ -5377,9 +5429,9 @@ for i = indexset1
                                 sol = [sol.x2 sol.z2];
                                 if isempty(symvar(sol))
                                     x=eval(sol(1)); z=eval(sol(2));
-                                    if x > 0 && z > 0                                    
+                                    if x > 0 && z > 0                                          
                                         %if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                        if m_i <= m_j
+                                        if m_i <= m_j                                            
                                             if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
                                                (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z %%%%11/01
@@ -5481,6 +5533,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(2, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z_aux
                                                                         if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
@@ -5490,6 +5543,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -5498,9 +5552,10 @@ for i = indexset1
                                                 end
                                             else
                                                 %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 3, 4, 2);
+                                                %[points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+                                                %    i, j, 1, 3, 4, 2);
                                                 %%%%%%%%%%%%%
+                                                calc_intersect = 1;  
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
@@ -5596,6 +5651,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(1, 1) <= x && points_actual_j(1, 3) >= z_aux
                                                                         points_set_convex{j}.points(2, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) >= x && points_actual_i(3, 3) <= z_aux
                                                                         if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
@@ -5605,6 +5661,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -5613,26 +5670,27 @@ for i = indexset1
                                                 end
                                             else
                                                 %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 1, 4, 2);
+                                                %[points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+                                                %    i, j, 3, 1, 4, 2);
                                                 %%%%%%%%%%%%%
+                                                calc_intersect = 1;
                                             end
                                         end                                    
                                     else
                                         %%%%%%
                                         caso = 1;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 3, 4, 2);
-                                            else
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 1, 4, 2);
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 3, 4, 2);
+%                                             else
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 1, 4, 2);
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -5641,13 +5699,14 @@ for i = indexset1
                                     %%%%%%%                                    
                                 end
                             else
-                                if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 3, 4, 2);
-                                else
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 1, 4, 2);
-                                end
+                                 calc_intersect = 1;  
+%                                 if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 3, 4, 2);
+%                                 else
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 1, 4, 2);
+%                                 end
                             end
                         elseif ((m_i < 0 ) && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ... %%|| m_i == Inf
                                 points_set_convex{j}.tipo == 5 || points_set_convex{j}.tipo == 13 || ...
@@ -5670,8 +5729,8 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < 0
-                                            %if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z
                                                     if points_set_convex{i}.points(3, 2) == 0
                                                         if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
@@ -5730,6 +5789,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 19 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 29
@@ -5738,21 +5798,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 1, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z
                                                     if points_set_convex{j}.points(3, 2) == 0
                                                         if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
@@ -5811,6 +5873,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z_aux
                                                                         points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
                                                                         if points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 29
@@ -5819,18 +5882,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %   [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 3, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         end
                                         %if any([x,z]==0)
                                             %%%%%%
@@ -5842,22 +5907,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 2;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1 
-                                            if m_i < 0
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 1, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 3, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1 
+%                                             if m_i < 0
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 1, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 3, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -5866,17 +5931,18 @@ for i = indexset1
                                     %%%%%%% 
                                 end
                             else
-                                if m_i < 0
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 1, 4, 2);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 3, 4, 2);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < 0
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 1, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 3, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                            
                         elseif (m_i < 0 && (m_j >= 0 && (points_set_convex{j}.tipo ==4 || ... %%m_i >= 0
                                 points_set_convex{j}.tipo == 7 || points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 23 || ...
@@ -5898,8 +5964,8 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < 0
-                                            %if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z
                                                     if points_set_convex{i}.points(1, 2) == 0 
                                                         points_set_convex{i}.points(1, :) = [x 0 z];
@@ -5958,6 +6024,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(2, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 35
@@ -5966,21 +6033,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 3, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z
                                                     if points_set_convex{j}.points(1, 2) == 0 
                                                         points_set_convex{j}.points(1, :) = [x 0 z];
@@ -6039,6 +6108,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z_aux
                                                                         points_set_convex{j}.points(2, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
                                                                         if points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 35
@@ -6047,18 +6117,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 1, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         end
                                         %if any([x,z]==0)
                                             %%%%%%
@@ -6070,22 +6142,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 3;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1 
-                                            if m_i < 0
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 3, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 1, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1 
+%                                             if m_i < 0
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 3, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 1, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -6094,17 +6166,18 @@ for i = indexset1
                                     %%%%%%% 
                                 end
                             else
-                                if m_i < 0
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 3, 4, 2);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 1, 4, 2);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < 0
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 3, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 1, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end
                         elseif ((m_i >= 0 && (points_set_convex{i}.tipo ==4 || ...
                                 points_set_convex{i}.tipo == 7 || points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 23 || ...
@@ -6134,8 +6207,8 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < m_j
-                                            %if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z
                                                     if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
                                                         points_set_convex{i}.points(4, :) = [x 0 z];
@@ -6183,6 +6256,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z_aux
                                                                         points_set_convex{j}.points(2, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z_aux
                                                                         if points_set_convex{i}.tipo == 35
@@ -6191,21 +6265,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %   [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 1, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z
                                                     points_set_convex{i}.points(1, :) = [x 0 z];
                                                     
@@ -6253,6 +6329,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(2, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 35
@@ -6261,38 +6338,40 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 3, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                     else
                                         %%%%%%
                                         caso = 4;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
-                                                    i, j,caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
+                                                    i, j,caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 1, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 3, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 1, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 3, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -6301,17 +6380,18 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 1, 4, 2);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 3, 4, 2);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 1, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 3, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                                                                    
                         elseif ((m_i >= 0 && (points_set_convex{i}.tipo ==4 || ...
                                 points_set_convex{i}.tipo == 7 || points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 23 || ...
@@ -6341,8 +6421,8 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < m_j
-                                            %if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z
                                                     if points_set_convex{i}.points(1, 2) == 0 
                                                         points_set_convex{i}.points(1, :) = [x 0 z];
@@ -6400,6 +6480,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 35
@@ -6408,21 +6489,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 3, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
                                                 if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z
                                                     if points_set_convex{j}.points(1, 2) == 0 
                                                         points_set_convex{j}.points(1, :) = [x 0 z];
@@ -6480,6 +6563,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z_aux
                                                                         points_set_convex{j}.points(2, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
                                                                         if points_set_convex{i}.tipo == 35
@@ -6488,18 +6572,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 1, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                         %if any([x,z]==0)
                                             %%%%%%
@@ -6511,22 +6597,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 5;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1 
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 3, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 1, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1 
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 3, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 1, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -6535,17 +6621,18 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 3, 4, 2);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 1, 4, 2);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 3, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 1, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end
                         elseif (((m_i >= 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
                                 points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 13 || ...
@@ -6575,167 +6662,171 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < m_j
-                                            %if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.point
-                                            %   s(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                            if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
-                                                if points_set_convex{i}.points(1, 2) == 0 
-                                                    points_set_convex{i}.points(1, :) = [x 0 z];
-                                                else
-                                                    dim = size(points_set_convex{i}.points);
-                                                    points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                end
-
-                                                %if abs(C) < e
-                                                %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                %end
-                                            end
-
-                                            if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z
-                                                if points_set_convex{j}.points(3, 2) == 0 
-                                                    if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                        points_set_convex{j}.points(4, :) = [x y 0];
+                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                                if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
+                                                    if points_set_convex{i}.points(1, 2) == 0 
+                                                        points_set_convex{i}.points(1, :) = [x 0 z];
+                                                    else
+                                                        dim = size(points_set_convex{i}.points);
+                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
                                                     end
-                                                    points_set_convex{j}.points(3, :) = [x 0 z];
-                                                else
-                                                    dim = size(points_set_convex{j}.points);
-                                                    points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+
+                                                    %if abs(C) < e
+                                                    %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                    %end
                                                 end
 
-                                                %if abs(C2) < e
-                                                %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                %end
-                                            end
-                                                
-                                            %%%%%% Modificar (Revisar)
-                                            if points_set_convex{j}.tipo == 5 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
-                                                points_set_convex{j}.tipo == 19 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
-                                                points_set_convex{j}.tipo == 29 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29)
-                                                if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z || ...
-                                                   points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z
-                                                    z_aux = z;
-                                                    syms x4 y4 z4 z;
-                                                    sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
-                                                                [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
-                                                    if ~isempty(sol)
-                                                        sol = [sol.x4 sol.y4 sol.z4];
-                                                        if ~isempty(symvar(sol))
-                                                            %points_set_convex{j}.points(4, :) = [0 y z];
-                                                            %z = z + 1;
-                                                            z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                            z = z_sol; p_new = eval(eval(sol));
-                                                            if all(p_new(:) >= 0)
-                                                                if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
-                                                                    points_set_convex{i}.points(2, :) = eval(sol); %%3
-                                                                end
-                                                                if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z_aux
-                                                                    if points_set_convex{j}.tipo == 29
-                                                                        points_set_convex{j}.points(4, :) = eval(sol); %%2
-                                                                    else
-                                                                        dim = size(points_set_convex{j}.points);
-                                                                        points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z
+                                                    if points_set_convex{j}.points(3, 2) == 0 
+                                                        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                            points_set_convex{j}.points(4, :) = [x y 0];
+                                                        end
+                                                        points_set_convex{j}.points(3, :) = [x 0 z];
+                                                    else
+                                                        dim = size(points_set_convex{j}.points);
+                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                    end
+
+                                                    %if abs(C2) < e
+                                                    %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                    %end
+                                                end
+
+                                                %%%%%% Modificar (Revisar)
+                                                if points_set_convex{j}.tipo == 5 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
+                                                    points_set_convex{j}.tipo == 19 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
+                                                    points_set_convex{j}.tipo == 29 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29)
+                                                    if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z || ...
+                                                       points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z
+                                                        z_aux = z;
+                                                        syms x4 y4 z4 z;
+                                                        sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
+                                                                    [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
+                                                        if ~isempty(sol)
+                                                            sol = [sol.x4 sol.y4 sol.z4];
+                                                            if ~isempty(symvar(sol))
+                                                                %points_set_convex{j}.points(4, :) = [0 y z];
+                                                                %z = z + 1;
+                                                                z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
+                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                if all(p_new(:) >= 0)
+                                                                    if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
+                                                                        points_set_convex{i}.points(2, :) = eval(sol); %%3
+                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z_aux
+                                                                        if points_set_convex{j}.tipo == 29
+                                                                            points_set_convex{j}.points(4, :) = eval(sol); %%2
+                                                                        else
+                                                                            dim = size(points_set_convex{j}.points);
+                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                        end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 3, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                            %   (points_set_convex{j}.point
-                                            %   s(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                            if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
-                                                if points_set_convex{j}.points(1, 2) == 0 
-                                                    points_set_convex{j}.points(1, :) = [x 0 z];
-                                                else
-                                                    dim = size(points_set_convex{j}.points);
-                                                    points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                end
-
-                                                %if abs(C2) < e
-                                                %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                %end
-                                            end
-
-                                            if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z
-                                                if points_set_convex{i}.points(3, 2) == 0
-                                                    if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                        points_set_convex{i}.points(4, :) = [x y 0];
+                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
+                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
+                                                if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
+                                                    if points_set_convex{j}.points(1, 2) == 0 
+                                                        points_set_convex{j}.points(1, :) = [x 0 z];
+                                                    else
+                                                        dim = size(points_set_convex{j}.points);
+                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
                                                     end
-                                                    points_set_convex{i}.points(3, :) = [x 0 z];
-                                                else
-                                                    dim = size(points_set_convex{i}.points);
-                                                    points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+
+                                                    %if abs(C2) < e
+                                                    %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                    %end
                                                 end
 
-                                                %if abs(C) < e
-                                                %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                %end
-                                            end
-                                                
-                                            %%%%%% Modificar (Revisar)
-                                            if points_set_convex{j}.tipo == 5 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
-                                                points_set_convex{j}.tipo == 19 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
-                                                points_set_convex{j}.tipo == 29 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29)                                                
-                                                if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z || ...
-                                                   points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z
-                                                    z_aux = z;
-                                                    syms x4 y4 z4 z;
-                                                    sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
-                                                                [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
-                                                    if ~isempty(sol)
-                                                        sol = [sol.x4 sol.y4 sol.z4];
-                                                        if ~isempty(symvar(sol))
-                                                            %points_set_convex{j}.points(4, :) = [0 y z];
-                                                            %z = z + 1;
-                                                            z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                            z = z_sol; p_new = eval(eval(sol));
-                                                            if all(p_new(:) >= 0)
-                                                                if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
-                                                                    points_set_convex{j}.points(2, :) = eval(sol); %%3
-                                                                end
-                                                                if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z_aux
-                                                                    if points_set_convex{i}.tipo == 29
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);%%2
-                                                                    else
-                                                                        dim = size(points_set_convex{i}.points);
-                                                                        points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z
+                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                            points_set_convex{i}.points(4, :) = [x y 0];
+                                                        end
+                                                        points_set_convex{i}.points(3, :) = [x 0 z];
+                                                    else
+                                                        dim = size(points_set_convex{i}.points);
+                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                    end
+
+                                                    %if abs(C) < e
+                                                    %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                    %end
+                                                end
+
+                                                %%%%%% Modificar (Revisar)
+                                                if points_set_convex{j}.tipo == 5 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
+                                                    points_set_convex{j}.tipo == 19 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29) || ...
+                                                    points_set_convex{j}.tipo == 29 && (points_set_convex{i}.tipo == 5 || points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 29)                                                
+                                                    if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z || ...
+                                                       points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z
+                                                        z_aux = z;
+                                                        syms x4 y4 z4 z;
+                                                        sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
+                                                                    [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
+                                                        if ~isempty(sol)
+                                                            sol = [sol.x4 sol.y4 sol.z4];
+                                                            if ~isempty(symvar(sol))
+                                                                %points_set_convex{j}.points(4, :) = [0 y z];
+                                                                %z = z + 1;
+                                                                z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
+                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                if all(p_new(:) >= 0)
+                                                                    if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
+                                                                        points_set_convex{j}.points(2, :) = eval(sol); %%3
+                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z_aux
+                                                                        if points_set_convex{i}.tipo == 29
+                                                                            points_set_convex{i}.points(4, :) = eval(sol);%%2
+                                                                        else
+                                                                            dim = size(points_set_convex{i}.points);
+                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                        end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 3, 1, 4, 2);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                         %if any([x,z]==0)
                                             %%%%%%
@@ -6747,22 +6838,22 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 6;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_convex{i}, points_set_convex{j},  x, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1 
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 3, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 3, 1, 4, 2);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1 
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 3, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 3, 1, 4, 2);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -6771,17 +6862,18 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 3, 4, 2);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 3, 1, 4, 2);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 3, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 3, 1, 4, 2);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end
                         end
                         if points_set_convex{i}.tipo == 4
@@ -6794,12 +6886,12 @@ for i = indexset1
                             points_actual_j = points_set_convex{j}.points;
                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 2 4 3],:);    
                         end
-                        if points_set_convex{i}.tipo == 2 %|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
+                        if points_set_convex{i}.tipo == 2 || points_set_convex{i}.tipo == 13%|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 3 1],:);
                             points_actual_i = points_set_convex{i}.points;
                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 3 1],:);    
                         end
-                        if points_set_convex{j}.tipo == 2 %|| points_set_convex{j}.tipo == 16
+                        if points_set_convex{j}.tipo == 2 || points_set_convex{j}.tipo == 13%|| points_set_convex{j}.tipo == 16
                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 3 1],:);
                             points_actual_j = points_set_convex{j}.points;
                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 3 1],:);    
@@ -6899,6 +6991,8 @@ for i = indexset1
                         %if isnan(m_j)
                             m_j = (points_set_nonred{j}.points(1,3)-points_set_nonred{j}.points(2,3))/(points_set_nonred{j}.points(1,2)-points_set_nonred{j}.points(2,2));
                         %end
+                        InterchangeInterceptPoints(i, 3);
+                        InterchangeInterceptPoints(j, 3);
                         if (m_i < 0 && m_j < 0) || ...
                                 (points_set_convex{i}.tipo == 36 || points_set_convex{i}.tipo == 33 || points_set_convex{i}.tipo == 30)
                                 %((m_i == 0 || m_i == Inf) && (points_set_convex{i}.tipo == 30))
@@ -6906,7 +7000,7 @@ for i = indexset1
                                 sol = [sol.y3 sol.z3];
                                 if isempty(symvar(sol))
                                     y=eval(sol(1)); z=eval(sol(2));
-                                    if y > 0 && z > 0                                    
+                                    if y > 0 && z > 0   
                                         %if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
                                         if m_i <= m_j
                                             if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
@@ -7002,6 +7096,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(3, :) = eval(sol); % 4
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z_aux
                                                                         if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
@@ -7011,6 +7106,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -7019,9 +7115,10 @@ for i = indexset1
                                                 end
                                             else
                                                 %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 2, 4, 3);
+                                                %[points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+                                                %    i, j, 1, 2, 4, 3);
                                                 %%%%%%%%%%%%%
+                                                calc_intersect = 1;  
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
@@ -7115,6 +7212,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z_aux
                                                                         points_set_convex{j}.points(3, :) = eval(sol); %
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(2, 2) >= y && points_actual_i(2, 3) <= z_aux
                                                                         if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
@@ -7124,6 +7222,7 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
@@ -7132,26 +7231,27 @@ for i = indexset1
                                                 end
                                             else
                                                 %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 1, 4, 3);  
+                                                %[points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+                                                %    i, j, 2, 1, 4, 3);  
                                                 %%%%%%%%%%%%%
+                                                calc_intersect = 1;  
                                             end
                                         end                                    
                                     else
                                         %%%%%%
                                         caso = 1;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%% 
-                                        if IsPlaneCrossIntercept == 1
-                                            if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 2, 4, 3);
-                                            else
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 1, 4, 3);  
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 2, 4, 3);
+%                                             else
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 1, 4, 3);  
+%                                             end
+%                                         end
                                     end                 
                                 else
                                     %%%%%%
@@ -7160,13 +7260,14 @@ for i = indexset1
                                     %%%%%%%                                    
                                 end
                             else
-                                if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 2, 4, 3);
-                                else
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 1, 4, 3);  
-                                end
+                                 calc_intersect = 1;  
+%                                 if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 2, 4, 3);
+%                                 else
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 1, 4, 3);  
+%                                 end
                             end
                         elseif ((m_i < 0 ) && ((m_j > 0 || m_j == Inf) && (points_set_convex{j}.tipo ==2 || ...
                                 points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 13 || ...
@@ -7189,8 +7290,8 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < 0
-                                            %if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %   (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z
                                                     if points_set_convex{i}.points(2, 1) == 0 
                                                         points_set_convex{i}.points(2, :) = [0 y z];
@@ -7246,6 +7347,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 24 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32
@@ -7254,21 +7356,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 1, 4, 3);  
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %    (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z
                                                     if points_set_convex{j}.points(2, 1) == 0 
                                                         points_set_convex{j}.points(2, :) = [0 y z];
@@ -7324,6 +7428,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z_aux
                                                                         points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
 
                                                                     if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
@@ -7333,18 +7438,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                              %   [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                              %       i, j, 1, 2, 4, 3);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         end
                                         %if any([y,z]==0)
                                             %%%%%%
@@ -7356,23 +7463,23 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 2;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            %%%%%%%
-                                            if m_i < 0
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 1, 4, 3);  
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 2, 4, 3);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             %%%%%%%
+%                                             if m_i < 0
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 1, 4, 3);  
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 2, 4, 3);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -7381,18 +7488,19 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
+                                calc_intersect = 1;  
                                 %%%%%%
-                                if m_i < 0
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 1, 4, 3);  
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 2, 4, 3);
-                                    %%%%%%%%%%%%%
-                                end
+%                                 if m_i < 0
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 1, 4, 3);  
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 2, 4, 3);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end 
                         elseif (m_i < 0 && (m_j >= 0 && (points_set_convex{j}.tipo ==3 || ...
                                 points_set_convex{j}.tipo == 7 || points_set_convex{j}.tipo == 18 || ...
@@ -7414,8 +7522,8 @@ for i = indexset1
                                         %N2 = cross(points_actual_j(1,:)-points_actual_j(2,:), points_actual_j(1,:)-points_actual_j(3,:));
                                         %C2 = dot(N2, [1 0 0]);
                                         if m_i < 0
-                                            %if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %    (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z
                                                     if points_set_convex{i}.points(1, 1) == 0 
                                                         points_set_convex{i}.points(1, :) = [0 y z];
@@ -7471,6 +7579,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 35
@@ -7479,21 +7588,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 2, 4, 3);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                             %  (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                             if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z
                                                     if points_set_convex{j}.points(1, 1) == 0 
                                                         points_set_convex{j}.points(1, :) = [0 y z];
@@ -7549,6 +7660,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
                                                                         points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
                                                                         if points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 26 || points_set_convex{i}.tipo == 35
@@ -7557,18 +7669,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{i}.points);
                                                                             points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %       i, j, 2, 1, 4, 3);  
                                                 %%%%%%%%%%%%%
-                                            %end
+                                                calc_intersect = 1;  
+                                            end
                                         end
                                         %if any([y,z]==0)
                                             %%%%%%
@@ -7580,23 +7694,23 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 3;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            %%%%%%%
-                                            if m_i < 0
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 2, 4, 3);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 1, 4, 3);  
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             %%%%%%%
+%                                             if m_i < 0
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 2, 4, 3);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 1, 4, 3);  
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -7605,17 +7719,18 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < 0
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 2, 4, 3);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 1, 4, 3);  
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < 0
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 2, 4, 3);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 1, 4, 3);  
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                             
                         elseif ((m_i >= 0 && (points_set_convex{i}.tipo ==3 || ...
                                 points_set_convex{i}.tipo == 7 || points_set_convex{i}.tipo == 18 || ...
@@ -7645,8 +7760,8 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < m_j
-                                            %if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %   (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
                                                     points_set_convex{i}.points(2, :) = [0 y z];
                                                     
@@ -7690,6 +7805,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 35
@@ -7698,21 +7814,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 1, 4, 3);  
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %    (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
                                                     points_set_convex{i}.points(1, :) = [0 y z];
                                                     
@@ -7756,6 +7874,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 35
@@ -7764,39 +7883,41 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 2, 4, 3);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                     else
                                         %%%%%%
                                         caso = 4;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            %%%%%%
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 1, 4, 3);  
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 2, 4, 3);
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             %%%%%%
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 1, 4, 3);  
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 2, 4, 3);
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -7805,17 +7926,18 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 1, 4, 3);  
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 2, 4, 3);
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 1, 4, 3);  
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 2, 4, 3);
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                                                                     
                         elseif ((m_i >= 0 && (points_set_convex{i}.tipo ==3 || ...
                                 points_set_convex{i}.tipo == 7 || points_set_convex{i}.tipo == 18 || ...
@@ -7846,8 +7968,8 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < m_j
-                                            %if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %    (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) <= z
                                                     if points_set_convex{i}.points(1, 1) == 0 
                                                         points_set_convex{i}.points(1, :) = [0 y z];
@@ -7901,6 +8023,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 35
@@ -7909,21 +8032,23 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 2, 4, 3);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %   (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
                                                 if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) <= z
                                                     if points_set_convex{j}.points(1, 1) == 0 
                                                         points_set_convex{j}.points(1, :) = [0 y z];
@@ -7977,6 +8102,7 @@ for i = indexset1
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
                                                                         points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
                                                                         if points_set_convex{j}.tipo == 35
@@ -7985,18 +8111,20 @@ for i = indexset1
                                                                             dim = size(points_set_convex{j}.points);
                                                                             points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
                                                                         end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                             %    %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 1, 4, 3);  
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                         %if any([y,z]==0)
                                             %%%%%%
@@ -8008,23 +8136,23 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 5;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
+                                                    i, j, caso, calc_intersect); 
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            %%%%%%%
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 2, 4, 3);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 1, 4, 3);  
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             %%%%%%%
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 2, 4, 3);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 1, 4, 3);  
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -8033,17 +8161,18 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 2, 4, 3);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 1, 4, 3);  
-                                    %%%%%%%%%%%%%
-                                end
+                                 calc_intersect = 1;  
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 2, 4, 3);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 1, 4, 3);  
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end
                         elseif (((m_i >= 0 || m_i == Inf) && (points_set_convex{i}.tipo ==2 || ...
                                 points_set_convex{i}.tipo == 6 || points_set_convex{i}.tipo == 13 || ...
@@ -8073,159 +8202,163 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < m_j
-                                            %if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %    (points_set_convex{j}.poin
-                                            %    ts(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                            if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
-                                                if points_set_convex{i}.points(1, 1) == 0 
-                                                    points_set_convex{i}.points(1, :) = [0 y z];
-                                                else
-                                                    dim = size(points_set_convex{i}.points);
-                                                    points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                                if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
+                                                    if points_set_convex{i}.points(1, 1) == 0 
+                                                        points_set_convex{i}.points(1, :) = [0 y z];
+                                                    else
+                                                        dim = size(points_set_convex{i}.points);
+                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                    end
+
+                                                    %if abs(C) < e
+                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                    %end
                                                 end
 
-                                                %if abs(C) < e
-                                                %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                %end
-                                            end
+                                                if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z
+                                                    if points_set_convex{j}.points(2, 1) == 0 
+                                                        points_set_convex{j}.points(2, :) = [0 y z];
+                                                    else
+                                                        dim = size(points_set_convex{j}.points);
+                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                    end
 
-                                            if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z
-                                                if points_set_convex{j}.points(2, 1) == 0 
-                                                    points_set_convex{j}.points(2, :) = [0 y z];
-                                                else
-                                                    dim = size(points_set_convex{j}.points);
-                                                    points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                    %if abs(C2) < e
+                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                    %end
                                                 end
 
-                                                %if abs(C2) < e
-                                                %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                %end
-                                            end
-                                                
-                                            if points_set_convex{i}.tipo == 6 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
-                                                points_set_convex{i}.tipo == 26 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
-                                                points_set_convex{i}.tipo == 32 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32)                                                
-                                                if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z || ...
-                                                    points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z
-                                                    z_aux = z;
-                                                    syms x4 y4 z4 z;
-                                                    sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
-                                                                [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
-                                                    if ~isempty(sol)
-                                                        sol = [sol.x4 sol.y4 sol.z4];
-                                                        if ~isempty(symvar(sol))
-                                                            %points_set_convex{i}.points(4, :) = [0 y z];
-                                                            %z = z+1;
-                                                            z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                            z = z_sol; p_new = eval(eval(sol));
-                                                            if all(p_new(:) >= 0)
-                                                                if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
-                                                                    points_set_convex{i}.points(4, :) = eval(sol); %%3
-                                                                end
-                                                                if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z_aux
-                                                                    if points_set_convex{j}.tipo == 32
-                                                                        points_set_convex{j}.points(4, :) = eval(sol); %%3
-                                                                    else
-                                                                        dim = size(points_set_convex{j}.points);
-                                                                        points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                if points_set_convex{i}.tipo == 6 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
+                                                    points_set_convex{i}.tipo == 26 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
+                                                    points_set_convex{i}.tipo == 32 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32)                                                
+                                                    if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z || ...
+                                                        points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z
+                                                        z_aux = z;
+                                                        syms x4 y4 z4 z;
+                                                        sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
+                                                                    [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
+                                                        if ~isempty(sol)
+                                                            sol = [sol.x4 sol.y4 sol.z4];
+                                                            if ~isempty(symvar(sol))
+                                                                %points_set_convex{i}.points(4, :) = [0 y z];
+                                                                %z = z+1;
+                                                                z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
+                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                if all(p_new(:) >= 0)
+                                                                    if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
+                                                                        points_set_convex{i}.points(4, :) = eval(sol); %%3
+                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z_aux
+                                                                        if points_set_convex{j}.tipo == 32
+                                                                            points_set_convex{j}.points(4, :) = eval(sol); %%3
+                                                                        else
+                                                                            dim = size(points_set_convex{j}.points);
+                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                        end
+                                                                        calc_intersect = 1;
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 1, 2, 4, 3);
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         else
-                                            %if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                            %   (points_set_convex{j}.point
-                                            %   s(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                            if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
-                                                if points_set_convex{j}.points(1, 1) == 0 
-                                                    points_set_convex{j}.points(1, :) = [0 y z];
-                                                else
-                                                    dim = size(points_set_convex{j}.points);
-                                                    points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
+                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                                if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
+                                                    if points_set_convex{j}.points(1, 1) == 0 
+                                                        points_set_convex{j}.points(1, :) = [0 y z];
+                                                    else
+                                                        dim = size(points_set_convex{j}.points);
+                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                    end
+
+                                                    %if abs(C2) < e
+                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z]; 
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                    %end
                                                 end
 
-                                                %if abs(C2) < e
-                                                %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z]; 
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                %end
-                                            end
+                                                if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z
+                                                    if points_set_convex{i}.points(2, 1) == 0 
+                                                        points_set_convex{i}.points(2, :) = [0 y z];
+                                                    else
+                                                        dim = size(points_set_convex{i}.points);
+                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                    end
 
-                                            if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z
-                                                if points_set_convex{i}.points(2, 1) == 0 
-                                                    points_set_convex{i}.points(2, :) = [0 y z];
-                                                else
-                                                    dim = size(points_set_convex{i}.points);
-                                                    points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                    %if abs(C) < e
+                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
+                                                    %else
+                                                    %    s = get(handles.listbox_operations, 'string');
+                                                    %    set(handles.listbox_operations, 'string', ...
+                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                    %end
                                                 end
 
-                                                %if abs(C) < e
-                                                %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
-                                                %else
-                                                %    s = get(handles.listbox_operations, 'string');
-                                                %    set(handles.listbox_operations, 'string', ...
-                                                %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                %end
-                                            end
-                                                
-                                            if points_set_convex{i}.tipo == 6 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
-                                                points_set_convex{i}.tipo == 26 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
-                                                points_set_convex{i}.tipo == 32 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32)
-                                                if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z || ...
-                                                    points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
-                                                    z_aux = z;
-                                                    syms x4 y4 z4 z;
-                                                    sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
-                                                                [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
-                                                    if ~isempty(sol)
-                                                        sol = [sol.x4 sol.y4 sol.z4];
-                                                        if ~isempty(symvar(sol))
-                                                            %points_set_convex{i}.points(4, :) = [0 y z];
-                                                            %z = z+1;
-                                                            z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                            z = z_sol; p_new = eval(eval(sol));
-                                                            if all(p_new(:) >= 0)
-                                                                if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z_aux
-                                                                    if points_set_convex{i}.tipo == 32
-                                                                        points_set_convex{i}.points(4, :) = eval(sol); %%3                                                                    
-                                                                    else
-                                                                        dim = size(points_set_convex{i}.points);
-                                                                        points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
-                                                                    end                                                                    
-                                                                end
-                                                                if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
-                                                                    points_set_convex{j}.points(4, :) = eval(sol); %%3
+                                                if points_set_convex{i}.tipo == 6 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
+                                                    points_set_convex{i}.tipo == 26 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
+                                                    points_set_convex{i}.tipo == 32 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32)
+                                                    if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z || ...
+                                                        points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
+                                                        z_aux = z;
+                                                        syms x4 y4 z4 z;
+                                                        sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
+                                                                    [num2str(table_copy(j, 1)), '*x4+', num2str(table_copy(j, 2)), '*y4+', num2str(table_copy(j, 3)), '*z4 =', num2str(table_copy(j, 4))], x4, y4, z4);
+                                                        if ~isempty(sol)
+                                                            sol = [sol.x4 sol.y4 sol.z4];
+                                                            if ~isempty(symvar(sol))
+                                                                %points_set_convex{i}.points(4, :) = [0 y z];
+                                                                %z = z+1;
+                                                                z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
+                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                if all(p_new(:) >= 0)
+                                                                    if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z_aux
+                                                                        if points_set_convex{i}.tipo == 32
+                                                                            points_set_convex{i}.points(4, :) = eval(sol); %%3                                                                    
+                                                                        else
+                                                                            dim = size(points_set_convex{i}.points);
+                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                        end
+                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
+                                                                        points_set_convex{j}.points(4, :) = eval(sol); %%3
+                                                                        calc_intersect = 1;
+                                                                    end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
-                                            end
-                                            %else
+                                            else
+                                                calc_intersect = 1;
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
                                             %        i, j, 2, 1, 4, 3);  
                                                 %%%%%%%%%%%%%
-                                            %end
+                                            end
                                         end
                                         %if any([y,z]==0)
                                             %%%%%%
@@ -8237,23 +8370,23 @@ for i = indexset1
                                     else
                                         %%%%%%
                                         caso = 6;
-                                        [points_set_convex{i}, points_set_convex{j}, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
-                                                    i, j, caso);
+                                        [points_set_convex{i}, points_set_convex{j}, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_convex{i}, points_set_convex{j},  y, z, table_copy, ...
+                                                    i, j, caso, calc_intersect);
                                         %%%%%%%
-                                        if IsPlaneCrossIntercept == 1
-                                            %%%%%%
-                                            if m_i < m_j
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 1, 2, 4, 3);
-                                                %%%%%%%%%%%%%
-                                            else
-                                                %%%%%%%%%%%%%
-                                                [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                                    i, j, 2, 1, 4, 3);  
-                                                %%%%%%%%%%%%%
-                                            end
-                                        end
+%                                         if IsPlaneCrossIntercept == 1
+%                                             %%%%%%
+%                                             if m_i < m_j
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 1, 2, 4, 3);
+%                                                 %%%%%%%%%%%%%
+%                                             else
+%                                                 %%%%%%%%%%%%%
+%                                                 [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                                     i, j, 2, 1, 4, 3);  
+%                                                 %%%%%%%%%%%%%
+%                                             end
+%                                         end
                                     end
                                 else
                                     %%%%%%
@@ -8262,17 +8395,18 @@ for i = indexset1
                                     %%%%%%%
                                 end
                             else
-                                if m_i < m_j
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 1, 2, 4, 3);
-                                    %%%%%%%%%%%%%
-                                else
-                                    %%%%%%%%%%%%%
-                                    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
-                                        i, j, 2, 1, 4, 3);  
-                                    %%%%%%%%%%%%%
-                                end
+                                calc_intersect = 1;  
+%                                 if m_i < m_j
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 1, 2, 4, 3);
+%                                     %%%%%%%%%%%%%
+%                                 else
+%                                     %%%%%%%%%%%%%
+%                                     [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
+%                                         i, j, 2, 1, 4, 3);  
+%                                     %%%%%%%%%%%%%
+%                                 end
                             end                            
                         end
                         if points_set_convex{i}.tipo == 10 %%%% Orden
@@ -8301,198 +8435,20 @@ for i = indexset1
                         end
                       end                   
                   end
+                  
                   if i < Dimension(1)
-                      if any(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) > table_copy(j, 4)) && ...
-                          any(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) < table_copy(j, 4)) && ...
-                            all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) <= table_copy(i, 4)) %#ok<ST2NM> %%%OJO con la precisión
-                                
-                                nonintersect = str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) > table_copy(j, 4); %#ok<ST2NM> %& ...
-                                    %all(points_set_convex{i}.points' > 0)';  
-                                points_set_convex_i_aux = points_set_convex{i}.points; 
-                                
-                                %points_set_convex{i}.points = points_set_convex{i}.points(~nonintersect', :);
-                                i_first= find(~nonintersect',1);
-                                if ~isempty(i_first) 
-                                    copia_points = [];
-                                    for k = 1:sum(nonintersect)
-                                        copia_points = [copia_points;points_set_convex{i}.points(i_first, :)];
-                                    end
-                                    points_set_convex{i}.points(nonintersect', :) = copia_points;
-                                else
-                                    points_set_convex{i}.points = [];
-                                end
-                                points_i = unique(points_set_convex{i}.points, 'rows');    
-                                dim_aux = size(points_i);
-                                if dim_aux(1) > 0 && dim_aux(1) < 3
-                                    points_set_convex{i}.points = [points_i; ...
-                                        points_set_convex{j}.points(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) == table_copy(i, 4),:)]; %#ok<ST2NM>
-                                    points_i = unique(points_set_convex{i}.points, 'rows');
-                                    dim_aux = size(points_i);
-                                    if dim_aux(1) == 3
-                                        points_set_convex{i}.points = [points_i;points_i(3,:)];
-                                    elseif dim_aux(1) < 3
-                                        points_set_convex{i}.points = points_set_convex_i_aux;
-                                    end
-                                elseif isempty(points_set_convex{i}.points)
-                                    points_set_convex{i}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{i}.points;
-                                    set(handles_surf(i), 'Visible', 'off');
-                                    delete(handles_surf(i));
-                                    set(handles_norm(i), 'Visible', 'off');
-                                    delete(handles_norm(i));
-                                    handles_surf(i) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
-                                    handles_norm(i) = quiver3(0, 0, 0, table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
-                                end
-
-                      elseif any(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) > table_copy(i, 4)) && ...
-                          any(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) < table_copy(i, 4)) && ...
-                              all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) <= table_copy(j, 4)) %#ok<ST2NM> %%%OJO con la precisión
-                            
-                                nonintersect = str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) > table_copy(i, 4); %#ok<ST2NM> %& ...
-                                        %all(points_set_convex{j}.points' > 0)';  
-                                points_set_convex_j_aux = points_set_convex{j}.points; 
-                                
-                                %points_set_convex{j}.points = points_set_convex{j}.points(~nonintersect', :);
-                                j_first= find(~nonintersect',1);
-                                if ~isempty(j_first)
-                                    copia_points = [];
-                                    for k = 1:sum(nonintersect)
-                                        copia_points = [copia_points;points_set_convex{j}.points(j_first, :)];
-                                    end
-                                    points_set_convex{j}.points(nonintersect', :) = copia_points;                                    
-                                else
-                                    points_set_convex{j}.points = [];
-                                end
-                                points_j = unique(points_set_convex{j}.points, 'rows');
-                                dim_aux = size(points_j);
-                                if dim_aux(1) > 0 && dim_aux(1) < 3
-                                    points_set_convex{j}.points = [points_j; ...
-                                        points_set_convex{i}.points(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) == table_copy(j, 4),:)]; %#ok<ST2NM>
-                                    points_j = unique(points_set_convex{j}.points, 'rows');
-                                    dim_aux = size(points_j);                                    
-                                    if dim_aux(1) == 3
-                                        points_set_convex{j}.points = [points_j;points_j(3,:)];
-                                    elseif dim_aux(1) < 3
-                                        points_set_convex{j}.points = points_set_convex_j_aux;
-                                    end
-                                elseif isempty(points_set_convex{j}.points)
-                                    points_set_convex{j}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{j}.points;
-                                    set(handles_surf(j), 'Visible', 'off');
-                                    delete(handles_surf(j));
-                                    set(handles_norm(j), 'Visible', 'off');
-                                    delete(handles_norm(j));
-                                    handles_surf(j) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
-                                    handles_norm(j) = quiver3(0, 0, 0, table_copy(j, 1), table_copy(j, 2), table_copy(j, 3), 'Color', 'red');
-                                end
-                      elseif all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) >= table_copy(i, 4)) && ...
-                          all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) <= table_copy(j, 4)) %#ok<ST2NM>
-                            points_set_convex{j}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{j}.points;
-                            set(handles_surf(j), 'Visible', 'off');
-                            delete(handles_surf(j));
-                            set(handles_norm(j), 'Visible', 'off');
-                            delete(handles_norm(j));
-                            handles_surf(j) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
-                            handles_norm(j) = quiver3(0, 0, 0, table_copy(j, 1), table_copy(j, 2), table_copy(j, 3), 'Color', 'red');
-                      elseif all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) >= table_copy(j, 4)) && ...
-                          all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) <= table_copy(i, 4)) %#ok<ST2NM>
-                            points_set_convex{i}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{i}.points;
-                            set(handles_surf(i), 'Visible', 'off');
-                            delete(handles_surf(i));
-                            set(handles_norm(i), 'Visible', 'off');
-                            delete(handles_norm(i));
-                            handles_surf(i) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
-                            handles_norm(i) = quiver3(0, 0, 0, table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
+                      if calc_intersect == 1
+                          if size(unique(points_set_convex{i}.points, 'rows'), 1) >= 3
+                            table_copy = PlaneCrossIntercept(handles, table_copy, i, j);
+                          end
                       end
                   end
+                  arrangetoplotPlane(table_copy, i, j);
             end
             
-            p1 = points_set_convex{i}.points;
-            if i > Dimension(1)
-                if ~all(p1(1, :) == p1(2, :)) && ~all(p1(1, :)==p1(3, :)) && ~all(p1(2, :) == p1(3, :))
-                    if ~all(points_set_convex{i}.points(:) == points_set_nonred{i}.points(:))
-                        points_i = unique(points_set_convex{i}.points, 'rows');
-                        dim_i = size(points_i);
-                        points_all = unique(all_points, 'rows');
-                        dim_all = size(points_all);
-                        if dim_i(1) >= 3 && dim_all(1) >= 3
-                            d_i = cross(points_i(1, :) - points_i(2, :), points_i(1, :) - points_i(3, :));
-                            d_all = cross(points_all(1, :) - points_all(2, :), points_all(1, :) - points_all(3, :));
-                            if points_set_convex{i}.tipo == 36
-                                if d_i(3) > 0
-                                    d_i = -d_i;
-                                end
-                                if d_all(3) > 0
-                                    d_all = -d_all;
-                                end
-                            elseif points_set_convex{i}.tipo == 33
-                                if d_i(2) > 0
-                                    d_i = -d_i;
-                                end
-                                if d_all(2) > 0
-                                    d_all = -d_all;
-                                end
-                            elseif points_set_convex{i}.tipo == 30
-                                if d_i(1) > 0
-                                    d_i = -d_i;
-                                end
-                                if d_all(1) > 0
-                                    d_all = -d_all;
-                                end
-                            end
-                            if all(str2num(rats(points_i*d_all')) >= str2num(rats(points_all(1,:)*d_all'))) && ...
-                                    any(str2num(rats(points_i*d_all')) > str2num(rats(points_all(1,:)*d_all'))) %#ok<ST2NM>
-                                all_points = [points_set_convex{i}.points];
-                            elseif ~(all(str2num(rats(points_all*d_i')) >= str2num(rats(points_i(1,:)*d_i'))) && ...
-                                    any(str2num(rats(points_all*d_i')) > str2num(rats(points_i(1,:)*d_i')))) %#ok<ST2NM>
-                                all_points = [all_points;points_set_convex{i}.points];   
-                            end
-                        elseif isempty(all_points)
-                            all_points = points_set_convex{i}.points;   
-                        end
-                    end
-                end
-            end
-        end
-        p = points_set_convex{i}.points;
-        if i > Dimension(1)
-            if ~isempty(all_points)
-                p = all_points;
-                pasar = 1;
-            end
-        end
-        if (all(p(1, :) == p(2, :)) || all(p(1, :)==p(3, :)) || all(p(2, :) == p(3, :))) && all(p(3, :) == p(4, :))
-            pasar = 0;
-        end
-
-        if  any(p(:)~=0) && pasar                               
-            mean_point = 0.3*p(1,:) + 0.3*p(2,:) + 0.4*p(3,:);
-            if i <= Dimension(1)
-                K = convex_hull(p, points_set_nonred{i}.points);
-            else
-                K = convex_hull(p, p);
-            end
-            K_dim = size(K);
-            if i < Dimension(1)
-                set(handles_surf(i), 'Visible', 'off');
-                delete(handles_surf(i));
-                set(handles_norm(i), 'Visible', 'off');
-                delete(handles_norm(i));
-
-                handles_surf(i) = patch('xdata',p(K(1:K_dim(1)-1),1), 'ydata',p(K(1:K_dim(1)-1),2), ...
-                        'zdata', p(K(1:K_dim(1)-1),3), 'FaceColor', 'g'); hold on;
-                handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
-            else
-                set(handles_surf(i), 'Visible', 'off');
-                delete(handles_surf(i));
-
-                if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'off')
-                    visibility = 'off';
-                else
-                    visibility = 'on';
-                end
-                handles_surf(i) = patch('xdata',p(K(1:K_dim(1)-1),1), 'ydata',p(K(1:K_dim(1)-1),2), ...
-                        'zdata', p(K(1:K_dim(1)-1),3), 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;                        
-            end
-        end
+            pasar = arrangetoplotCanonicPlane(pasar, i);
+        end        
+        plotPlane(handles, pasar, table_copy, i);
     end
 end
 
@@ -8501,11 +8457,294 @@ set(handles.uipushtool1, 'Enable', 'off');
 set(handles.uitoggletool6, 'enable', 'off');
 
 
-function [points_set_i_con,points_set_j_con, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXY(points_set_i_con, points_set_j_con, x, y, table_copy, ...
-    i, j, caso)
+
+function arrangetoplotPlane(table_copy, i, j)
+global Dimension handles_surf handles_norm points_set_convex;
+    
+if i < Dimension(1)                      
+  if any(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) > table_copy(j, 4)) && ...
+      any(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) < table_copy(j, 4)) && ...
+        all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) <= table_copy(i, 4)) %#ok<ST2NM> %%%OJO con la precisión
+
+            nonintersect = str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) > table_copy(j, 4); %#ok<ST2NM> %& ...
+                %all(points_set_convex{i}.points' > 0)';  
+            points_set_convex_i_aux = points_set_convex{i}.points; 
+
+            %points_set_convex{i}.points = points_set_convex{i}.points(~nonintersect', :);
+            i_first= find(~nonintersect',1);
+            if ~isempty(i_first) 
+                copia_points = [];
+                for k = 1:sum(nonintersect)
+                    copia_points = [copia_points;points_set_convex{i}.points(i_first, :)];
+                end
+                points_set_convex{i}.points(nonintersect', :) = copia_points;
+            else
+                points_set_convex{i}.points = [];
+            end
+            points_i = unique(points_set_convex{i}.points, 'rows');    
+            dim_aux = size(points_i);
+            if dim_aux(1) > 0 && dim_aux(1) < 3
+                points_set_convex{i}.points = [points_i; ...
+                    points_set_convex{j}.points(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) == table_copy(i, 4),:)]; %#ok<ST2NM>
+                points_i = unique(points_set_convex{i}.points, 'rows');
+                dim_aux = size(points_i);
+                if dim_aux(1) == 3
+                    points_set_convex{i}.points = [points_i;points_i(3,:)];
+                elseif dim_aux(1) < 3
+                    points_set_convex{i}.points = points_set_convex_i_aux;
+                end
+            elseif isempty(points_set_convex{i}.points)
+                points_set_convex{i}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{i}.points;
+                set(handles_surf(i), 'Visible', 'off');
+                delete(handles_surf(i));
+                set(handles_norm(i), 'Visible', 'off');
+                delete(handles_norm(i));
+                handles_surf(i) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
+                handles_norm(i) = quiver3(0, 0, 0, table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
+            end
+
+  elseif any(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) > table_copy(i, 4)) && ...
+      any(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) < table_copy(i, 4)) && ...
+          all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) <= table_copy(j, 4)) %#ok<ST2NM> %%%OJO con la precisión
+
+            nonintersect = str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) > table_copy(i, 4); %#ok<ST2NM> %& ...
+                    %all(points_set_convex{j}.points' > 0)';  
+            points_set_convex_j_aux = points_set_convex{j}.points; 
+
+            %points_set_convex{j}.points = points_set_convex{j}.points(~nonintersect', :);
+            j_first= find(~nonintersect',1);
+            if ~isempty(j_first)
+                copia_points = [];
+                for k = 1:sum(nonintersect)
+                    copia_points = [copia_points;points_set_convex{j}.points(j_first, :)];
+                end
+                points_set_convex{j}.points(nonintersect', :) = copia_points;                                    
+            else
+                points_set_convex{j}.points = [];
+            end
+            points_j = unique(points_set_convex{j}.points, 'rows');
+            dim_aux = size(points_j);
+            if dim_aux(1) > 0 && dim_aux(1) < 3
+                points_set_convex{j}.points = [points_j; ...
+                    points_set_convex{i}.points(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) == table_copy(j, 4),:)]; %#ok<ST2NM>
+                points_j = unique(points_set_convex{j}.points, 'rows');
+                dim_aux = size(points_j);                                    
+                if dim_aux(1) == 3
+                    points_set_convex{j}.points = [points_j;points_j(3,:)];
+                elseif dim_aux(1) < 3
+                    points_set_convex{j}.points = points_set_convex_j_aux;
+                end
+            elseif isempty(points_set_convex{j}.points)
+                points_set_convex{j}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{j}.points;
+                set(handles_surf(j), 'Visible', 'off');
+                delete(handles_surf(j));
+                set(handles_norm(j), 'Visible', 'off');
+                delete(handles_norm(j));
+                handles_surf(j) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
+                handles_norm(j) = quiver3(0, 0, 0, table_copy(j, 1), table_copy(j, 2), table_copy(j, 3), 'Color', 'red');
+            end
+  elseif all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) >= table_copy(i, 4)) && ...
+      all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) <= table_copy(j, 4)) %#ok<ST2NM>
+        points_set_convex{j}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{j}.points;
+        set(handles_surf(j), 'Visible', 'off');
+        delete(handles_surf(j));
+        set(handles_norm(j), 'Visible', 'off');
+        delete(handles_norm(j));
+        handles_surf(j) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
+        handles_norm(j) = quiver3(0, 0, 0, table_copy(j, 1), table_copy(j, 2), table_copy(j, 3), 'Color', 'red');
+  elseif all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) >= table_copy(j, 4)) && ...
+      all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) <= table_copy(i, 4)) %#ok<ST2NM>
+        points_set_convex{i}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{i}.points;
+        set(handles_surf(i), 'Visible', 'off');
+        delete(handles_surf(i));
+        set(handles_norm(i), 'Visible', 'off');
+        delete(handles_norm(i));
+        handles_surf(i) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
+        handles_norm(i) = quiver3(0, 0, 0, table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
+  end
+end
+
+function pasar = arrangetoplotCanonicPlane(pasar, i)
+global Dimension points_set_nonred points_set_convex all_points;
+
+p1 = points_set_convex{i}.points;
+if i > Dimension(1)
+    if size(unique(p1, 'rows'), 1) >= 3
+        if ~all(points_set_convex{i}.points(:) == points_set_nonred{i}.points(:))
+            points_i = unique(points_set_convex{i}.points, 'rows');
+            dim_i = size(points_i);
+            points_all = unique(all_points, 'rows');
+            dim_all = size(points_all);
+            if dim_i(1) >= 3 && dim_all(1) >= 3
+                d_i = cross(points_i(1, :) - points_i(2, :), points_i(1, :) - points_i(3, :));
+                d_all = cross(points_all(1, :) - points_all(2, :), points_all(1, :) - points_all(3, :));
+                if points_set_convex{i}.tipo == 36
+                    if d_i(3) > 0
+                        d_i = -d_i;
+                    end
+                    if d_all(3) > 0
+                        d_all = -d_all;
+                    end
+                elseif points_set_convex{i}.tipo == 33
+                    if d_i(2) > 0
+                        d_i = -d_i;
+                    end
+                    if d_all(2) > 0
+                        d_all = -d_all;
+                    end
+                elseif points_set_convex{i}.tipo == 30
+                    if d_i(1) > 0
+                        d_i = -d_i;
+                    end
+                    if d_all(1) > 0
+                        d_all = -d_all;
+                    end
+                end
+                if all(str2num(rats(points_i*d_all')) >= str2num(rats(points_all(1,:)*d_all'))) && ...
+                        any(str2num(rats(points_i*d_all')) > str2num(rats(points_all(1,:)*d_all'))) %#ok<ST2NM>
+                    all_points = [points_set_convex{i}.points];
+                elseif ~(all(str2num(rats(points_all*d_i')) >= str2num(rats(points_i(1,:)*d_i'))) && ...
+                        any(str2num(rats(points_all*d_i')) > str2num(rats(points_i(1,:)*d_i')))) %#ok<ST2NM>
+                    all_points = [all_points;points_set_convex{i}.points];   
+                end
+            elseif isempty(all_points)
+                all_points = points_set_convex{i}.points;   
+            end
+        end
+    end
+end
+
+function plotPlane(handles, pasar, table_copy, i)
+global Dimension handles_surf handles_norm points_set_nonred points_set_convex all_points;
+
+p = points_set_convex{i}.points;
+if i > Dimension(1)
+    if ~isempty(all_points)
+        p = all_points;
+        pasar = 1;
+    end
+end
+if size(unique(p, 'rows'), 1) < 3
+    pasar = 0;
+end
+
+if  any(p(:)~=0) && pasar                               
+    mean_point = 0.3*p(1,:) + 0.3*p(2,:) + 0.4*p(3,:);
+    if i <= Dimension(1)
+        K = convex_hull(p, points_set_nonred{i}.points);
+    else
+        K = convex_hull(p, p);
+    end
+    K_dim = size(K);
+    if i < Dimension(1)
+        set(handles_surf(i), 'Visible', 'off');
+        delete(handles_surf(i));
+        set(handles_norm(i), 'Visible', 'off');
+        delete(handles_norm(i));
+
+        handles_surf(i) = patch('xdata',p(K(1:K_dim(1)-1),1), 'ydata',p(K(1:K_dim(1)-1),2), ...
+                'zdata', p(K(1:K_dim(1)-1),3), 'FaceColor', 'g'); hold on;
+        handles_norm(i) = quiver3(handles.axes_simplex3D, mean_point(1),mean_point(2),mean_point(3), table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
+    else
+        set(handles_surf(i), 'Visible', 'off');
+        delete(handles_surf(i));
+
+        if strcmp(get(handles.Restriction_nonnegativity, 'Checked'), 'off')
+            visibility = 'off';
+        else
+            visibility = 'on';
+        end
+        handles_surf(i) = patch('xdata',p(K(1:K_dim(1)-1),1), 'ydata',p(K(1:K_dim(1)-1),2), ...
+                'zdata', p(K(1:K_dim(1)-1),3), 'FaceColor', 'b', 'visible', visibility, 'facealpha', .5); hold on;                        
+    end
+end
+
+function InterchangeInterceptPoints(i, canonic_plane)
+global points_set_convex points_set_nonred;
+ 
+e = 0.00005; %%%% Cambiar si se cambia precisión
+if canonic_plane == 1
+    points_i = points_set_convex{i}.points(:, 3) == 0;
+    index = find(points_i);
+    for k = 1:size(index, 1)-1
+        p1 = points_set_convex{i}.points(index(k),:);
+        for l = k+1:size(index, 1)
+            p2 = points_set_convex{i}.points(index(l),:);            
+            if ~all(abs(p1 - p2) < e)
+                paux_x = points_set_convex{i}.points(3,:);
+                paux_y = points_set_convex{i}.points(2,:);
+                if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2)                    
+                    points_set_convex{i}.points(3, :) = p1;
+                    points_set_convex{i}.points(2, :) = p2;
+                    points_set_convex{i}.points(index(k), :) = paux_x;
+                    points_set_convex{i}.points(index(l), :) = paux_y;
+                else                    
+                    points_set_convex{i}.points(3, :) = p2;
+                    points_set_convex{i}.points(2, :) = p1;
+                    points_set_convex{i}.points(index(k), :) = paux_y;
+                    points_set_convex{i}.points(index(l), :) = paux_x;
+                end                 
+                return;
+            end
+        end
+    end
+elseif canonic_plane == 2
+    points_i = points_set_convex{i}.points(:, 2) == 0;
+    index = find(points_i);
+    for k = 1:size(index, 1)-1
+        p1 = points_set_convex{i}.points(index(k),:);
+        for l = k+1:size(index, 1)
+            p2 = points_set_convex{i}.points(index(l),:);
+            if ~all(abs(p1 - p2) < e)
+                paux_x = points_set_convex{i}.points(3,:);
+                paux_z = points_set_convex{i}.points(1,:);
+                if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2)                    
+                    points_set_convex{i}.points(3, :) = p1;
+                    points_set_convex{i}.points(1, :) = p2;
+                    points_set_convex{i}.points(index(k), :) = paux_x;
+                    points_set_convex{i}.points(index(l), :) = paux_z;
+                else                    
+                    points_set_convex{i}.points(3, :) = p2;
+                    points_set_convex{i}.points(1, :) = p1;
+                    points_set_convex{i}.points(index(k), :) = paux_z;
+                    points_set_convex{i}.points(index(l), :) = paux_x;
+                end
+                return;
+            end
+        end
+    end
+elseif canonic_plane == 3
+    points_i = points_set_convex{i}.points(:, 1) == 0;
+    index = find(points_i);
+    for k = 1:size(index, 1)-1
+        p1 = points_set_convex{i}.points(index(k),:);
+        for l = k+1:size(index, 1)
+            p2 = points_set_convex{i}.points(index(l),:);
+            if ~all(abs(p1 - p2) < e)
+                paux_y = points_set_convex{i}.points(2,:);
+                paux_z = points_set_convex{i}.points(1,:);
+                if norm(points_set_nonred{i}.points(2,:)-p1) <= norm(points_set_nonred{i}.points(2,:)-p2) 
+                    points_set_convex{i}.points(2, :) = p1;
+                    points_set_convex{i}.points(1, :) = p2;
+                    points_set_convex{i}.points(index(k), :) = paux_y;
+                    points_set_convex{i}.points(index(l), :) = paux_z;
+                else                    
+                    points_set_convex{i}.points(2, :) = p2;
+                    points_set_convex{i}.points(1, :) = p1;
+                    points_set_convex{i}.points(index(k), :) = paux_z;
+                    points_set_convex{i}.points(index(l), :) = paux_y;
+                end
+                return;            
+            end
+        end
+    end
+end 
+        
+
+function [points_set_i_con,points_set_j_con, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_i_con, points_set_j_con, x, y, table_copy, ...
+    i, j, caso, calc_intersect)
 global points_set_nonred m_i m_j handles_surf handles_norm;
 e = 0.00005; %%%% Cambiar si se cambia precisión
-IsPlaneCrossIntercept = 0;
 
 d_i = table_copy(i, 1:3); % vector director de i
 d_j = table_copy(j, 1:3); % vector director de j
@@ -8568,18 +8807,6 @@ else
             points_set_nonred{j} = points_set_nonred{i};
             points_set_j_con.tipo =points_set_i_con.tipo;
         end
-    elseif ((abs(C) < e) || (abs(C2) < e)) && x == 0 && y ~= 0
-            points_set_i_con.points(2, :) = [x y 0];
-            points_set_i_con.points(4, :) = points_set_i_con.points(3, :);
-
-            points_set_j_con.points(2, :) = [x y 0];
-            points_set_j_con.points(4, :) = [x y 0];                                            
-    elseif ((abs(C) < e) || (abs(C2) < e)) && y == 0 && x ~= 0
-            points_set_i_con.points(3, :) = [x y 0];                                                
-            points_set_i_con.points(4, :) = [x y 0];
-
-            points_set_j_con.points(3, :) = [x y 0];                                                
-            points_set_j_con.points(4, :) = points_set_i_con.points(3, :);
     elseif (caso == 4 || caso == 5 || caso == 6) && x == 0 && y == 0 %&& (points_set_nonred{i}.tipo == 10 || points_set_nonred{j}.tipo == 10)           
             syms x4 y4 z4 z;
             sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
@@ -8595,19 +8822,71 @@ else
                                 (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9 || points_set_j_con.tipo == 21)
                                 if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9) && points_set_i_con.tipo == 26  %%Con eje X                                         
                                     if (caso == 4 && d_j(2) >=0 && d_i(2) <= 0)
-                                        points_set_j_con.points(1, :) = eval(sol);
-                                        points_set_i_con.points(4, :) = eval(sol); %%3    
+                                        p2 = eval(eval(sol)); 
+                                        p1_j = points_set_j_con.points(1, :); p1_i = points_set_i_con.points(4, :);
+                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(4, :) = eval(sol); %%3  
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_j(2) <=0 && d_i(2) <= 0)
-                                        points_set_j_con.points(1, :) = eval(sol);
-                                        points_set_i_con.points(2, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol)); 
+                                        p1_j = points_set_j_con.points(1, :); p1_i = points_set_i_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && points_set_j_con.tipo == 21 %%Con eje Y
                                     if (caso == 4 && d_i(2) <=0 && d_j(2) >= 0)
-                                        points_set_i_con.points(2, :) = eval(sol); 
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol)); 
+                                        p1_j = points_set_j_con.points(4, :); p1_i = points_set_i_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(2) <=0 && d_j(2) <= 0)
-                                        points_set_i_con.points(1, :) = eval(sol); 
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol)); 
+                                        p1_j = points_set_j_con.points(4, :); p1_i = points_set_i_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 end
                             end
@@ -8617,44 +8896,123 @@ else
                                 (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && (points_set_j_con.tipo == 21)
                                 if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && points_set_j_con.tipo == 26 %%Con eje X
                                     if (caso == 4 && d_i(2) >=0 && d_j(2) <= 0)
-                                        points_set_i_con.points(1, :) = eval(sol); 
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(4, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(2) <=0 && d_j(2) <= 0)
-                                        points_set_i_con.points(1, :) = eval(sol); 
-                                        points_set_j_con.points(2, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol)); 
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(2, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(2, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9) && points_set_i_con.tipo == 21 %%Con eje Y
                                     if (caso == 4 && d_j(2) <=0 && d_i(2) >= 0)
-                                        points_set_j_con.points(2, :) = eval(sol); 
-                                        points_set_i_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(2, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(2, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_j(2) <=0 && d_i(2) <= 0)
-                                        points_set_j_con.points(1, :) = eval(sol); 
-                                        points_set_i_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && (points_set_j_con.tipo == 21)
                                     if (caso == 4 && d_i(2) <=0 && d_j(2) >= 0)
-                                        points_set_i_con.points(2, :) = eval(sol); 
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(4, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(2) <=0 && d_j(2) <= 0)
-                                        points_set_i_con.points(1, :) = eval(sol); 
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(4, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 end
                             end
                         end
                     end
-                end
+                end           
+            else
+                calc_intersect = 1;
             end
     else
-        IsPlaneCrossIntercept = 1;
+        calc_intersect = 1;
     end
 end
 
-function [points_set_i_con,points_set_j_con, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptXZ(points_set_i_con, points_set_j_con, x, z, table_copy, ...
-    i, j, caso)
+function [points_set_i_con,points_set_j_con, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_i_con, points_set_j_con, x, z, table_copy, ...
+    i, j, caso, calc_intersect)
 global points_set_nonred m_i m_j handles_surf handles_norm;
 e = 0.00005; %%%% Cambiar si se cambia precisión
-IsPlaneCrossIntercept = 0;
 
 d_i = table_copy(i, 1:3); % vector director de i
 d_j = table_copy(j, 1:3); % vector director de j
@@ -8719,19 +9077,6 @@ else
             points_set_nonred{j} = points_set_nonred{i};
             points_set_j_con.tipo = points_set_i_con.tipo;
         end 
-    elseif ((abs(C) < e) || (abs(C2) < e)) && x == 0 && z ~= 0
-            points_set_i_con.points(1, :) = [x 0 z];
-            points_set_i_con.points(4, :) = points_set_i_con.points(3, :);
-
-
-            points_set_j_con.points(1, :) = [x 0 z];                                                    
-            points_set_j_con.points(4, :) = [x 0 z];
-    elseif ((abs(C) < e) || (abs(C2) < e)) && z == 0 && x ~= 0
-            points_set_i_con.points(3, :) = [x 0 z];                                                
-            points_set_i_con.points(4, :) = [x 0 z];                                                
-
-            points_set_j_con.points(3, :) = [x 0 z];                                                
-            points_set_j_con.points(4, :) = points_set_j_con.points(3, :);
     elseif (caso == 4 || caso == 5 || caso == 6) && x == 0 && z == 0 %&& (points_set_nonred{i}.tipo == 10 || points_set_nonred{j}.tipo == 10)        
             syms x4 y4 z4 z;
             sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
@@ -8747,19 +9092,71 @@ else
                                 (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16)
                                 if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 16  %%Con eje Z                                       
                                     if (caso == 4 && d_j(3) <=0 && d_i(3) >= 0)
-                                        points_set_i_con.points(3, :) = eval(sol);
-                                        points_set_j_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(3, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(3, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(3, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_j(3) <=0 && d_i(3) <= 0)
-                                        points_set_i_con.points(3, :) = eval(sol);
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(3, :); p1_j = points_set_j_con.points(4, :);
+                                        p1_i0 = points_set_nonred{i}.points(3, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(3, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 26 %%Con eje X
                                     if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
-                                        points_set_j_con.points(2, :) = eval(sol); 
-                                        points_set_i_con.points(2, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(2, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(2, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
-                                        points_set_j_con.points(2, :) = eval(sol); 
-                                        points_set_i_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(2, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(2, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 end
                             end
@@ -8768,36 +9165,89 @@ else
                                 (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16) 
                                 if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 16 %%Con eje Z
                                     if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
-                                        points_set_j_con.points(3, :) = eval(sol); 
-                                        points_set_i_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(3, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(3, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(3, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
-                                        points_set_j_con.points(3, :) = eval(sol); 
-                                        points_set_i_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(3, :);
+                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(3, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(3, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 26 %%Con eje X
                                     if (caso == 4 && d_i(3) >=0 && d_j(3) <= 0)
-                                        points_set_i_con.points(2, :) = eval(sol); 
-                                        points_set_j_con.points(2, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(2, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(2, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
-                                        points_set_i_con.points(2, :) = eval(sol); 
-                                        points_set_j_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol); 
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 end
                             end
                         end
                     end
                 end
+            else
+                calc_intersect = 1;
             end
     else
-        IsPlaneCrossIntercept = 1;
+        calc_intersect = 1;
     end
 end
 
-function [points_set_i_con,points_set_j_con, table_copy, IsPlaneCrossIntercept] = NonPositiveInterceptYZ(points_set_i_con, points_set_j_con, y, z, table_copy, ...
-    i, j, caso)
+function [points_set_i_con,points_set_j_con, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_i_con, points_set_j_con, y, z, table_copy, ...
+    i, j, caso, calc_intersect)
 global points_set_nonred m_i m_j handles_surf handles_norm;
 e = 0.00005; %%%% Cambiar si se cambia precisión
-IsPlaneCrossIntercept = 0;
 
 d_i = table_copy(i, 1:3); % vector director de i
 d_j = table_copy(j, 1:3); % vector director de j
@@ -8861,18 +9311,6 @@ else
             points_set_nonred{j} = points_set_nonred{i};
             points_set_j_con.tipo = points_set_i_con.tipo;
         end
-    elseif ((abs(C) < e) ||  (abs(C2) < e)) && y == 0 && z ~= 0
-            points_set_i_con.points(1, :) = [0 y z];
-            points_set_i_con.points(4, :) = points_set_i_con.points(3, :);
-
-            points_set_j_con.points(1, :) = [0 y z];                                                
-            points_set_j_con.points(4, :) = points_set_j_con.points(3, :);
-    elseif ((abs(C) < e) ||  (abs(C2) < e)) && z == 0 && y ~= 0
-            points_set_i_con.points(2, :) = [0 y z];                                                
-            points_set_i_con.points(4, :) = points_set_i_con.points(3, :);
-
-            points_set_j_con.points(2, :) = [0 y z];                                                
-            points_set_j_con.points(4, :) = points_set_j_con.points(3, :);
     elseif (caso == 4 || caso == 5 || caso == 6) && y == 0 && z == 0 %&& (points_set_nonred{i}.tipo == 10 || points_set_nonred{j}.tipo == 10)                 
             syms x4 y4 z4 z;
             sol = solve([num2str(table_copy(i, 1)), '*x4+', num2str(table_copy(i, 2)), '*y4+', num2str(table_copy(i, 3)), '*z4 =', num2str(table_copy(i, 4))], ...
@@ -8888,22 +9326,87 @@ else
                                 (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16)                                                        
                                 if (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 16  %%Con eje Z                                         
                                     if (caso == 4 && d_j(3) <=0 && d_i(3) >= 0)
-                                        points_set_i_con.points(2, :) = eval(sol);
-                                        points_set_j_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_j(3) <=0 && d_i(3) <= 0)
-                                        points_set_i_con.points(2, :) = eval(sol);
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(4, :);
+                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(2, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 elseif (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 21  %%Con eje Y
                                     if (caso == 4 && d_i(3) >=0 && d_j(3) <= 0)
-                                        points_set_j_con.points(1, :) = eval(sol);
-                                        points_set_i_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 5 && d_i(3) >=0 && d_j(3) >= 0)
-                                        points_set_j_con.points(1, :) = eval(sol);
-                                        points_set_i_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
-                                        points_set_j_con.points(3, :) = eval(sol);
-                                        points_set_i_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(3, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(3, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(3, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 end
                             end
@@ -8912,31 +9415,98 @@ else
                                 (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16)   
                                 if (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 16 %%Con eje Z                                          
                                     if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
-                                        points_set_j_con.points(2, :) = eval(sol);
-                                        points_set_i_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(2, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(2, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
-                                        points_set_j_con.points(2, :) = eval(sol);
-                                        points_set_i_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(2, :);
+                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(2, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(2, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 elseif (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 21  %%Con eje Y                                         
                                     if (caso == 4 && d_j(3) >=0 && d_i(3) <= 0)
-                                        points_set_i_con.points(1, :) = eval(sol);
-                                        points_set_j_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 5 && d_j(3) >=0 && d_i(3) >= 0)
-                                        points_set_i_con.points(1, :) = eval(sol);
-                                        points_set_j_con.points(4, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(4, :);
+                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(1, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(4, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     elseif (caso == 6 && d_j(3) <=0 && d_i(3) <= 0)
-                                        points_set_i_con.points(3, :) = eval(sol);
-                                        points_set_j_con.points(1, :) = eval(sol); %%3
+                                        p2 = eval(eval(sol));
+                                        p1_i = points_set_i_con.points(3, :); p1_j = points_set_j_con.points(1, :);
+                                        p1_i0 = points_set_nonred{i}.points(3, :); p1_j0 = points_set_nonred{j}.points(1, :);
+                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_i
+                                            points_set_i_con.points(3, :) = eval(sol);
+                                            calc_intersect = 1;
+                                        end
+                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                        if angulo_p2 > angulo_p1_j
+                                            points_set_j_con.points(1, :) = eval(sol); %%3
+                                            calc_intersect = 1;
+                                        end
                                     end
                                 end
                             end
                         end
                     end
                 end
-            end  
+            else
+                calc_intersect = 1;
+            end 
     else
-        IsPlaneCrossIntercept = 1;
+        calc_intersect = 1;
     end
 end
 
@@ -9248,638 +9818,39 @@ elseif plano == 3
     end
 end
 
-function [points_set_i,points_set_j, table_copy] = PlaneCrossInterceptXY(handles, points_set_i, points_set_j, table_copy, i, j, ...
-    index_1, index_2, index_3, index_4)
-global points_set_nonred;
-syms x1 y1 z1;
-e = 0.00005; %%%% Cambiar si se cambia precisión
 
-N2 = cross(points_set_j(1, :)-points_set_j(2, :), points_set_j(1, :)-points_set_j(3, :));
-C2 = dot(N2, [0 0 1]);
-N = cross(points_set_i(1, :)-points_set_i(2, :), points_set_i(1, :)-points_set_i(3, :));
-C = dot(N, [0 0 1]);
-
-if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4)) && ...
-        all(points_set_nonred{j}.points*table_copy(i, 1:3)' <= table_copy(i, 4))    
-    points_set_i = points_set_j;
-    
-    table_copy(i, :) = table_copy(j, :);
-    points_set_nonred{i} = points_set_nonred{j};
-    %points_set_i_con.tipo = points_set_j_con.tipo;
-elseif all(points_set_nonred{i}.points*table_copy(j, 1:3)' <= table_copy(j, 4)) && ...
-        all(points_set_nonred{j}.points*table_copy(i, 1:3)' >= table_copy(i, 4))    
-    points_set_j = points_set_i;
-    
-    table_copy(j, :) = table_copy(i, :);
-    points_set_nonred{j} = points_set_nonred{i};
-    %points_set_j_con.tipo = points_set_i_con.tipo;
-elseif (abs(C) < e) && (abs(C2) < e)
-    %%%% Desarrollar
-    s = get(handles.listbox_operations, 'string');
-    set(handles.listbox_operations, 'string', ...
-         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
-elseif (abs(C2) < e && points_set_nonred{i}.tipo == 1)
-    %if points_set_i(index_2, index_coor) < points_set_j(index_2, index_coor)                                                            
-    if (points_set_i(3, 3) > 0 || (points_set_i(3, 3) == 0 && points_set_i(4, 3) > 0)) ||...
-            (points_set_i(2, 3) > 0 || (points_set_i(2, 3) == 0 && points_set_i(4, 3) > 0))
-        if index_1 == 2
-            if all(points_set_i(3, :) == points_set_i(4, :))                
-                [points_set_i, points_set_j] = calcIntersect2(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);            
-            else                                    
-                [points_set_i, points_set_j] = calcIntersect(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            end
-        elseif index_1 == 3
-            if all(points_set_i(3, :) == points_set_i(4, :))
-                [points_set_i, points_set_j] = calcIntersect2(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            else
-                [points_set_i, points_set_j] = calcIntersect(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            end
-        end                    
-    elseif (points_set_j(2, 3) > 0 || (points_set_j(2, 3) == 0 && points_set_j(4, 3) > 0)) ||...
-            (points_set_j(3, 3) > 0 || (points_set_j(3, 3) == 0 && points_set_j(4, 3) > 0))
-        [points_set_i, points_set_j] = calcIntersect3(points_set_i, points_set_j, table_copy, i, j);        
-    elseif points_set_i(2, 3) == 0 && points_set_i(3, 3) == 0
-        [points_set_i, points_set_j] = calcIntersect3(points_set_i, points_set_j, table_copy, i, j);                
-    end
-elseif (abs(C) < e && points_set_nonred{j}.tipo == 1)   
-    if (points_set_j(3, 3) > 0 || (points_set_j(3, 3) == 0 && points_set_j(4, 3) > 0)) ||...
-            (points_set_j(2, 3) > 0 || (points_set_j(2, 3) == 0 && points_set_j(4, 3) > 0))
-        if index_1 == 2           
-            if all(points_set_j(3, :) == points_set_j(4, :))
-                [points_set_j, points_set_i] = calcIntersect2(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            else
-                [points_set_j, points_set_i] = calcIntersect(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            end
-        elseif index_1 == 3
-            if all(points_set_j(3, :) == points_set_j(4, :))                
-                [points_set_j, points_set_i] = calcIntersect2(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            else
-                [points_set_j, points_set_i] = calcIntersect(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            end
-        end                    
-    elseif (points_set_i(3, 3) > 0 || (points_set_i(3, 3) == 0 && points_set_i(4, 3) > 0)) ||...
-            (points_set_i(2, 3) > 0 || (points_set_i(2, 3) == 0 && points_set_i(4, 3) > 0))
-        [points_set_j, points_set_i] = calcIntersect3(points_set_j, points_set_i, table_copy, j, i);
-                
-    elseif points_set_j(2, 3) == 0 && points_set_j(3, 3) == 0       
-        [points_set_j, points_set_i] = calcIntersect3(points_set_j, points_set_i, table_copy, j, i);
-    end
-elseif ((abs(C) < e && points_set_nonred{j}.tipo ~= 1) || (abs(C2) < e && points_set_nonred{i}.tipo ~= 1))
-    %%%%% Desarrollar
-    s = get(handles.listbox_operations, 'string');
-    set(handles.listbox_operations, 'string', ...
-            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
-end
-
-
-%%%%%%
-function [points_set_i, points_set_j] = calcIntersect(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
-global points_set_nonred;
-%%%%%%%%
-
-if points_set_i(4, 1) == 0
-    index_copy = 2;
-    frontier = points_set_i(4,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(2,:); points_set_i(3,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(2,:); points_set_i(3,:)];
-    end
-elseif points_set_i(4, 2) == 0
-    index_copy = 3;
-    frontier = points_set_i(4,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(3,:); points_set_i(2,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(3,:); points_set_i(2,:)];
-    end
-else
-    index_copy = 4;
-    frontier = points_set_i(2,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(4,:); points_set_i(3,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(4,:); points_set_i(3,:)];
-    end
-end
-
-outer_points = frontier*table_copy(j, 1:3)' > table_copy(j, 4);
-if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
-    index_first = find(outer_points(:), 1, 'first');
-    index_last = find(outer_points(:), 1, 'last');
-    if index_first > 1
-        sol = findIntercept(frontier(index_first-1, :), frontier(index_first, :), table_copy, i, j);
-        if ~isempty(sol)
-            sol = [sol.x1 sol.y1 sol.z1];
-            if isempty(symvar(sol))                                                
-                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                if all([x y z] > 0)                                    
-                    if index_first == dim(1)-1
-                        frontier_aux = frontier;
-                        frontier = frontier(1:index_first-1,:);
-                        frontier(index_first,:) = [x y z];
-                        frontier = [frontier; frontier_aux(index_first:dim(1)-1,:)];
-                    else
-                        frontier(index_first, :) = [x y z];
-                    end                   
-                    m_j = (points_set_nonred{j}.points(index_2, 2)-points_set_nonred{j}.points(index_1, 2))/...
-                            (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
-                    m_i = (frontier(index_first-1, 2)-frontier(index_first, 2))/...
-                        (frontier(index_first-1, 1)-frontier(index_first, 1));
-                    
-                    if index_copy == 2 || index_copy == 4
-                        if (m_i > 0) && m_j < 0
-                            index_1 = 2; index_2 = 3;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = 3; index_2 = 2;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = 3; index_2 = 2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = 3; index_2 = 2;
-                        end
-                    elseif index_copy == 3
-                        if (m_i > 0) && m_j < 0
-                            index_1 = 3; index_2 = 2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = 2; index_2 = 3;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = 2; index_2 = 3;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = 2; index_2 = 3;
-                        end
-                    end
-                    if index_1 == 2
-                        if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y) && ...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2))
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                                points_set_j(index_4, :) = [x y z];
-                            else
-                                points_set_j(index_3, :) = [x y z];
-                            end
-                            points_set_j(index_2, :) = [x y 0];
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            end 
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)                                                                                                 
-                                        frontier(index_first, :) = [x y z];
-                                    end
-                                end
-                            end
-                        end
-                        
-                        if index_first >= dim(1)-2 
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                            end        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] >= 0)
-                                        if index_first == dim(1)-1
-                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
-                                                frontier(dim(1), :) = [x y z];
-                                            %end
-                                        else
-                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
-                                                frontier(dim(1)-1, :) = [x y z];
-                                            %end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    elseif index_1 == 3
-                        if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y && ...                            
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2)))
-                        %if (points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                                points_set_j(index_3, :) = [x y z];
-                            else
-                                points_set_j(index_4, :) = [x y z];
-                            end
-                            points_set_j(index_2, :) = [x y 0];
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                                %frontier(index_first, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            else
-                                %frontier(index_first, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z_1];
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            end  
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        frontier(index_first,:) = [x y z];
-                                    end
-                                end
-                            end
-                        end                        
-
-                        if index_first >= dim(1)-2 
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                            end
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] >= 0)
-                                        if index_first == dim(1)-1
-                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
-                                                frontier(dim(1),:) = [x y z];
-                                            %end
-                                        else
-                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
-                                                frontier(dim(1)-1, :) = [x y z];
-                                            %end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end                                        
-                end
-            end
-        end
-    end
-    if index_last < dim(1)-1
-        sol = findIntercept(frontier(index_last+1, :), frontier(index_last, :), table_copy, i, j);
-        if ~isempty(sol)
-            sol = [sol.x1 sol.y1 sol.z1];
-            if isempty(symvar(sol))                                                
-                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                if all([x y z] > 0)                           
-                    if index_last == index_first
-                        frontier_aux = frontier;
-                        frontier = frontier(1:index_last,:);
-                        frontier(index_last+1,:) = [x y z];
-                        frontier = [frontier; frontier_aux(index_last+1:dim(1)-1,:)];
-                    else
-                        frontier(index_last, :) = [x y z];
-                    end
-                    
-                    m_j = (points_set_nonred{j}.points(index_2, 2)-points_set_nonred{j}.points(index_1, 2))/...
-                            (points_set_nonred{j}.points(index_2, 1)-points_set_nonred{j}.points(index_1, 1));
-                    m_i = (frontier(index_last+1, 2)-frontier(index_last, 2))/...
-                        (frontier(index_last+1, 1)-frontier(index_last, 1));
-                    
-                    if index_copy == 2 || index_copy == 4
-                        if (m_i > 0) && m_j < 0
-                            index_1 = 2; index_2 = 3;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = 3; index_2 = 2;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = 3; index_2 = 2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = 3; index_2 = 2;
-                        end
-                    elseif index_copy == 3
-                        if (m_i > 0) && m_j < 0
-                            index_1 = 3; index_2 = 2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = 2; index_2 = 3;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = 2; index_2 = 3;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = 2; index_2 = 3;
-                        end
-                    end
-                    if index_1 == 2
-                        if (points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y && ...                            
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2)))
-                        %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                                points_set_j(index_3, :) = [x y z];
-                            else
-                                points_set_j(index_4, :) = [x y z];
-                            end
-                            points_set_j(index_1, :) = [x y 0];
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
-                            end                                        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_last == index_first
-                                            frontier(index_last+1,:) = [x y z];
-                                        else
-                                            frontier(index_last, :) = [x y z];
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                        if index_last == 1 
-                            if points_set_j(index_4, 1) == points_set_j(index_2, 1) && points_set_j(index_4, 2) == points_set_j(index_2, 2)
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            end
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] >= 0)
-                                        %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
-                                            frontier(index_last, :) = [x y z];
-                                        %end
-                                    end
-                                end
-                            end
-                        end
-                    elseif index_1 == 3
-                        
-                        if ((points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y) &&...
-                            (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2)))
-                        %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                                points_set_j(index_4, :) = [x y z];
-                            else
-                                points_set_j(index_3, :) = [x y z];
-                            end
-                            points_set_j(index_1, :) = [x y 0];
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
-                            end                                        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        %if index_last == index_first
-                                            frontier(index_last+1,:) = [x y z];
-                                        %else
-                                            frontier(index_last, :) = [x y z];
-                                        %end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if index_last == 1 
-                        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                        end
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
-                                        frontier(index_last, :) = [x y z];
-                                    %end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if index_last - index_first > 1
-        frontier = [frontier(1:index_first,:);frontier(index_last:dim(1)-1,:)];
-    end
-    dim = size(frontier);
-    points_set_i = points_set_i(1, :);
-    if index_copy == 3
-        points_set_i = [points_set_i;frontier(dim(1),:);frontier(dim(1)-1,:);frontier(1,:)];
-    elseif index_copy == 2
-        points_set_i = [points_set_i;frontier(dim(1)-1,:);frontier(dim(1),:);frontier(1,:)];
-    else
-        points_set_i = [points_set_i;frontier(1,:);frontier(dim(1),:);frontier(dim(1)-1,:)];
-    end
-    for k = 2:dim(1)-2
-        points_set_i(3+k, :) = frontier(k,:);
-    end
-elseif all(outer_points(:)==1)
-    points_set_i = points_set_i(1:4, :);
-    if index_copy == 3
-        points_set_i(3,:) = points_set_i(4, :);
-        points_set_i(4,:) = points_set_i(3, :);
-    elseif index_copy == 2
-        points_set_i(2,:) = points_set_i(4, :);
-        points_set_i(4,:) = points_set_i(3, :);
-    else                        
-        points_set_i(4,:) = points_set_i(3, :);
-    end
-    [points_set_i, points_set_j] = calcIntersect3(points_set_i, points_set_j, table_copy, i, j);
-    %%%%%
-end
-
-
-
-%%%%%%%%
-function [points_set_i, points_set_j] = calcIntersect2(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
 %%%%%%%
-sol = findIntercept(points_set_i(index_1, :), points_set_i(index_2, :), table_copy, i, j);
-if ~isempty(sol) 
-    sol = [sol.x1 sol.y1 sol.z1];
-    if isempty(symvar(sol))                                                
-        x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-        if all([x y z] > 0)
-            if index_1 == 2
-                if points_set_i(index_1, 1) <= x && points_set_i(index_1, 2) >= y                                
-                    points_set_i(4, :) = [x y z];                           
-                end
-            else
-                if points_set_i(index_1, 1) >= x && points_set_i(index_1, 2) <= y                                
-                    points_set_i(4, :) = [x y z];                           
-                end
-            end
-            m_j = (points_set_j(index_1, 2)-points_set_j(index_2, 2))/...
-                (points_set_j(index_1, 1)-points_set_j(index_2, 1));
-            m_i = (points_set_i(index_1, 2)-points_set_i(index_2, 2))/...
-                (points_set_i(index_1, 1)-points_set_i(index_2, 1));          
-            
-            outer_points = [points_set_i(index_1, :); points_set_i(index_2, :)]*table_copy(j, 1:3)' > table_copy(j, 4);
-            index_first = find(outer_points(:)==0, 1, 'first');
-            if (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 1)
-                index_first = 3; index_second = 2;
-            elseif (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 2)
-                index_first = 2; index_second = 3;
-            elseif (m_i < 0 && m_j > 0)
-                index_first = 2; index_second = 3;            
-            end
-            
-            if (points_set_j(index_first, 1) <= x && points_set_j(index_first, 2) >= y) || ...
-                    (points_set_j(index_first, 1) >= x && points_set_j(index_first, 2) <= y) && ...
-                    (points_set_j(index_2, 1) <= x <= points_set_j(index_1, 1) && points_set_j(index_2, 2) <= y <= points_set_j(index_1, 2) || ...
-                            points_set_j(index_1, 1) <= x <= points_set_j(index_2, 1) && points_set_j(index_1, 2) <= y <= points_set_j(index_2, 2))
-            %if points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y
-                if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 2) == points_set_j(index_second, 2)
-                %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
-                    points_set_j(index_4, :) = [x y z];
-                else
-                    points_set_j(index_3, :) = [x y z];                  
-                end
-                points_set_j(index_first, :) = [x y 0];
-                %minxyz(3) = min([minxyz(3) z]);                                
-            else
-                if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 2) == points_set_j(index_second, 2)
-                %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
-                    %points_set_i(4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
-                    sol = findIntercept(points_set_j(index_first, :), points_set_j(index_4, :), table_copy, i, j);
-                else
-                    %points_set_i(4, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z_1];
-                    sol = findIntercept(points_set_j(index_first, :), points_set_j(index_3, :), table_copy, i, j);
-                end                                
-                if ~(isempty(sol))
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))
-                        x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                        if all([x y z] > 0)
-                            points_set_i(4, :) = [x y z];
-                        end
-                    end
-                end
-            end
-            if points_set_j(index_3, 1) == points_set_j(index_second, 1) && points_set_j(index_3, 2) == points_set_j(index_second, 2)        
-                sol = findIntercept(points_set_j(index_3, :), points_set_j(index_second, :), table_copy, i, j);
-            else
-                sol = findIntercept(points_set_j(index_4, :), points_set_j(index_second, :), table_copy, i, j);                    
-            end
-            if ~(isempty(sol))
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))
-                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                    if all([x y z] > 0)
-                        points_set_i(index_2, :) = [x y z];
-                    end
-                end
-            end
-        end        
-    end        
-end
-
-%%%%%
-function [points_set_i, points_set_j] = calcIntersect3(points_set_i, points_set_j, table_copy, i, j)
-global points_set_nonred;
-
-if points_set_j(2,1) > 0
-    sol = findIntercept(points_set_j(2, :), points_set_j(1, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                points_set_i(4, :) = [x y z];
-                points_set_j(1, :) = [x y z];
-            end
-        end
-    end
-    sol = findIntercept(points_set_nonred{j}.points(2,:), points_set_nonred{j}.points(1,:), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                points_set_i(2, :) = [x y z];                
-            end
-        end
-    end
-else
-    sol = findIntercept(points_set_j(2, :), points_set_j(1, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                points_set_i(2, :) = [x y z];
-                points_set_j(1, :) = [x y z];
-            end
-        end
-    end
-end
-
-if points_set_j(3,2) > 0
-    sol = findIntercept(points_set_j(3, :), points_set_j(4, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                if all(points_set_i(4, :) == points_set_i(3, :))
-                    points_set_i(4, :) = [x y z];
-                else
-                    points_set_i(5, :) = [x y z];
-                end
-                points_set_j(4, :) = [x y z];
-            end
-        end
-    end
-    sol = findIntercept(points_set_nonred{j}.points(3,:), points_set_nonred{j}.points(4,:), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                if all(points_set_i(3, :) == points_set_i(4, :))
-                    points_set_i(4, :) = [x y z];
-                end
-                points_set_i(3, :) = [x y z];                
-            end
-        end
-    end
-else
-    sol = findIntercept(points_set_j(3, :), points_set_j(4, :), table_copy, i, j);
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                 if all(points_set_i(3, :) == points_set_i(4, :))
-                    points_set_i(4, :) = [x y z];
-                end
-                points_set_i(3, :) = [x y z];
-                points_set_j(4, :) = [x y z];
-            end
-        end
-    end
-end
-
+% function sol = findIntercept2(p1, p2, table_copy, i, j)
+% syms x1 y1 z1;
+% 
+% d = p1 - p2;
+% 
+% sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+%     [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+%     [num2str(d(2)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(y1-', num2str(p1(2)), ') = 0'], ...
+%     [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+% if ~isempty(sol)                     
+%     sol1 = [sol.x1 sol.y1 sol.z1];
+% else
+%     sol1 = x1;                 
+% end
+% if isempty(sol) || ~isempty(symvar(sol1)) 
+%     sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+%         [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+%         [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], ...
+%         [num2str(d(3)), '*(y1-', num2str(p1(2)), ')-',num2str(d(2)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+% end
+% if ~isempty(sol)                     
+%     sol1 = [sol.x1 sol.y1 sol.z1];
+% else
+%     sol1 = x1;                 
+% end
+% if isempty(sol) || ~isempty(symvar(sol1)) 
+%     sol = solve([num2str(table_copy(i, 1)), '*x1+', num2str(table_copy(i, 2)), '*y1+', num2str(table_copy(i, 3)), '*z1 =', num2str(table_copy(i, 4))], ...
+%         [num2str(table_copy(j, 1)), '*x1+', num2str(table_copy(j, 2)), '*y1+', num2str(table_copy(j, 3)), '*z1 =', num2str(table_copy(j, 4))], ...
+%         [num2str(d(3)), '*(y1-', num2str(p1(2)), ')-',num2str(d(2)), '*(z1-', num2str(p1(3)), ') = 0'], ...
+%         [num2str(d(3)), '*(x1-', num2str(p1(1)), ')-',num2str(d(1)), '*(z1-', num2str(p1(3)), ') = 0'], x1, y1, z1);
+% end
 
 %%%%%%%
 function sol = findIntercept(p1, p2, table_copy, i, j)
@@ -9912,1653 +9883,322 @@ if isempty(sol) || ~isempty(symvar(sol1))
 end
 
 
-function [points_set_i,points_set_j, table_copy] = PlaneCrossInterceptXZ(handles, points_set_i, points_set_j, table_copy, i, j, ...
-    index_1, index_2, index_3, index_4)
-global points_set_nonred;
-syms x1 y1 z1;
+%%%%%%
+function table_copy = PlaneCrossIntercept(handles, table_copy, i, j)
+global points_set_nonred indexset1 Dimension points_set_convex handles_surf handles_norm;
+
 e = 0.00005; %%%% Cambiar si se cambia precisión
 
-N2 = cross(points_set_j(1, :)-points_set_j(2, :), points_set_j(1, :)-points_set_j(3, :));
-C2 = dot(N2, [0 1 0]);
-N = cross(points_set_i(1, :)-points_set_i(2, :), points_set_i(1, :)-points_set_i(3, :));
-C = dot(N, [0 1 0]);
-
 if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4)) && ...
-        all(points_set_nonred{j}.points*table_copy(i, 1:3)' <= table_copy(i, 4))    
-    points_set_i = points_set_j;
+        all(points_set_nonred{j}.points*table_copy(i, 1:3)' <= table_copy(i, 4))
     
-    table_copy(i, :) = table_copy(j, :);
-    points_set_nonred{i} = points_set_nonred{j};
-    %points_set_i_con.tipo = points_set_j_con.tipo;
+    %points_set_i_con.points = points_set_j_con.points;
+    
+    %table_copy(i, :) = table_copy(j, :);
+    %points_set_nonred{i} = points_set_nonred{j};
+    %points_set_i_con.tipo =points_set_j_con.tipo;
+    points_set_convex{i}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{i}.points;
+    set(handles_surf(i), 'Visible', 'off');
+    delete(handles_surf(i));
+    set(handles_norm(i), 'Visible', 'off');
+    delete(handles_norm(i));
+    handles_surf(i) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
+    handles_norm(i) = quiver3(0, 0, 0, table_copy(i, 1), table_copy(i, 2), table_copy(i, 3), 'Color', 'red');
 elseif all(points_set_nonred{i}.points*table_copy(j, 1:3)' <= table_copy(j, 4)) && ...
         all(points_set_nonred{j}.points*table_copy(i, 1:3)' >= table_copy(i, 4))    
-    points_set_j = points_set_i;
+    %points_set_j_con.points = points_set_i_con.points;
     
-    table_copy(j, :) = table_copy(i, :);
-    points_set_nonred{j} = points_set_nonred{i};
-    %points_set_j_con.tipo = points_set_i_con.tipo;
-elseif (abs(C) < e) && (abs(C2) < e)
-    %%%% Desarrollar
-    s = get(handles.listbox_operations, 'string');
-    set(handles.listbox_operations, 'string', ...
-         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
-elseif (abs(C2) < e && points_set_nonred{i}.tipo == 1)
-    %if points_set_i(index_2, index_coor) < points_set_j(index_2, index_coor)                                                            
-    if (points_set_i(3, 2) > 0 || (points_set_i(3, 2) == 0 && points_set_i(4, 2) > 0)) ||...
-            (points_set_i(1, 2) > 0 || (points_set_i(1, 2) == 0 && points_set_i(4, 2) > 0))
-        if index_1 == 1
-            if all(points_set_i(3, :) == points_set_i(4, :))                
-                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);            
-            else                                    
-                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            end
-        elseif index_1 == 3
-            if all(points_set_i(3, :) == points_set_i(4, :))
-                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            else
-                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            end
-        end                    
-    elseif (points_set_j(1, 2) > 0 || (points_set_j(1, 2) == 0 && points_set_j(4, 2) > 0)) ||...
-            (points_set_j(3, 2) > 0 || (points_set_j(3, 2) == 0 && points_set_j(4, 2) > 0))
-        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);        
-    elseif points_set_i(1, 2) == 0 && points_set_i(3, 2) == 0
-        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);                
-    end
-elseif (abs(C) < e && points_set_nonred{j}.tipo == 1)   
-    if (points_set_j(3, 2) > 0 || (points_set_j(3, 2) == 0 && points_set_j(4, 2) > 0)) ||...
-            (points_set_j(1, 2) > 0 || (points_set_j(1, 2) == 0 && points_set_j(4, 2) > 0))
-        if index_1 == 1           
-            if all(points_set_j(3, :) == points_set_j(4, :))
-                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            else
-                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            end
-        elseif index_1 == 3
-            if all(points_set_j(3, :) == points_set_j(4, :))                
-                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            else
-                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            end
-        end                    
-    elseif (points_set_i(3, 2) > 0 || (points_set_i(3, 2) == 0 && points_set_i(4, 2) > 0)) ||...
-            (points_set_i(1, 2) > 0 || (points_set_i(1, 2) == 0 && points_set_i(4, 2) > 0))
-        [points_set_j, points_set_i] = calcIntersect3_XZ_YZ(points_set_j, points_set_i, table_copy, j, i);
-                
-    elseif points_set_j(1, 2) == 0 && points_set_j(3, 2) == 0       
-        [points_set_j, points_set_i] = calcIntersect3_XZ__YZ(points_set_j, points_set_i, table_copy, j, i);
-    end
-elseif ((abs(C) < e && points_set_nonred{j}.tipo ~= 1) || (abs(C2) < e && points_set_nonred{i}.tipo ~= 1))
-    %%%%% Desarrollar
-    s = get(handles.listbox_operations, 'string');
-    set(handles.listbox_operations, 'string', ...
-            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
-end
-
-
-%%%%%%
-function [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
-global points_set_nonred;
-%%%%%%%%
-
-if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-    index_var1 = 1; index_var2 = 3;
-    index_comp1 = 1; index_comp2 = 3;
-elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-    index_var1 = 1; index_var2 = 2;
-    index_comp1 = 2; index_comp2 = 3;
-end
-if points_set_i(index_3, index_comp1) == 0
-    index_copy = index_var1;
-    frontier = points_set_i(index_3,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(index_var1,:); points_set_i(index_var2,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(index_var1,:); points_set_i(index_var2,:)];
-    end
-elseif points_set_i(index_3, index_comp2) == 0
-    index_copy = index_var2;
-    frontier = points_set_i(index_3,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(index_var2,:); points_set_i(index_var1,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(index_var2,:); points_set_i(index_var1,:)];
-    end
+    %table_copy(j, :) = table_copy(i, :);
+    %points_set_nonred{j} = points_set_nonred{i};
+    %points_set_j_con.tipo =points_set_i_con.tipo; 
+    points_set_convex{j}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{j}.points;
+    set(handles_surf(j), 'Visible', 'off');
+    delete(handles_surf(j));
+    set(handles_norm(j), 'Visible', 'off');
+    delete(handles_norm(j));
+    handles_surf(j) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
+    handles_norm(j) = quiver3(0, 0, 0, table_copy(j, 1), table_copy(j, 2), table_copy(j, 3), 'Color', 'red');
 else
-    index_copy = 4;
-    frontier = points_set_i(index_var1,:);
-    dim = size(points_set_i);
-    if dim(1) == 4
-        frontier = [frontier; points_set_i(index_3,:); points_set_i(index_var2,:)];
-    else
-        for k = 5:dim(1)
-            frontier = [frontier; points_set_i(k,:)];
-        end
-        frontier = [frontier; points_set_i(index_3,:); points_set_i(index_var2,:)];
-    end
-end
+    % indexset1_already = [j, setdiff(indexset1,indexset1(find(indexset1==i):Dimension(1)-1+3))];
+    indexset1_already2 = setdiff(indexset1,indexset1(find(indexset1==i):Dimension(1)-1+3));
+    indexset1_already = [j, indexset1_already2];
 
-outer_points = frontier*table_copy(j, 1:3)' > table_copy(j, 4);
-if ~all(outer_points(:)==0) && ~all(outer_points(:)==1)
-    index_first = find(outer_points(:), 1, 'first');
-    index_last = find(outer_points(:), 1, 'last');
-    if index_first > 1
-        sol = findIntercept(frontier(index_first-1, :), frontier(index_first, :), table_copy, i, j);
-        if ~isempty(sol)
-            sol = [sol.x1 sol.y1 sol.z1];
-            if isempty(symvar(sol))                                                
-                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                if all([x y z] > 0)                                    
-                    if index_first == dim(1)-1
-                        frontier_aux = frontier;
-                        frontier = frontier(1:index_first-1,:);
-                        frontier(index_first,:) = [x y z];
-                        frontier = [frontier; frontier_aux(index_first:dim(1)-1,:)];
-                    else
-                        frontier(index_first, :) = [x y z];
-                    end                   
-                    m_j = (points_set_nonred{j}.points(index_2, index_comp2)-points_set_nonred{j}.points(index_1, index_comp2))/...
-                            (points_set_nonred{j}.points(index_2, index_comp1)-points_set_nonred{j}.points(index_1, index_comp1));
-                    m_i = (frontier(index_first-1, index_comp2)-frontier(index_first, index_comp2))/...
-                        (frontier(index_first-1, index_comp1)-frontier(index_first, index_comp1));
-                    
-                    if index_copy == index_var1 || index_copy == index_3 %%%% 4
-                        if (m_i > 0) && m_j < 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        end
-                    elseif index_copy == index_var2
-                        if (m_i > 0) && m_j < 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        end
-                    end
-                    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                        var_first = x;                
-                    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                        var_first = y;
-                    end
-                    if index_1 == index_var1
-                        if (points_set_j(index_2, index_comp1) <= var_first && points_set_j(index_2, index_comp2) >= z) && ...
-                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
-                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2))
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
-                                points_set_j(index_4, :) = [x y z];
-                            else
-                                points_set_j(index_3, :) = [x y z];
-                            end
-                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                                points_set_j(index_2, :) = [x 0 z];
-                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                                points_set_j(index_2, :) = [0 y z];
-                            end
-                        else
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            end 
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)                                                                                                 
-                                        frontier(index_first, :) = [x y z];
-                                    end
-                                end
-                            end
-                        end
-                        
-                        if index_first >= dim(1)-2 
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                            end        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] >= 0)
-                                        if index_first == dim(1)-1
-                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
-                                                frontier(dim(1), :) = [x y z];
-                                            %end
-                                        else
-                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
-                                                frontier(dim(1)-1, :) = [x y z];
-                                            %end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    elseif index_1 == index_var2
-                        if (points_set_j(index_2, index_comp1) <= var_first && points_set_j(index_2, index_comp2) >= z && ...                            
-                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
-                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2)))
-                        %if (points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y)
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
-                                points_set_j(index_3, :) = [x y z];
-                            else
-                                points_set_j(index_4, :) = [x y z];
-                            end
-                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                                points_set_j(index_2, :) = [x 0 z];
-                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                                points_set_j(index_2, :) = [0 y z];
-                            end
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
-                                %frontier(index_first, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            else
-                                %frontier(index_first, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z_1];
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            end  
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        frontier(index_first,:) = [x y z];
-                                    end
-                                end
-                            end
-                        end                        
-
-                        if index_first >= dim(1)-2 
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_nonred{j}.points(index_1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-                            end
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] >= 0)
-                                        if index_first == dim(1)-1
-                                            %if frontier(dim(1), 1) >= x && frontier(dim(1), 2) >= y
-                                                frontier(dim(1),:) = [x y z];
-                                            %end
-                                        else
-                                            %if frontier(dim(1)-1, 1) >= x && frontier(dim(1)-1, 2) >= y
-                                                frontier(dim(1)-1, :) = [x y z];
-                                            %end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end                                        
-                end
-            end
-        end
-    end
-    if index_last < dim(1)-1
-        sol = findIntercept(frontier(index_last+1, :), frontier(index_last, :), table_copy, i, j);
-        if ~isempty(sol)
-            sol = [sol.x1 sol.y1 sol.z1];
-            if isempty(symvar(sol))                                                
-                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                if all([x y z] > 0)                           
-                    if index_last == index_first
-                        frontier_aux = frontier;
-                        frontier = frontier(1:index_last,:);
-                        frontier(index_last+1,:) = [x y z];
-                        frontier = [frontier; frontier_aux(index_last+1:dim(1)-1,:)];
-                    else
-                        frontier(index_last, :) = [x y z];
-                    end
-                    
-                    m_j = (points_set_nonred{j}.points(index_2, index_comp2)-points_set_nonred{j}.points(index_1, index_comp2))/...
-                            (points_set_nonred{j}.points(index_2, index_comp1)-points_set_nonred{j}.points(index_1, index_comp1));
-                    m_i = (frontier(index_last+1, index_comp2)-frontier(index_last, index_comp2))/...
-                        (frontier(index_last+1, index_comp1)-frontier(index_last, index_comp1));
-                    
-                    if index_copy == index_var1 || index_copy == index_3 %%%% 4
-                        if (m_i > 0) && m_j < 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        end
-                    elseif index_copy == index_var2
-                        if (m_i > 0) && m_j < 0
-                            index_1 = index_var2; index_2 = index_var1;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j < 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        elseif (m_i > 0) && m_j > 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        elseif (m_i < 0 || abs(m_i) == Inf) && m_j > 0
-                            index_1 = index_var1; index_2 = index_var2;
-                        end
-                    end
-                    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                        var_first = x;                
-                    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                        var_first = y;
-                    end
-                    if index_1 == index_var1
-                        if (points_set_j(index_1, index_comp1) <= var_first && points_set_j(index_1, index_comp2) >= z && ...                            
-                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
-                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2)))
-                        %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
-                                points_set_j(index_3, :) = [x y z];
-                            else
-                                points_set_j(index_4, :) = [x y z];
-                            end
-                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                                points_set_j(index_1, :) = [x 0 z];
-                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                                points_set_j(index_1, :) = [0 y z];
-                            end
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
-                            end                                        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        if index_last == index_first
-                                            frontier(index_last+1,:) = [x y z];
-                                        else
-                                            frontier(index_last, :) = [x y z];
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                        if index_last == 1 
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_2, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_2, index_comp2)
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                            end
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] >= 0)
-                                        %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
-                                            frontier(index_last, :) = [x y z];
-                                        %end
-                                    end
-                                end
-                            end
-                        end
-                    elseif index_1 == index_var2
-                        
-                        if ((points_set_j(index_1, index_comp1) <= var_first && points_set_j(index_1, index_comp2) >= z) &&...
-                            (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
-                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2)))
-                        %if (points_set_j(index_2, 1) <= x && points_set_j(index_2, 2) >= y)
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
-                                points_set_j(index_4, :) = [x y z];
-                            else
-                                points_set_j(index_3, :) = [x y z];
-                            end
-                            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                                points_set_j(index_1, :) = [x 0 z];
-                            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                                points_set_j(index_1, :) = [0 y z];
-                            end                            
-                            %minxyz(3) = min([minxyz(3) z]);
-                        else
-                            if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_4, :), table_copy, i, j);
-                            else
-                                sol = findIntercept(points_set_j(index_1, :), points_set_j(index_3, :), table_copy, i, j);
-                            end                                        
-                            if ~(isempty(sol))
-                                sol = [sol.x1 sol.y1 sol.z1];
-                                if isempty(symvar(sol))
-                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                    if all([x y z] > 0)
-                                        %if index_last == index_first
-                                            frontier(index_last+1,:) = [x y z];
-                                        %else
-                                            frontier(index_last, :) = [x y z];
-                                        %end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if index_last == 1 
-                        if points_set_j(index_4, index_comp1) == points_set_j(index_1, index_comp1) && points_set_j(index_4, index_comp2) == points_set_j(index_1, index_comp2)
-                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-                        else
-                            sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-                        end
+    for l = indexset1_already
+        istheretoplot = 0;
+    %     if ~((points_set_convex{i}.tipo == 8 || points_set_convex{i}.tipo == 9 || points_set_convex{i}.tipo == 10 || ...
+    %             points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 26) && ...
+    %        (points_set_convex{l}.tipo == 8 || points_set_convex{l}.tipo == 9 || points_set_convex{l}.tipo == 10 || ...
+    %             points_set_convex{l}.tipo == 16 || points_set_convex{l}.tipo == 21 || points_set_convex{l}.tipo == 26))
+            if size(unique(points_set_convex{i}.points, 'rows'), 1) >= 3
+                K_i = convex_hull(points_set_convex{i}.points, points_set_nonred{i}.points);
+                dim_K_i = size(K_i);
+                for s = 1:dim_K_i(1)-1
+                    p2 = points_set_convex{i}.points(K_i(s+1),:);
+                    p1 = points_set_convex{i}.points(K_i(s),:);
+                    if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
+                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
+                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
+                         all(abs(p1 - p2)< e))
+                        sol = findIntercept(p1, p2, table_copy, i, l);
                         if ~(isempty(sol))
                             sol = [sol.x1 sol.y1 sol.z1];
                             if isempty(symvar(sol))
                                 x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
                                 if all([x y z] >= 0)
-                                    %if frontier(index_last, 1) >= x && frontier(index_last, 2) >= y
-                                        frontier(index_last, :) = [x y z];
-                                    %end
+                                    p3 = [x y z];                    
+                                    first_nonzero = find(p1-p2, 1);
+                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
+                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
+            %                         if ~isnan(alpha)
+                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
+                                                %dim = size(points_set{i}.points);
+                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
+                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
+                                                    points_set_convex{i}.points(K_i(s-1+find(nonintersect',1)), :) = eval(sol);
+                                                else
+    %                                                 points_set_convex{i}.points(K_i(s+1), :) = eval(sol);
+                                                    dim = size(points_set_convex{i}.points);
+                                                    points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                end
+                                                istheretoplot = 1;
+                                            end
+                                            if all([x y z] > 0)
+                                                if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
+                                                        abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1) || ...
+                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
+                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)) )) %#ok<ST2NM>
+                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM> 
+                                                    first_index = find(nonintersect', 1);
+                                                    if ~isempty(first_index)
+                                                        points_set_convex{l}.points(first_index, :) = eval(sol);
+                                                    else
+                                                        dim = size(points_set_convex{l}.points);
+                                                        points_set_convex{l}.points(dim(1)+1, :) = eval(sol);                                            
+                                                    end
+                                                    istheretoplot = 1;
+                                                end
+                                            end
+                                        end
+            %                         end
                                 end
                             end
                         end
                     end
                 end
             end
-        end
-    end
-    if index_last - index_first > 1
-        frontier = [frontier(1:index_first,:);frontier(index_last:dim(1)-1,:)];
-    end
-    dim = size(frontier);
-    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-        points_set_i = points_set_i(2, :);
-        if index_copy == index_var2
-            points_set_i = [frontier(dim(1),:);points_set_i;frontier(dim(1)-1,:);frontier(1,:)];
-        elseif index_copy == index_var1
-            points_set_i = [frontier(dim(1)-1,:);points_set_i;frontier(dim(1),:);frontier(1,:)];
-        else
-            points_set_i = [frontier(dim(1),:);points_set_i;frontier(1,:);frontier(dim(1)-1,:)];
-        end       
-    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-        points_set_i = points_set_i(3, :);
-        if index_copy == index_var2
-            points_set_i = [frontier(dim(1),:);frontier(dim(1)-1,:);points_set_i;frontier(1,:)];
-        elseif index_copy == index_var1
-            points_set_i = [frontier(dim(1)-1,:);frontier(dim(1),:);points_set_i;frontier(1,:)];
-        else
-            points_set_i = [frontier(dim(1),:);frontier(1,:);points_set_i;frontier(dim(1)-1,:)];
-        end
-    end
-    for k = 2:dim(1)-2
-        points_set_i(3+k, :) = frontier(k,:);
-    end
-elseif all(outer_points(:)==1)
-    points_set_i = points_set_i(1:4, :);
-    if index_copy == index_var2
-        points_set_i(index_var2,:) = points_set_i(4, :);
-        points_set_i(4,:) = points_set_i(3, :);
-    elseif index_copy == index_var1
-        points_set_i(index_var1,:) = points_set_i(4, :);
-        points_set_i(4,:) = points_set_i(3, :);
-    else                        
-        points_set_i(4,:) = points_set_i(3, :);
-    end
-    [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);
-    %%%%%
-end
-
-
-%%%%%%%%
-function [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4)
-%%%%%
-if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-    index_var1 = 1; index_var2 = 3;
-    index_comp1 = 1; index_comp2 = 3;
-elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-    index_var1 = 1; index_var2 = 2;
-    index_comp1 = 2; index_comp2 = 3;
-end
-
-sol = findIntercept(points_set_i(index_1, :), points_set_i(index_2, :), table_copy, i, j);
-if ~isempty(sol) 
-    sol = [sol.x1 sol.y1 sol.z1];
-    if isempty(symvar(sol))                                                
-        x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-        if all([x y z] > 0)
-            if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                var_first = x;                
-            elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                var_first = y;
-            end
-            if index_1 == index_var1
-                if points_set_i(index_1, index_comp1) <= var_first && points_set_i(index_1, index_comp2) >= z 
-                    points_set_i(4, :) = [x y z];        
-                end
-            else                
-                if points_set_i(index_1, index_comp1) >= var_first && points_set_i(index_1, index_comp2) <= z 
-                    points_set_i(4, :) = [x y z];                           
-                end                
-            end
-            m_j = (points_set_j(index_1, index_comp2)-points_set_j(index_2, index_comp2))/...
-                (points_set_j(index_1, index_comp1)-points_set_j(index_2, index_comp1));
-            m_i = (points_set_i(index_1, index_comp2)-points_set_i(index_2, index_comp2))/...
-                (points_set_i(index_1, index_comp1)-points_set_i(index_2, index_comp1));          
-            
-            outer_points = [points_set_i(index_1, :); points_set_i(index_2, :)]*table_copy(j, 1:3)' > table_copy(j, 4);
-            index_first = find(outer_points(:)==0, 1, 'first');
-            if (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 1)
-                index_first = index_var2; index_second = index_var1;
-            elseif (m_i < 0 && (m_j < 0 || abs(m_j) == Inf) && index_first == 2)
-                index_first = index_var1; index_second = index_var2;
-            elseif (m_i < 0 && m_j > 0)
-                index_first = index_var1; index_second = index_var2;            
-            end
-            
-            if (points_set_j(index_first, index_comp1) <= var_first && points_set_j(index_first, index_comp2) >= z) || ...
-                    (points_set_j(index_first, index_comp1) >= var_first && points_set_j(index_first, index_comp2) <= z) && ...
-                    (points_set_j(index_2, index_comp1) <= var_first <= points_set_j(index_1, index_comp1) && points_set_j(index_2, index_comp2) <= z <= points_set_j(index_1, index_comp2) || ...
-                            points_set_j(index_1, index_comp1) <= var_first <= points_set_j(index_2, index_comp1) && points_set_j(index_1, index_comp2) <= z <= points_set_j(index_2, index_comp2))
-            %if points_set_j(index_1, 1) <= x && points_set_j(index_1, 2) >= y
-                if points_set_j(index_3, index_comp1) == points_set_j(index_second, index_comp1) && points_set_j(index_3, index_comp2) == points_set_j(index_second, index_comp2)
-                %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
-                    points_set_j(index_4, :) = [x y z];
-                else
-                    points_set_j(index_3, :) = [x y z];                  
-                end
-                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                    points_set_j(index_first, :) = [x 0 z];
-                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                    points_set_j(index_first, :) = [0 y z];
-                end                
-                %minxyz(3) = min([minxyz(3) z]);                                
-            else
-                if points_set_j(index_3, index_comp1) == points_set_j(index_second, index_comp1) && points_set_j(index_3, index_comp2) == points_set_j(index_second, index_comp2)
-                %if points_set_j(index_3, 1) == points_set_j(index_2, 1) && points_set_j(index_3, 2) == points_set_j(index_2, 2)
-                    %points_set_i(4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
-                    sol = findIntercept(points_set_j(index_first, :), points_set_j(index_4, :), table_copy, i, j);
-                else
-                    %points_set_i(4, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z_1];
-                    sol = findIntercept(points_set_j(index_first, :), points_set_j(index_3, :), table_copy, i, j);
-                end                                
-                if ~(isempty(sol))
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))
-                        x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                        if all([x y z] > 0)
-                            points_set_i(4, :) = [x y z];
-                        end
-                    end
-                end
-            end
-            if points_set_j(index_3, index_comp1) == points_set_j(index_second, index_comp1) && points_set_j(index_3, index_comp2) == points_set_j(index_second, index_comp2)        
-                sol = findIntercept(points_set_j(index_3, :), points_set_j(index_second, :), table_copy, i, j);
-            else
-                sol = findIntercept(points_set_j(index_4, :), points_set_j(index_second, :), table_copy, i, j);                    
-            end
-            if ~(isempty(sol))
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))
-                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                    if all([x y z] > 0)
-                        points_set_i(index_2, :) = [x y z];
-                    end
-                end
-            end
-        end        
-    end        
-end
-
-%%%%%
-function [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j)
-global points_set_nonred;
-
-if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-    index_var1 = 1; index_var2 = 3;
-    index_comp1 = 1; index_comp2 = 3;
-elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-    index_var1 = 1; index_var2 = 2;
-    index_comp1 = 2; index_comp2 = 3;
-end
-
-if points_set_j(index_var1,index_comp1) > 0
-    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_4, :), table_copy, i, j);    
-    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_3, :), table_copy, i, j);    
-    end
-    
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                points_set_i(4, :) = [x y z]; %%%%index_3 = 4
-                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                    points_set_j(index_4, :) = [x y z];
-                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                    points_set_j(index_3, :) = [x y z];
-                end                
-            end
-        end
-    end
-    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-        sol = findIntercept(points_set_nonred{j}.points(index_var1,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-        sol = findIntercept(points_set_nonred{j}.points(index_var1,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-    end
-    
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                points_set_i(index_var1, :) = [x y z];
-            end
-        end
-    end
-else
-    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_4, :), table_copy, i, j);    
-    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_var1, :), points_set_j(index_3, :), table_copy, i, j);    
-    end
-    
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                points_set_i(index_var1, :) = [x y z];
-                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                    points_set_j(index_4, :) = [x y z];
-                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                    points_set_j(index_3, :) = [x y z];
-                end                
-            end
-        end
-    end
-end
-
-if points_set_j(index_var2,index_comp2) > 0
-    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-    end    
-
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] > 0)
-                if all(points_set_i(4, :) == points_set_i(3, :))
-                    points_set_i(4, :) = [x y z];
-                else
-                    points_set_i(5, :) = [x y z];
-                end
-                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                    points_set_j(index_3, :) = [x y z];                    
-                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                    points_set_j(index_4, :) = [x y z];
-                end 
-            end
-        end
-    end
-    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-        sol = findIntercept(points_set_nonred{j}.points(index_var2,:), points_set_nonred{j}.points(index_3,:), table_copy, i, j);
-    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-        sol = findIntercept(points_set_nonred{j}.points(index_var2,:), points_set_nonred{j}.points(index_4,:), table_copy, i, j);
-    end
-    
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                if index_2 == 3
-                    if all(points_set_i(3, :) == points_set_i(4, :))
-                        points_set_i(4, :) = [x y z];
-                    end
-                end
-                points_set_i(index_2, :) = [x y z];                
-            end
-        end
-    end
-else
-    if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_3, :), table_copy, i, j);
-    elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-        sol = findIntercept(points_set_j(index_2, :), points_set_j(index_4, :), table_copy, i, j);
-    end
-
-    if ~(isempty(sol))
-        sol = [sol.x1 sol.y1 sol.z1];
-        if isempty(symvar(sol))
-            x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-            if all([x y z] >= 0)
-                if index_2 == 3
-                    if all(points_set_i(3, :) == points_set_i(4, :))
-                        points_set_i(4, :) = [x y z];
-                    end
-                end
-                points_set_i(index_var2, :) = [x y z];
-                if (index_1 == 1 && index_2 == 3) || (index_1 == 3 && index_2 == 1)
-                    points_set_j(index_3, :) = [x y z];                    
-                elseif (index_1 == 1 && index_2 == 2) || (index_1 == 2 && index_2 == 1)
-                    points_set_j(index_4, :) = [x y z];
-                end 
-            end
-        end
-    end
-end
-
-
-%%%%%%
-function [points_set_i,points_set_j, table_copy] = PlaneCrossInterceptYZ(handles, points_set_i, points_set_j, table_copy, i, j, ...
-    index_1, index_2, index_3, index_4)
-global points_set_nonred;
-syms x1 y1 z1;
-e = 0.00005; %%%% Cambiar si se cambia precisión
-
-N2 = cross(points_set_j(1, :)-points_set_j(2, :), points_set_j(1, :)-points_set_j(3, :));
-C2 = dot(N2, [1 0 0]);
-N = cross(points_set_i(1, :)-points_set_i(2, :), points_set_i(1, :)-points_set_i(3, :));
-C = dot(N, [1 0 0]);
-
-if all(points_set_nonred{i}.points*table_copy(j, 1:3)' >= table_copy(j, 4)) && ...
-        all(points_set_nonred{j}.points*table_copy(i, 1:3)' <= table_copy(i, 4))    
-    points_set_i = points_set_j;
-    
-    table_copy(i, :) = table_copy(j, :);
-    points_set_nonred{i} = points_set_nonred{j};
-    %points_set_i_con.tipo = points_set_j_con.tipo;
-elseif all(points_set_nonred{i}.points*table_copy(j, 1:3)' <= table_copy(j, 4)) && ...
-        all(points_set_nonred{j}.points*table_copy(i, 1:3)' >= table_copy(i, 4))    
-    points_set_j = points_set_i;
-    
-    table_copy(j, :) = table_copy(i, :);
-    points_set_nonred{j} = points_set_nonred{i};
-    %points_set_j_con.tipo = points_set_i_con.tipo;
-elseif (abs(C) < e) && (abs(C2) < e)
-    %%%% Desarrollar
-    s = get(handles.listbox_operations, 'string');
-    set(handles.listbox_operations, 'string', ...
-         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de planos paralelos a Z en desarrollo.'));
-elseif (abs(C2) < e && points_set_nonred{i}.tipo == 1)
-    %if points_set_i(index_2, index_coor) < points_set_j(index_2, index_coor)                                                            
-    if (points_set_i(2, 1) > 0 || (points_set_i(2, 1) == 0 && points_set_i(4, 1) > 0)) ||...
-            (points_set_i(1, 1) > 0 || (points_set_i(1, 1) == 0 && points_set_i(4, 1) > 0))
-        if index_1 == 1
-            if all(points_set_i(3, :) == points_set_i(4, :))                
-                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);            
-            else                                    
-                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            end
-        elseif index_1 == 2
-            if all(points_set_i(3, :) == points_set_i(4, :))
-                [points_set_i, points_set_j] = calcIntersect2_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            else
-                [points_set_i, points_set_j] = calcIntersect_XZ_YZ(points_set_i, points_set_j, table_copy, i, j, index_1, index_2, index_3, index_4);
-            end
-        end                    
-    elseif (points_set_j(1, 1) > 0 || (points_set_j(1, 1) == 0 && points_set_j(4, 1) > 0)) ||...
-            (points_set_j(1, 1) > 0 || (points_set_j(2, 1) == 0 && points_set_j(4, 1) > 0))
-        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);        
-    elseif points_set_i(1, 1) == 0 && points_set_i(2, 1) == 0
-        [points_set_i, points_set_j] = calcIntersect3_XZ_YZ(points_set_i, points_set_j, table_copy, i, j);                
-    end
-elseif (abs(C) < e && points_set_nonred{j}.tipo == 1)   
-    if (points_set_j(2, 1) > 0 || (points_set_j(2, 1) == 0 && points_set_j(4, 1) > 0)) ||...
-            (points_set_j(1, 1) > 0 || (points_set_j(1, 1) == 0 && points_set_j(4, 1) > 0))
-        if index_1 == 1           
-            if all(points_set_j(3, :) == points_set_j(4, :))
-                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            else
-                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            end
-        elseif index_1 == 2
-            if all(points_set_j(3, :) == points_set_j(4, :))                
-                [points_set_j, points_set_i] = calcIntersect2_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            else
-                [points_set_j, points_set_i] = calcIntersect_XZ_YZ(points_set_j, points_set_i, table_copy, j, i, index_1, index_2, index_3, index_4);
-            end
-        end                    
-    elseif (points_set_i(2, 1) > 0 || (points_set_i(2, 1) == 0 && points_set_i(4, 1) > 0)) ||...
-            (points_set_i(1, 1) > 0 || (points_set_i(1, 1) == 0 && points_set_i(4, 1) > 0))
-        [points_set_j, points_set_i] = calcIntersect3_XZ_YZ(points_set_j, points_set_i, table_copy, j, i);
-                
-    elseif points_set_j(1, 1) == 0 && points_set_j(2, 1) == 0       
-        [points_set_j, points_set_i] = calcIntersect3_XZ_YZ(points_set_j, points_set_i, table_copy, j, i);
-    end
-elseif ((abs(C) < e && points_set_nonred{j}.tipo ~= 1) || (abs(C2) < e && points_set_nonred{i}.tipo ~= 1))
-    %%%%% Desarrollar
-    s = get(handles.listbox_operations, 'string');
-    set(handles.listbox_operations, 'string', ...
-            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 7 de plano paralelo a Z y de tipo distinto a 1 con limites interiores en desarrollo.'));
-end
-
-
-%%%%%
-function [points_set_i, points_set_j] = ZParalelPlanesInterceptXY(handles, points_set_i, points_set_j, ...
-    x, y, table_copy, i, j, index_1, index_2, index_3, index_4)
-%global minxyz;
-e = 0.00005; %%%% Cambiar si se cambia precisión
-
-syms x1 y1 z1;
-
-N2 = cross(points_set_j(1,:)-points_set_j(2,:), points_set_j(1,:)-points_set_j(3,:));
-N = cross(points_set_i(1,:)-points_set_i(2,:), points_set_i(1,:)-points_set_i(3,:));   
-C2 = dot(N2, [0 0 1]); C = dot(N, [0 0 1]);
-
-if (abs(C2) < e) && (abs(C) < e)         
-    if points_set_i(index_3,1) == points_set_i(index_1,1) && ...
-            points_set_i(index_3,2) == points_set_i(index_1,2)
-        if points_set_i(index_4, 3) == points_set_i(index_3, 3) %%%% Prueba 20/01  22/01
-            %minxyz(3) = min([points_set_j(4, 3) points_set_i(index_4, 3)]);
-            if points_set_j(index_4, 3) == points_set_j(index_3, 3)                
-                points_set_i(index_3, :) = [x y points_set_i(index_4, 3)];
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2) points_set_i(index_4, 3)];
-
-                if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x                    
-                    points_set_j(index_4, :) = [x y points_set_j(index_4, 3)];
-                    points_set_j(index_3, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) points_set_j(index_3, 3)];
-                end
-            else                    
-                %x1 = x; y1 = y; syms z1;
-                sol = findIntercept(points_set_j(index_3,:), points_set_j(index_4,:), table_copy, i, j);
-                if ~isempty(sol)
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))                                                
-                        x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                        if all([x_1 y_1 z_1] > 0)
-                            if points_set_j(3, 2) <= y_1 && points_set_j(3, 1) >= x_1
-                                points_set_j(index_4, :) = [x_1 y_1 z_1];
-                            end
-                            
-                            points_set_i(index_3, :) = [x_1 y_1 z_1];
-                            points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2) z_1];
-                        end
-                    else
-                        if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                           points_set_j(index_4, :) = [x y points_set_j(index_4, 3)];
-                        end
-                        
-                        points_set_i(index_3, :) = [x y points_set_i(index_3, 3)];
-                        
-                        %%%%% Desarrollar
-                        s = get(handles.listbox_operations, 'string');
-                        set(handles.listbox_operations, 'string', ...
-                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                    end
-                else
-                    if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                        points_set_j(index_4, :) = [x y points_set_j(index_4, 3)];
-                    end
-                    
-                    points_set_i(index_3, :) = [x y points_set_i(index_3, 3)];
-                    
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            end
-        else
-            %x1 = x; y1 = y; syms z1; 
-            sol = findIntercept(points_set_i(index_3,:), points_set_i(index_4,:), table_copy, i, j);
-            if ~isempty(sol)
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))                                                
-                    x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                    if all([x_1 y_1 z_1] > 0)                                                    
-                        points_set_i(index_3, :) = [x_1 y_1 z_1];
-
-                        if points_set_j(3, 2) <= y_1 && points_set_j(3, 1) >= x_1
-                            %minxyz(3) = min([minxyz(3) z]);
-                            if points_set_j(index_4, 3) == points_set_j(index_3, 3)
-                                points_set_j(index_4, :) = [x_1 y_1 z_1];
-                                points_set_j(index_3, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z_1]; %%%
-                            else
-                                points_set_j(index_4, :) = [x_1 y_1 z_1];                                
+            if size(unique(points_set_convex{l}.points, 'rows'), 1) >= 3
+                K_l = convex_hull(points_set_convex{l}.points, points_set_nonred{l}.points);
+                dim_K_l = size(K_l);
+                for s = 1:dim_K_l(1)-1
+                    p2 = points_set_convex{l}.points(K_l(s+1),:);
+                    p1 = points_set_convex{l}.points(K_l(s),:);
+                    if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
+                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
+                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
+                         all(abs(p1 - p2)< e))
+                        sol = findIntercept(p1, p2, table_copy, i, l);
+                        if ~(isempty(sol))
+                            sol = [sol.x1 sol.y1 sol.z1];
+                            if isempty(symvar(sol))
+                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                if all([x y z] >= 0)
+                                    p3 = [x y z]; 
+                                    first_nonzero = find(p1-p2, 1);
+                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
+                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
+            %                         if ~isnan(alpha)
+                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
+                                                %dim = size(points_set{l}.points);
+                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM>
+                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
+                                                    points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
+                                                else
+    %                                                 points_set_convex{l}.points(K_l(s+1), :) = eval(sol);
+                                                    dim = size(points_set_convex{l}.points);
+                                                    points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                end
+                                                istheretoplot = 1;
+                                            end
+                                            if all([x y z] > 0)
+                                                if ~(watchismember(points_set_convex{i}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{i}.points, p2) || ...
+                                                        abs(alpha-1) < e && watchismember(points_set_convex{i}.points, p1) || ...
+                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) > table_copy(i, 4)) || ...
+                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) <= table_copy(i, 4)))) %#ok<ST2NM>
+                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{i}.points*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM> 
+                                                    first_index = find(nonintersect', 1);
+                                                    if ~isempty(first_index)
+                                                        points_set_convex{i}.points(first_index, :) = eval(sol);
+                                                    else
+                                                        dim = size(points_set_convex{i}.points);
+                                                        points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                    end
+                                                    istheretoplot = 1;
+                                                end
+                                            end
+                                        end
+            %                         end
+                                end
                             end
                         end
                     end
-                else
-                    points_set_i(index_3, :) = [x y points_set_i(index_3, 3)];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                        if points_set_j(index_4, 3) == points_set_j(index_3, 3)
-                            points_set_j(index_4, :) = [x y points_set_j(index_4, 3)];                            
-                        else
-                            points_set_j(index_4, :) = [x y points_set_j(index_4, 3)];                            
-                        end
-                    end
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
-            else
-                points_set_i(index_3, :) = [x y points_set_i(index_3, 3)];
-                %minxyz(3) = min([minxyz(3) z]);
-                if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                    if points_set_j(index_4, 3) == points_set_j(index_3, 3)
-                        points_set_j(index_4, :) = [x y points_set_j(index_4, 3)];                        
-                    else
-                        points_set_j(index_4, :) = [x y points_set_j(index_4, 3)];                        
+                if istheretoplot == 1 %%%&& l ~= j        
+                    arrangetoplotPlane(table_copy, i, l);
+                    if l ~= j %|| l == indexset1(Dimension(1)-1)
+                        pasar = arrangetoplotCanonicPlane(1, l);
+                        plotPlane(handles, pasar, table_copy, l);
                     end
                 end
-                s = get(handles.listbox_operations, 'string');
-                set(handles.listbox_operations, 'string', ...
-                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
             end
-        end
-    else
-        if points_set_i(index_4, 3) == points_set_i(index_3, 3) %%%% Prueba 20/01  22/01
-            %minxyz(3) = min([points_set_j(4, 3) points_set_i(index_4, 3)]);
-            if points_set_j(index_4, 3) == points_set_j(index_3, 3)                
-                points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) points_set_i(index_3, 3)];
+    %     end
+    end
 
-                if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x                    
-                    points_set_j(index_3, :) = [x y points_set_j(index_3, 3)];
-                    points_set_j(index_4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) points_set_j(index_4, 3)];
-                end
-            else                    
-                %x1 = x; y1 = y; syms z1;
-                sol = findIntercept(points_set_j(index_3,:), points_set_j(index_4,:), table_copy, i, j);
-                if ~isempty(sol)
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))                                                
-                        x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                        if all([x_1 y_1 z_1] > 0) 
-                            if points_set_j(3, 2) <= y_1 && points_set_j(3, 1) >= x_1
-                                points_set_j(index_3, :) = [x_1 y_1 z_1];
-                            end
-                            
-                            points_set_i(index_4, :) = [x_1 y_1 z_1];
-                            points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) z_1];
-                        end
-                    else
-                        if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                            points_set_j(index_3, :) = [x y points_set_j(index_3, 3)];
-                        end
-                        
-                        points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
-                        
-                        s = get(handles.listbox_operations, 'string');
-                        set(handles.listbox_operations, 'string', ...
-                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                    end
-                else
-                    if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                        points_set_j(index_3, :) = [x y points_set_j(index_3, 3)];
-                    end
-                    
-                    points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
-                    
-                    s = get(handles.listbox_operations, 'string');
-                    set(s, handles.listbox_operations, 'string', ...
-                            char('La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            end
-        else
-            %x1 = x; y1 = y; syms z1;
-            sol = findIntercept(points_set_i(index_3,:), points_set_i(index_4,:), table_copy, i, j);
-            if ~isempty(sol)
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))                                                
-                    x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                    if all([x_1 y_1 z_1] > 0)                                                    
-                        points_set_i(index_4, :) = [x_1 y_1 z_1];
-                        %minxyz(3) = min([minxyz(3) z]);
-                        if points_set_j(3, 2) <= y_1 && points_set_j(3, 1) >= x_1
-                            if points_set_j(index_4, 3) == points_set_j(index_3, 3)
-                                points_set_j(index_3, :) = [x_1 y_1 z_1];
-                                points_set_j(index_4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) z_1];
-                            else
-                                points_set_j(index_3, :) = [x_1 y_1 z_1];                                
+    for l = indexset1_already2
+        istheretoplot = 0;
+    %     if ~((points_set_convex{j}.tipo == 8 || points_set_convex{j}.tipo == 9 || points_set_convex{j}.tipo == 10 || ...
+    %             points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 26) && ...
+    %        (points_set_convex{l}.tipo == 8 || points_set_convex{l}.tipo == 9 || points_set_convex{l}.tipo == 10 || ...
+    %             points_set_convex{l}.tipo == 16 || points_set_convex{l}.tipo == 21 || points_set_convex{l}.tipo == 26))
+            if size(unique(points_set_convex{j}.points, 'rows'), 1) >= 3
+                K_j = convex_hull(points_set_convex{j}.points, points_set_nonred{j}.points);
+                dim_K_j = size(K_j);
+                for s = 1:dim_K_j(1)-1
+                    p2 = points_set_convex{j}.points(K_j(s+1),:);
+                    p1 = points_set_convex{j}.points(K_j(s),:);
+                    if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
+                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
+                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
+                         all(abs(p1 - p2)< e))
+                        sol = findIntercept(p1, p2, table_copy, j, l);
+                        if ~(isempty(sol))
+                            sol = [sol.x1 sol.y1 sol.z1];
+                            if isempty(symvar(sol))
+                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                if all([x y z] >= 0)
+                                    p3 = [x y z];                    
+                                    first_nonzero = find(p1-p2, 1);
+                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
+                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
+            %                         if ~isnan(alpha)
+                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
+                                                %dim = size(points_set{i}.points);
+                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
+                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
+                                                    points_set_convex{j}.points(K_j(s-1+find(nonintersect',1)), :) = eval(sol);
+                                                else
+    %                                                 points_set_convex{j}.points(K_j(s+1), :) = eval(sol);
+                                                    dim = size(points_set_convex{j}.points);
+                                                    points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                end   
+                                                istheretoplot = 1;
+                                            end
+                                            if all([x y z] > 0)
+                                                if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
+                                                        abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1) || ...
+                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
+                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)))) %#ok<ST2NM>
+                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM> 
+                                                    first_index = find(nonintersect', 1);
+                                                    if ~isempty(first_index)
+                                                        points_set_convex{l}.points(first_index, :) = eval(sol);
+                                                    else
+                                                        dim = size(points_set_convex{l}.points);
+                                                        points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                    end
+                                                    istheretoplot = 1;
+                                                end
+                                            end
+                                        end
+            %                         end
+                                end
                             end
                         end
                     end
-                else
-                    points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                        if points_set_j(index_4, 3) == points_set_j(index_3, 3)
-                            points_set_j(index_3, :) = [x y points_set_j(index_3, 3)];                            
-                        else
-                            points_set_j(index_3, :) = [x y points_set_j(index_3, 3)];                            
+                end
+            end
+
+            if size(unique(points_set_convex{l}.points, 'rows'), 1) >= 3
+                K_l = convex_hull(points_set_convex{l}.points, points_set_nonred{l}.points);
+                dim_K_l = size(K_l);
+                for s = 1:dim_K_l(1)-1
+                    p2 = points_set_convex{l}.points(K_l(s+1),:);
+                    p1 = points_set_convex{l}.points(K_l(s),:);
+                   if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
+                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
+                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
+                         all(abs(p1 - p2)< e))
+                        sol = findIntercept(p1, p2, table_copy, j, l);
+                        if ~(isempty(sol))
+                            sol = [sol.x1 sol.y1 sol.z1];
+                            if isempty(symvar(sol))
+                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                if all([x y z] >= 0)
+                                    p3 = [x y z]; 
+                                    first_nonzero = find(p1-p2, 1);
+                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
+                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
+            %                         if ~isnan(alpha)
+                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
+                                                %dim = size(points_set{l}.points);
+                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM>
+                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
+                                                    points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
+                                                else 
+                                                      %points_set_convex{l}.points(K_l(s+1), :) = eval(sol);
+                                                    dim = size(points_set_convex{l}.points);
+                                                    points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                end                                         
+                                                istheretoplot = 1;
+                                            end
+                                            if all([x y z] > 0)
+                                                if ~(watchismember(points_set_convex{j}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{j}.points, p2) || ...
+                                                        abs(alpha-1) < e && watchismember(points_set_convex{j}.points, p1) || ...
+                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) > table_copy(j, 4)) || ...
+                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) <= table_copy(j, 4)))) %#ok<ST2NM>
+                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{j}.points*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM> 
+                                                    first_index = find(nonintersect', 1);
+                                                    if ~isempty(first_index)
+                                                        points_set_convex{j}.points(first_index, :) = eval(sol);
+                                                    else
+                                                        dim = size(points_set_convex{j}.points);
+                                                        points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                    end
+                                                    istheretoplot = 1;
+                                                end
+                                            end
+                                        end
+            %                         end
+                                end
+                            end
                         end
                     end
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                         char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
                 end
-            else
-                points_set_i(index_4, :) = [x y points_set_i(index_4, 3)];
-                %minxyz(3) = min([minxyz(3) z]);
-                if points_set_j(3, 2) <= y && points_set_j(3, 1) >= x
-                    if points_set_j(index_4, 3) == points_set_j(index_3, 3)
-                        points_set_j(index_3, :) = [x y points_set_j(index_3, 3)];                        
-                    else
-                        points_set_j(index_3, :) = [x y points_set_j(index_3, 3)];                        
-                    end
+                if istheretoplot == 1
+                    arrangetoplotPlane(table_copy, j, l);
+                    pasar = arrangetoplotCanonicPlane(1, l);
+                    plotPlane(handles, pasar, table_copy, l);
                 end
-                s = get(handles.listbox_operations, 'string');
-                set(handles.listbox_operations, 'string', ...
-                     char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
             end
-        end
+    %     end
     end
-elseif (abs(C) < e)
-    C2_Y = dot(N2, [0 1 0]); C2_X = dot(N2, [1 0 0]); C2_Z = dot(N2, [0 0 1]);
-
-    if (abs(C2_Z) < e)
-        %%%% Desarrollar
-        s = get(handles.listbox_operations, 'string');
-        set(handles.listbox_operations, 'string', ...
-           char(s, 'La reconstrucción puede ser incompleta.', 'Caso 15 de colapso de plano paralelo a Z.'));
-    %    if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-    %        if points_set_j(index_3, 1) == points_set_j(index_1, 1) && points_set_j(index_3, 2) == points_set_j(index_1, 2)
-    %            points_set_j(index_3, :) = [x y 0];
-    %        end
-    %    else
-    %        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-    %            points_set_j(index_4, :) = [x y 0];
-    %        end
-    %    end
-    end
-    if (index_1 == 2 && index_2 == 3) && (abs(C2_X) < e)
-        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-            if x < points_set_j(index_3, 1)
-                points_set_j(index_3, :) = [x points_set_j(index_3, 2) points_set_j(index_3, 3)];
-            end                
-        else
-            if x < points_set_j(index_4, 1)            
-                points_set_j(index_4, :) = [x points_set_j(index_4, 2) points_set_j(index_4, 3)];
-            end
-        end
-    elseif (index_1 == 3 && index_2 == 2)  && (abs(C2_Y) < e)
-        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-            if y < points_set_j(index_3, 2)                
-                points_set_j(index_3, :) = [points_set_j(index_3, 1) y points_set_j(index_3, 3)];
-            end
-        else
-            if y < points_set_j(index_4, 2)
-                points_set_j(index_4, :) = [points_set_j(index_4, 1) y points_set_j(index_4, 3)];
-            end
-        end
-    end
-elseif (abs(C2) < e)
-    C_Y = dot(N, [0 1 0]); C_X = dot(N, [1 0 0]); C_Z = dot(N, [0 0 1]);
-    
-    if (abs(C_Z) < e)
-        %%%% Desarrollar
-        s = get(handles.listbox_operations, 'string');
-        set(handles.listbox_operations, 'string', ...
-               char(s, 'La reconstrucción puede ser incompleta.', 'Caso 15 de colapso de plano paralelo a Z.'));
-    %    if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 2) == points_set_i(index_2, 2)
-    %        if points_set_i(index_4, 1) == points_set_i(index_1, 1) && points_set_i(index_4, 2) == points_set_i(index_1, 2)
-    %            points_set_i(index_4, :) = [x y 0];
-    %        end
-    %    else
-    %        if points_set_i(index_3, 1) == points_set_i(index_1, 1) && points_set_i(index_3, 2) == points_set_i(index_1, 2)
-    %            points_set_i(index_3, :) = [x y 0];
-    %        end
-    %    end
-    end
-    if (index_1 == 2 && index_2 == 3) && (abs(C_Y) < e)
-        if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 2) == points_set_i(index_2, 2)
-            if y < points_set_i(index_4, 2)
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) y points_set_i(index_4, 3)];
-            end                
-        else
-            if y < points_set_i(index_3, 2)            
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) y points_set_i(index_3, 3)];
-            end
-        end
-    elseif (index_1 == 3 && index_2 == 2)  && (abs(C_X) < e)              
-        if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 2) == points_set_i(index_2, 2)
-            if x < points_set_i(index_4, 1)                
-                points_set_i(index_4, :) = [x points_set_i(index_4, 2) points_set_i(index_4, 3)];
-            end
-        else
-            if x < points_set_i(index_3, 1)
-                points_set_i(index_3, :) = [x points_set_i(index_3, 2) points_set_i(index_3, 3)];
-            end
-        end  
-    end        
 end
 
 
-function [points_set_i,points_set_j] = YParalelPlanesInterceptXZ(handles, points_set_i, points_set_j, ...
-    x, z, table_copy, i, j, index_1, index_2, index_3, index_4)
-%global minxyz;
+%%%%
+function membership = watchismember(points_set, p)
 e = 0.00005; %%%% Cambiar si se cambia precisión
-
-syms x1 y1 z1;
-
-N2 = cross(points_set_j(1,:)-points_set_j(2,:), points_set_j(1,:)-points_set_j(3,:));
-N = cross(points_set_i(1,:)-points_set_i(2,:), points_set_i(1,:)-points_set_i(3,:));
-C2 = dot(N2, [0 1 0]); C = dot(N, [0 1 0]);
-
-if (abs(C2) < e) && (abs(C) < e)
-    if points_set_i(index_3,1) == points_set_i(index_1,1) && ...
-            points_set_i(index_3,3) == points_set_i(index_1,3)
-        if points_set_i(index_4, 2) == points_set_i(index_3, 2) %%%% Prueba 20/01  22/01               
-            if points_set_j(index_4, 2) == points_set_j(index_3, 2)                
-                points_set_i(index_3, :) = [x points_set_i(index_3, 2), z];
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2) points_set_i(index_4, 3)];
-                
-                %if points_set_j(3, 3) <= z && points_set_j(3, 1) >= x
-                %%%%Revisar esta condición y el resto de la función
-                    points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
-                    points_set_j(index_3, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) points_set_j(index_3, 3)];
-                %end
-            else                   
-                %x1 = x; z1 = z; syms y1;
-                sol = findIntercept(points_set_j(index_3,:), points_set_j(index_4,:), table_copy, i, j);
-                if ~isempty(sol)
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))                                                
-                        x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                        if all([x_1 y_1 z_1] > 0)                                                    
-                            points_set_j(index_4, :) = [x_1 y_1 z_1];
-                            %minxyz(3) = min([minxyz(3) z]);                            
-                            points_set_i(index_3, :) = [x_1 y_1 z_1];
-                            points_set_i(index_4, :) = [points_set_i(index_4, 1) y_1 points_set_i(index_4, 3)];
-                        end
-                    else
-                        points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
-
-                        points_set_i(index_3, :) = [x points_set_i(index_3, 2) z];
-                        s = get(handles.listbox_operations, 'string');
-                        set(handles.listbox_operations, 'string', ...
-                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                    end
-                else
-                    points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
-
-                    points_set_i(index_3, :) = [x points_set_i(index_3, 2) z];
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            end
-        else
-            %x1 = x; z1 = z; syms y1;
-            sol = findIntercept(points_set_i(index_3,:), points_set_i(index_4,:), table_copy, i, j);
-            if ~isempty(sol)
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))                                                
-                    x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                    if all([x_1 y_1 z_1] > 0)                                                    
-                        points_set_i(index_3, :) = [x_1 y_1 z_1];
-                        %minxyz(3) = min([minxyz(3) z]);
-                        if points_set_j(index_4, 2) == points_set_j(index_3, 2)
-                            points_set_j(index_4, :) = [x_1 y_1 z_1];
-                            points_set_j(index_3, :) = [points_set_j(index_3, 1) y_1 points_set_j(index_3, 3)];
-                        else
-                            points_set_j(index_4, :) = [x_1 y_1 z_1];
-                        end
-                    end
-                else
-                    points_set_i(index_3, :) = [x points_set_i(index_3, 2) z];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    if points_set_j(index_4, 2) == points_set_j(index_3, 2)
-                        points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];                            
-                    else
-                        points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
-                    end
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            else
-                points_set_i(index_3, :) = [x points_set_i(index_3, 2) z];
-                %minxyz(3) = min([minxyz(3) z]);
-                if points_set_j(index_4, 2) == points_set_j(index_3, 2)
-                    points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];                            
-                else
-                    points_set_j(index_4, :) = [x points_set_j(index_4, 2) z];
-                end
-                s = get(handles.listbox_operations, 'string');
-                set(handles.listbox_operations, 'string', ...
-                     char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-            end
-        end
-    else
-        if points_set_i(index_4, 2) == points_set_i(index_3, 2) %%%% Prueba 20/01  22/01               
-            if points_set_j(index_4, 2) == points_set_j(index_3, 2)                
-                points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) points_set_i(index_3, 3)];
-
-                points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
-                points_set_j(index_4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) points_set_j(index_4, 3)];
-            else
-                %x1 = x; z1 = z; syms y1;
-                sol = findIntercept(points_set_j(index_3,:), points_set_j(index_4,:), table_copy, i, j);
-                if ~isempty(sol)
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))                                                
-                        x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                        if all([x_1 y_1 z_1] > 0)                                                    
-                            points_set_j(index_3, :) = [x_1 y_1 z_1];
-                            %minxyz(3) = min([minxyz(3) z]);
-                            points_set_i(index_4, :) = [x_1 y_1 z_1];
-                            points_set_i(index_3, :) = [points_set_i(index_3, 1) y_1 points_set_i(index_3, 3)];
-                        end
-                    else
-                        points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
-
-                        points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
-                        s = get(handles.listbox_operations, 'string');
-                        set(handles.listbox_operations, 'string', ...
-                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                    end
-                else
-                    points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
-
-                    points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            end
-        else
-            %x1 = x; z1 = z; syms y1;
-            sol = findIntercept(points_set_i(index_3,:), points_set_i(index_4,:), table_copy, i, j);
-            if ~isempty(sol)
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))                                                
-                    x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                    if all([x_1 y_1 z_1] > 0)                                                    
-                        points_set_i(index_4, :) = [x_1 y_1 z_1];
-                        %minxyz(3) = min([minxyz(3) z]);
-                        if points_set_j(index_4, 2) == points_set_j(index_3, 2)
-                            points_set_j(index_3, :) = [x_1 y_1 z_1];
-                            points_set_j(index_4, :) = [points_set_j(index_4, 1) y_1 points_set_j(index_4, 3)];
-                        else
-                            points_set_j(index_3, :) = [x_1 y_1 z_1];
-                        end
-                    end
-                else
-                    points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    if points_set_j(index_4, 2) == points_set_j(index_3, 2)
-                        points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];                        
-                    else
-                        points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
-                    end
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            else
-                points_set_i(index_4, :) = [x points_set_i(index_4, 2) z];
-                %minxyz(3) = min([minxyz(3) z]);
-                if points_set_j(index_4, 2) == points_set_j(index_3, 2)
-                    points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];                    
-                else
-                    points_set_j(index_3, :) = [x points_set_j(index_3, 2) z];
-                end
-                s = get(handles.listbox_operations, 'string');
-                set(handles.listbox_operations, 'string', ...
-                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-            end
-        end
-    end
-elseif (abs(C) < e)
-    C2_Z = dot(N2, [0 0 1]); C2_X = dot(N2, [1 0 0]); C2_Y = dot(N2, [0 1 0]);
-
-
-    if (abs(C2_Y) < e)
-        %%%% Desarrollar
-        s = get(handles.listbox_operations, 'string');
-        set(handles.listbox_operations, 'string', ...
-            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 16 de colapso de plano paralelo a Y.'));
-    %    if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 2) == points_set_j(index_1, 2)
-    %        if points_set_j(index_3, 1) == points_set_j(index_1, 1) && points_set_j(index_3, 3) == points_set_j(index_1, 3)
-    %            points_set_j(index_3, :) = [x 0 z];
-    %        end
-    %    else
-    %        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-    %            points_set_j(index_4, :) = [x 0 z];
-    %        end
-    %    end
-    end
-    if ((index_1 == 1 && index_2 == 3)||(index_1 == 4 && index_2 == 3)) && (abs(C2_X) < e)
-        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-            %minxyz(3) = min([minxyz(3) min([z points_set_i(index_3, 3)])]);
-            if x < points_set_j(index_3, 1)                             
-                points_set_j(index_3, :) = [x points_set_j(index_3, 2) points_set_j(index_3, 3)];
-            end
-        else
-            if x < points_set_j(index_4, 1)
-                points_set_j(index_4, :) = [x points_set_j(index_4, 2) points_set_j(index_4, 3)];
-            end        
-        end
-    elseif ((index_1 == 3 && index_2 == 1)||(index_1 == 4 && index_2 == 1))  && (abs(C2_Z) < e)
-        if points_set_j(index_4, 1) == points_set_j(index_1, 1) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-            %minxyz(1) = min([minxyz(1) min([x  points_set_i(index_3, 1)])]);
-            if z < points_set_j(index_3, 3)
-                points_set_j(index_3, :) = [points_set_j(index_3, 1)  points_set_j(index_3, 2) z];
-            end        
-        else
-            if z < points_set_j(index_4, 3)
-                points_set_j(index_4, :) = [points_set_j(index_4, 1)  points_set_j(index_4, 2) z];
-            end        
-        end  
-    end
-elseif (abs(C2) < e)
-    C_Z = dot(N, [0 0 1]); C_X = dot(N, [1 0 0]); C_Y = dot(N, [0 1 0]);
-    
-    if (abs(C_Y) < e)
-        %%%% Desarrollar
-        s = get(handles.listbox_operations, 'string');
-        set(handles.listbox_operations, 'string', ...
-             char(s, 'La reconstrucción puede ser incompleta.', 'Caso 16 de colapso de plano paralelo a Y.'));
-    %    if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
-    %        if points_set_i(index_4, 1) == points_set_i(index_1, 1) && points_set_i(index_4, 3) == points_set_i(index_1, 3)
-    %            points_set_i(index_4, :) = [x 0 z];
-    %        end
-    %    else
-    %        if points_set_i(index_3, 1) == points_set_i(index_1, 1) && points_set_i(index_3, 3) == points_set_i(index_1, 3)
-    %            points_set_i(index_3, :) = [x 0 z];
-    %        end
-    %    end
-    end
-    if ((index_1 == 1 && index_2 == 3)||(index_1 == 4 && index_2 == 3)) && (abs(C_Z) < e)
-        if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
-            %minxyz(3) = min([minxyz(3) min([z points_set_i(index_3, 3)])]);
-            if z < points_set_i(index_4, 3)                             
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2) z];
-            end        
-        else
-            if z < points_set_i(index_3, 3)
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) z];
-            end        
-        end
-    elseif ((index_1 == 3 && index_2 == 1)||(index_1 == 4 && index_2 == 1))  && (abs(C_X) < e)
-        if points_set_i(index_3, 1) == points_set_i(index_2, 1) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
-            %minxyz(1) = min([minxyz(1) min([x  points_set_i(index_3, 1)])]);
-            if x < points_set_i(index_4, 1)            
-                points_set_i(index_4, :) = [x  points_set_i(index_4, 2)  points_set_i(index_4, 3)];
-            end        
-        else
-            if x < points_set_i(index_3, 1)            
-                points_set_i(index_3, :) = [x  points_set_i(index_3, 2)  points_set_i(index_3, 3)];
-            end        
-        end  
+dim = size(points_set);
+membership = 0;
+for i = 1: dim(1)
+    if all(abs(points_set(i, :) - p) < e)
+        membership = 1;
+        break;
     end
 end
-
-
-function [points_set_i,points_set_j] = XParalelPlanesInterceptYZ(handles, points_set_i, points_set_j, ...
-    y, z, table_copy, i, j, index_1, index_2, index_3, index_4)
-%global minxyz;
-e = 0.00005; %%%% Cambiar si se cambia precisión
-
-%syms x1 y1 z1;
-N2 = cross(points_set_j(1,:)-points_set_j(2,:), points_set_j(1,:)-points_set_j(3,:));
-N = cross(points_set_i(1,:)-points_set_i(2,:), points_set_i(1,:)-points_set_i(3,:));
-C2 = dot(N2, [1 0 0]); C = dot(N, [1 0 0]);
-
-if (abs(C2) < e) && (abs(C) < e)
-    if points_set_i(index_3,2) == points_set_i(index_1,2) && ...
-            points_set_i(index_3,3) == points_set_i(index_1,3)
-        if points_set_i(index_4, 1) == points_set_i(index_3, 1) %%%% Prueba 20/01  22/01
-            if points_set_j(index_4, 1) == points_set_j(index_3, 1) %%%% Prueba 20/01  22/01                
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2)  points_set_i(index_4, 3)];
-                
-                %if points_set_j(2, 3) <= z && points_set_j(2, 2) >= y
-                %%%%Revisar esta condición y el resto de la función
-                    points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
-                    points_set_j(index_3, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) points_set_j(index_3, 3)];
-                %end
-            else
-                %y1 = y; z1 = z; syms x1;
-                sol = findIntercept(points_set_j(index_3,:), points_set_j(index_4,:), table_copy, i, j);
-                if ~isempty(sol)
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))                                                
-                        x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                        if all([x_1 y_1 z_1] > 0)                                                    
-                            points_set_j(index_4, :) = [x_1 y_1 z_1];
-                            %minxyz(3) = min([minxyz(3) z]);
-                            points_set_i(index_3, :) = [x_1 y_1 z_1];
-                            points_set_i(index_4, :) = [x_1 points_set_i(index_4, 2)  points_set_i(index_4, 3)];
-                        end
-                    else
-                        points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
-                        %minxyz(3) = min([minxyz(3) z]);
-                        points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
-                        s = get(handles.listbox_operations, 'string');
-                        set(handles.listbox_operations, 'string', ...
-                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                    end
-                else                        
-                    points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            end
-        else                
-            %y1 = y; z1 = z; syms x1;
-            sol = findIntercept(points_set_i(index_3,:), points_set_i(index_4,:), table_copy, i, j);
-            if ~isempty(sol)
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))                                                
-                    x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                    if all([x_1 y_1 z_1] > 0)                                                    
-                        points_set_i(index_3, :) = [x_1 y_1 z_1];
-                        %minxyz(3) = min([minxyz(3) z]);
-                        if points_set_j(index_4, 1) == points_set_j(index_3, 1)
-                            points_set_j(index_4, :) = [x_1 y_1 z_1];
-                            points_set_j(index_3, :) = [x_1 points_set_j(index_3, 2) points_set_j(index_3, 3)];
-                        else
-                            points_set_j(index_4, :) = [x_1 y_1 z_1];
-                        end
-                    end
-                else
-                    points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    if points_set_j(index_4, 1) == points_set_j(index_3, 1)
-                        points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];                            
-                    else
-                        points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
-                    end
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            else
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) y z];
-                %minxyz(3) = min([minxyz(3) z]);
-                if points_set_j(index_4, 1) == points_set_j(index_3, 1)
-                    points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];                            
-                else
-                    points_set_j(index_4, :) = [points_set_j(index_4, 1) y z];
-                end
-                s = get(handles.listbox_operations, 'string');
-                set(handles.listbox_operations, 'string', ...
-                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-            end
-        end
-    else
-        if points_set_i(index_4, 1) == points_set_i(index_3, 1) %%%% Prueba 20/01  22/01
-            if points_set_j(index_4, 1) == points_set_j(index_3, 1) %%%% Prueba 20/01  22/01                
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) points_set_i(index_3, 3)];
-
-                points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
-                points_set_j(index_4, :) = [points_set_j(index_4, 1) points_set_j(index_4, 2) points_set_j(index_4, 3)];
-            else                   
-                %y1 = y; z1 = z; syms x1;
-                sol = findIntercept(points_set_j(index_3,:), points_set_j(index_4,:), table_copy, i, j);
-                if ~isempty(sol)
-                    sol = [sol.x1 sol.y1 sol.z1];
-                    if isempty(symvar(sol))                                                
-                        x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                        if all([x_1 y_1 z_1] > 0)                                                    
-                            points_set_j(index_3, :) = [x_1 y_1 z_1];
-                            %minxyz(3) = min([minxyz(3) z]);
-                            points_set_i(index_4, :) = [x_1 y_1 z_1];
-                            points_set_i(index_3, :) = [x_1 points_set_i(index_3, 2) points_set_i(index_3, 3)];
-                        end
-                    else
-                        points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
-                        %minxyz(3) = min([minxyz(3) z]);
-                        points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
-                        s = get(handles.listbox_operations, 'string');
-                        set(handles.listbox_operations, 'string', ...
-                            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                    end
-                else
-                    points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            end
-        else
-            %y1 = y; z1 = z; syms x1;
-            sol = findIntercept(points_set_i(index_3,:), points_set_i(index_4,:), table_copy, i, j);
-            if ~isempty(sol)
-                sol = [sol.x1 sol.y1 sol.z1];
-                if isempty(symvar(sol))                                                
-                    x_1=eval(sol(1)); y_1=eval(sol(2)); z_1 = eval(sol(3));
-                    if all([x_1 y_1 z_1] > 0)                                                    
-                        points_set_i(index_4, :) = [x_1 y_1 z_1];
-                        %minxyz(3) = min([minxyz(3) z]);
-                        if points_set_j(index_4, 1) == points_set_j(index_3, 1)
-                            points_set_j(index_3, :) = [x_1 y_1 z_1];
-                            points_set_j(index_4, :) = [x_1 points_set_j(index_4, 2) points_set_j(index_4, 3)];
-                        else
-                            points_set_j(index_3, :) = [x_1 y_1 z_1];
-                        end
-                    end
-                else
-                    points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
-                    %minxyz(3) = min([minxyz(3) z]);
-                    if points_set_j(index_4, 1) == points_set_j(index_3, 1)
-                        points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];                            
-                    else
-                        points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
-                    end
-                    s = get(handles.listbox_operations, 'string');
-                    set(handles.listbox_operations, 'string', ...
-                        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-                end
-            else
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) y z];
-                %minxyz(3) = min([minxyz(3) z]);
-                if points_set_j(index_4, 1) == points_set_j(index_3, 1)
-                    points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];                            
-                else
-                    points_set_j(index_3, :) = [points_set_j(index_3, 1) y z];
-                end
-                s = get(handles.listbox_operations, 'string');
-                set(handles.listbox_operations, 'string', ...
-                    char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de falta de precisión en cálculo de intersecciones.'));
-            end
-        end
-    end                                                        
-elseif (abs(C) < e)
-    C2_Z = dot(N2, [0 0 1]); C2_Y = dot(N2, [0 1 0]); C2_X = dot(N2, [1 0 0]);
-
-    if (abs(C2_X) < e)
-        %%%% Desarrollar
-        s = get(handles.listbox_operations, 'string');
-        set(handles.listbox_operations, 'string', ...
-            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de colapso de plano paralelo a X.'));
-    %    if points_set_j(index_4, 2) == points_set_j(index_1, 2) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-    %        if points_set_j(index_3, 2) == points_set_j(index_1, 2) && points_set_j(index_3, 3) == points_set_j(index_1, 3)
-    %            points_set_j(index_3, :) = [0 y z];
-    %        end
-    %    else
-    %        if points_set_j(index_4, 2) == points_set_j(index_1, 2) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-    %            points_set_j(index_4, :) = [0 y z];
-    %        end
-    %    end
-    end
-    if ((index_1 == 1 && index_2 == 2)||(index_1 == 4 && index_2 == 2)) && (abs(C2_Y) < e)
-        if points_set_j(index_4, 2) == points_set_j(index_1, 2) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-            if y < points_set_j(index_3, 2)              
-                points_set_j(index_3, :) = [points_set_j(index_3, 1) y points_set_j(index_3, 3)];
-            end        
-        else
-            if y < points_set_j(index_4, 2)
-                points_set_j(index_4, :) = [points_set_j(index_4, 1) y points_set_j(index_4, 3)];
-            end
-        end
-    elseif ((index_1 == 2 && index_2 == 1)||(index_1 == 4 && index_2 == 1)) && (abs(C2_Z) < e)
-        if points_set_j(index_4, 2) == points_set_j(index_1, 2) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-            if z < points_set_j(index_3, 3)
-                points_set_j(index_3, :) = [points_set_j(index_3, 1) points_set_j(index_3, 2) z];
-            end        
-        else
-            if z < points_set_j(index_4, 3)            
-                points_set_j(index_4, :) = [points_set_j(index_4, 1) y points_set_j(index_4, 2) z];
-            end
-        end
-    end
-elseif (abs(C2) < e)
-    C_Z = dot(N, [0 0 1]); C_Y = dot(N, [0 1 0]); C_X = dot(N, [1 0 0]);
-    
-    if (abs(C_X) < e)
-        %%%% Desarrollar
-        s = get(handles.listbox_operations, 'string');
-        set(handles.listbox_operations, 'string', ...
-            char(s, 'La reconstrucción puede ser incompleta.', 'Caso 14 de colapso de plano paralelo a X.'));
-    %    if points_set_i(index_3, 2) == points_set_i(index_2, 2) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
-    %        if points_set_j(index_4, 2) == points_set_j(index_1, 2) && points_set_j(index_4, 3) == points_set_j(index_1, 3)
-    %            points_set_i(index_4, :) = [0 y z];
-    %        end
-    %    else
-    %        if points_set_j(index_3, 2) == points_set_j(index_1, 2) && points_set_j(index_3, 3) == points_set_j(index_1, 3)
-    %            points_set_i(index_3, :) = [0 y z];
-    %        end
-    %    end
-    end
-    if ((index_1 == 1 && index_2 == 2)||(index_1 == 4 && index_2 == 2)) && (abs(C_Z) < e)
-        if points_set_i(index_3, 2) == points_set_i(index_2, 2) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
-            if z < points_set_i(index_4, 3)              
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) points_set_i(index_4, 2) z];
-            end        
-        else
-            if z < points_set_i(index_3, 3)            
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) points_set_i(index_3, 2) z];
-            end
-        end
-    elseif ((index_1 == 2 && index_2 == 1)||(index_1 == 4 && index_2 == 1)) && (abs(C_Y) < e)
-        if points_set_i(index_3, 2) == points_set_i(index_2, 2) && points_set_i(index_3, 3) == points_set_i(index_2, 3)
-            if y < points_set_i(index_4, 2)
-                points_set_i(index_4, :) = [points_set_i(index_4, 1) y points_set_i(index_4, 3)];
-            end        
-        else
-            if y < points_set_i(index_3, 2)            
-                points_set_i(index_3, :) = [points_set_i(index_3, 1) y points_set_i(index_3, 3)];
-            end
-        end
-    end
-end
-
 
 %%%
 %%% Calcula el orden de los nodos para trazar un polígono convexo
@@ -11589,7 +10229,7 @@ end
 
 %if (abs(C) < e && ~(abs(points(1, 1) - points(3, 1) < e) && abs(points(3, 1) - points(2, 1)) < e) && ...
 %        ~(abs(points(1, 2) - points(3, 2) < e) && abs(points(3, 2) - points(2, 2)) < e))    
-if abs(C3) < e
+if abs(C3) < e && ~(abs(C2) < e || abs(C1) < e)
     %points_copy = sortrows(points(1:3,:), 3); %%%%ojo%%%
     %if ~(abs(points_copy(1, 1) - points_copy(2, 1)) < e  || abs(points_copy(1, 2) - points_copy(2, 2)) < e)
     %    punto1 = points_copy(1,:);
@@ -11706,7 +10346,7 @@ else
             R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
             new_points = R_x*points';
             points = new_points'; 
-        else
+        elseif ~(abs(C1) < e && abs(C2) < e)            
             theta = pi/2;
 
             R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
