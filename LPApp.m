@@ -3842,8 +3842,8 @@ else
     %indexset1 = [1:Dimension(1)-1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
     %indexset2 = 1:Dimension(1)-1; 
     %indexset2_copy = indexset2;
-    indexset1 = [2, 4, 1, 3, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3]; %% [2 3 1]; [1 2 3]
-    indexset2 = [1, 3, 4, 2];  
+    indexset1 = [3, 2, 1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3]; %% [2 3 1]; [1 2 3]
+    indexset2 = [3, 1, 2];  
     indexset2_copy = indexset2;
 end
     s = get(handles.listbox_operations, 'string');
@@ -8568,9 +8568,10 @@ function pasar = arrangetoplotCanonicPlane(pasar, i)
 global Dimension points_set_nonred points_set_convex all_points;
 
 p1 = points_set_convex{i}.points;
-if i > Dimension(1)
+if i > Dimension(1) %&& pasar == 1 
     if size(unique(p1, 'rows'), 1) >= 3
-        if ~all(points_set_convex{i}.points(:) == points_set_nonred{i}.points(:))
+        if ~(isempty(setdiff(points_set_convex{i}.points, points_set_nonred{i}.points, 'rows')))% || ...
+                %isempty(setdiff(all_points, points_set_nonred{i}.points, 'rows')))
             points_i = unique(points_set_convex{i}.points, 'rows');
             dim_i = size(points_i);
             points_all = unique(all_points, 'rows');
@@ -8676,13 +8677,49 @@ if canonic_plane == 1
                 if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2)                    
                     points_set_convex{i}.points(3, :) = p1;
                     points_set_convex{i}.points(2, :) = p2;
-                    points_set_convex{i}.points(index(k), :) = paux_x;
-                    points_set_convex{i}.points(index(l), :) = paux_y;
+                    
+                    index_common = setdiff([index(k), index(l)], [2,3]);
+                    if isempty(index_common) || size(index_common,1) == 2
+                        points_set_convex{i}.points(index(k), :) = paux_x;
+                        points_set_convex{i}.points(index(l), :) = paux_y;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_convex{i}.points(index(k), :) = paux_y;
+                            else
+                                points_set_convex{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_convex{i}.points(index(l), :) = paux_y;
+                            else
+                                points_set_convex{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end                    
                 else                    
                     points_set_convex{i}.points(3, :) = p2;
                     points_set_convex{i}.points(2, :) = p1;
-                    points_set_convex{i}.points(index(k), :) = paux_y;
-                    points_set_convex{i}.points(index(l), :) = paux_x;
+                    
+                    index_common = setdiff([index(k), index(l)], [2,3]);
+                    if isempty(index_common) || size(index_common,1) == 2
+                        points_set_convex{i}.points(index(k), :) = paux_y;
+                        points_set_convex{i}.points(index(l), :) = paux_x;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_convex{i}.points(index(k), :) = paux_y;
+                            else
+                                points_set_convex{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_convex{i}.points(index(l), :) = paux_y;
+                            else
+                                points_set_convex{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end                                       
                 end                 
                 return;
             end
@@ -8701,13 +8738,49 @@ elseif canonic_plane == 2
                 if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2)                    
                     points_set_convex{i}.points(3, :) = p1;
                     points_set_convex{i}.points(1, :) = p2;
-                    points_set_convex{i}.points(index(k), :) = paux_x;
-                    points_set_convex{i}.points(index(l), :) = paux_z;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,3]);
+                    if isempty(index_common) || size(index_common,1) == 2
+                        points_set_convex{i}.points(index(k), :) = paux_x;
+                        points_set_convex{i}.points(index(l), :) = paux_z;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_convex{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_convex{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end                       
                 else                    
                     points_set_convex{i}.points(3, :) = p2;
                     points_set_convex{i}.points(1, :) = p1;
-                    points_set_convex{i}.points(index(k), :) = paux_z;
-                    points_set_convex{i}.points(index(l), :) = paux_x;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,3]);
+                    if isempty(index_common) || size(index_common,1) == 2
+                        points_set_convex{i}.points(index(k), :) = paux_z;
+                        points_set_convex{i}.points(index(l), :) = paux_x;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_convex{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_convex{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end
                 end
                 return;
             end
@@ -8726,13 +8799,49 @@ elseif canonic_plane == 3
                 if norm(points_set_nonred{i}.points(2,:)-p1) <= norm(points_set_nonred{i}.points(2,:)-p2) 
                     points_set_convex{i}.points(2, :) = p1;
                     points_set_convex{i}.points(1, :) = p2;
-                    points_set_convex{i}.points(index(k), :) = paux_y;
-                    points_set_convex{i}.points(index(l), :) = paux_z;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,2]);
+                    if isempty(index_common) || size(index_common,1) == 2
+                        points_set_convex{i}.points(index(k), :) = paux_y;
+                        points_set_convex{i}.points(index(l), :) = paux_z;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 2
+                                points_set_convex{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(k), :) = paux_y;
+                            end
+                        else
+                            if index(k) == 2
+                                points_set_convex{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(l), :) = paux_y;
+                            end
+                        end
+                    end
                 else                    
                     points_set_convex{i}.points(2, :) = p2;
                     points_set_convex{i}.points(1, :) = p1;
-                    points_set_convex{i}.points(index(k), :) = paux_z;
-                    points_set_convex{i}.points(index(l), :) = paux_y;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,2]);
+                    if isempty(index_common) || size(index_common,1) == 2
+                        points_set_convex{i}.points(index(k), :) = paux_z;
+                        points_set_convex{i}.points(index(l), :) = paux_y;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 2
+                                points_set_convex{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(k), :) = paux_y;
+                            end
+                        else
+                            if index(k) == 2
+                                points_set_convex{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_convex{i}.points(index(l), :) = paux_y;
+                            end
+                        end
+                    end                    
                 end
                 return;            
             end
@@ -9529,27 +9638,30 @@ if points_set_nonred{i}.points(3, 1) >= points_set_nonred{j}.points(3, 1) && ...
            points_set_i_con.points(4, :) = [0 0 0];
            
            N = cross(points_set_j_con.points(1, :)-points_set_j_con.points(2, :), points_set_j_con.points(1, :)-points_set_j_con.points(3, :));
-           if N(3)~= 0
+           if any(N ~= 0) 
                 C = dot(N, [0 0 1]);
            else
                C = 1;
            end
-           if N(2)~= 0
+           if any(N ~= 0)
                C2 = dot(N, [0 1 0]);
            else
                C2 = 1;
            end
-           if N(1)~= 0
+           if any(N ~= 0) 
                 C3 = dot(N, [1 0 0]);
            else
                C3 = 1;
            end
-           if abs(C) < e && any(points(:,3) ~= 0)
-               points_set_i_con.points(4, :) = [0 0 max([points(1,3) points(2,3)])];
-           elseif abs(C2) < e && any(points(:,2) ~= 0)
-               points_set_i_con.points(4, :) = [0 max([points(1,2) points(2,2)]) 0];
-           elseif abs(C3) < e && any(points(:,1) ~= 0)
+           if (abs(C) < e && ~(abs(C2) < e || abs(C3) < e) || ...
+                   abs(C) < e && abs(C3) < e) && any(points(:,1) ~= 0)
                points_set_i_con.points(4, :) = [max([points(1,1) points(2,1)]) 0 0];
+           elseif (abs(C2) < e && ~(abs(C) < e || abs(C3) < e) || ...
+                   abs(C2) < e && abs(C) < e) && any(points(:,2) ~= 0)
+               points_set_i_con.points(4, :) = [ 0 max([points(1,2) points(2,2)]) 0];
+           elseif (abs(C3) < e && ~(abs(C) < e || abs(C2) < e) || ...
+                   abs(C2) < e && abs(C3) < e) && any(points(:,3) ~= 0)
+               points_set_i_con.points(4, :) = [ 0 0 max([points(1,3) points(2,3)])];
            end
        else
            pasar = 0;
@@ -9656,28 +9768,38 @@ elseif points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) &&
            points_set_i_con.points(4, :) = [0 0 0];
            
            N = cross(points_set_j_con.points(1, :)-points_set_j_con.points(2, :), points_set_j_con.points(1, :)-points_set_j_con.points(3, :));
-           if N(3)~= 0
+           if any(N ~= 0) 
                 C = dot(N, [0 0 1]);
            else
                C = 1;
            end
-           if N(2)~= 0
+           if any(N ~= 0)
                C2 = dot(N, [0 1 0]);
            else
                C2 = 1;
            end
-           if N(1)~= 0
+           if any(N ~= 0) 
                 C3 = dot(N, [1 0 0]);
            else
                C3 = 1;
            end
                
-           if abs(C) < e && any(points(:,3) ~= 0)
-               points_set_i_con.points(4, :) = [0 0 max([points(1,3) points(2,3)])];
-           elseif abs(C2) < e && any(points(:,2) ~= 0)
+%            if abs(C) < e && any(points(:,3) ~= 0)
+%                points_set_i_con.points(4, :) = [ 0 0 max([points(1,3) points(2,3)])];
+%            elseif abs(C2) < e && any(points(:,2) ~= 0)
+%                points_set_i_con.points(4, :) = [0 max([points(1,2) points(2,2)]) 0];
+%            elseif abs(C3) < e && any(points(:,1) ~= 0)
+%                points_set_i_con.points(4, :) = [ max([points(1,1) points(2,1)]) 0 0];
+%            end
+          if (abs(C) < e && ~(abs(C2) < e || abs(C3) < e) || ...
+                   abs(C) < e && abs(C3) < e) && any(points(:,2) ~= 0)
                points_set_i_con.points(4, :) = [0 max([points(1,2) points(2,2)]) 0];
-           elseif abs(C3) < e && any(points(:,1) ~= 0)
-               points_set_i_con.points(4, :) = [max([points(1,1) points(2,1)]) 0 0];
+           elseif (abs(C2) < e && ~(abs(C) < e || abs(C3) < e) || ...
+                   abs(C2) < e && abs(C) < e) && any(points(:,3) ~= 0)
+               points_set_i_con.points(4, :) = [ 0 0 max([points(1,3) points(2,3)])];
+           elseif (abs(C3) < e && ~(abs(C) < e || abs(C2) < e) || ...
+                   abs(C2) < e && abs(C3) < e) && any(points(:,1) ~= 0)
+               points_set_i_con.points(4, :) = [ 0 0 max([points(1,1) points(2,1)])];
            end
        else
            pasar = 0;
@@ -9720,26 +9842,36 @@ if points_set_nonred{i}.points(2, 2) >= points_set_nonred{j}.points(2, 2) && ...
            points_set_i_con.points(4, :) = [0 0 0];
            
            N = cross(points_set_j_con.points(1, :)-points_set_j_con.points(2, :), points_set_j_con.points(1, :)-points_set_j_con.points(3, :));
-           if N(3)~= 0
+           if any(N ~= 0) 
                 C = dot(N, [0 0 1]);
            else
                C = 1;
            end
-           if N(2)~= 0
+           if any(N ~= 0)
                C2 = dot(N, [0 1 0]);
            else
                C2 = 1;
            end
-           if N(1)~= 0
+           if any(N ~= 0) 
                 C3 = dot(N, [1 0 0]);
            else
                C3 = 1;
            end
-           if abs(C) < e
+%            if abs(C) < e
+%                points_set_i_con.points(4, :) = [0 0 max([points(1,3) points(2,3)])];
+%            elseif abs(C2) < e
+%                points_set_i_con.points(4, :) = [0 max([points(1,2) points(2,2)]) 0];
+%            elseif abs(C3) < e
+%                points_set_i_con.points(4, :) = [max([points(1,1) points(2,1)]) 0 0];
+%            end
+          if (abs(C) < e && ~(abs(C2) < e || abs(C3) < e) || ...
+                   abs(C) < e && abs(C3) < e) && any(points(:,3) ~= 0)
                points_set_i_con.points(4, :) = [0 0 max([points(1,3) points(2,3)])];
-           elseif abs(C2) < e
+           elseif (abs(C2) < e && ~(abs(C) < e || abs(C3) < e) || ...
+                   abs(C2) < e && abs(C) < e) && any(points(:,2) ~= 0)
                points_set_i_con.points(4, :) = [0 max([points(1,2) points(2,2)]) 0];
-           elseif abs(C3) < e
+           elseif (abs(C3) < e && ~(abs(C) < e || abs(C2) < e) || ...
+                   abs(C2) < e && abs(C3) < e) && any(points(:,1) ~= 0)
                points_set_i_con.points(4, :) = [max([points(1,1) points(2,1)]) 0 0];
            end
        else
@@ -10258,8 +10390,27 @@ if abs(C3) < e && ~(abs(C2) < e || abs(C1) < e)
 %end
     
 else
+    if (abs(C2) < e && abs(C3) < e)
+        theta = pi/2;       
+
+        R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
+        new_points = R_y*points';
+        points = new_points';               
+    elseif (abs(C1) < e && abs(C3) < e) 
+        theta = pi/2;
+
+        R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
+        new_points = R_x*points';
+        points = new_points'; 
+%     elseif ~(abs(C1) < e && abs(C2) < e)            
+%         theta = pi/2;
+% 
+%         R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
+%         new_points = R_x*points';
+%         points = new_points';
+%     end
     %if ~(abs(ps_i(1, 3) - ps_i(2, 3)) < e || abs(ps_i(2, 3) - ps_i(3, 3)) < e || abs(ps_i(1, 3) - ps_i(3, 3)) < e)
-    if ~(abs(C1) < e && abs(C2) < e) 
+    elseif ~(abs(C1) < e && abs(C2) < e) 
         syms z1 z2;
         %%%Encontrar el ángulo de rotación con respecto al eje X
         coef1 = sqrt(ps_i(1, 2)^2 + ps_i(1, 3)^2);
@@ -10333,27 +10484,27 @@ else
             new_points = R_y*points';
             points = new_points';
         end    
-    else 
-        if (abs(C2) < e && abs(C3) < e)
-            theta = pi/2;       
-
-            R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
-            new_points = R_y*points';
-            points = new_points';               
-        elseif (abs(C1) < e && abs(C3) < e) 
-            theta = pi/2;
-
-            R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
-            new_points = R_x*points';
-            points = new_points'; 
-        elseif ~(abs(C1) < e && abs(C2) < e)            
-            theta = pi/2;
-
-            R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
-            new_points = R_x*points';
-            points = new_points';
-        end
-    end
+    end 
+    
+%     if (abs(C2) < e && abs(C3) < e)
+%         theta = pi/2;       
+% 
+%         R_y = [cos(theta) 0 sin(theta); 0 1 0; -sin(theta) 0 cos(theta)];
+%         new_points = R_y*points';
+%         points = new_points';               
+%     elseif (abs(C1) < e && abs(C3) < e) 
+%         theta = pi/2;
+% 
+%         R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
+%         new_points = R_x*points';
+%         points = new_points'; 
+%     elseif ~(abs(C1) < e && abs(C2) < e)            
+%         theta = pi/2;
+% 
+%         R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
+%         new_points = R_x*points';
+%         points = new_points';
+%     end
 end
 ind = convhull(points(:,1), points(:,2));
 
