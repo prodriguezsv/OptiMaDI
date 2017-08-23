@@ -7095,7 +7095,7 @@ for i = indexset1
                                                                 z = z_sol; p_new = eval(eval(sol));
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(3, :) = eval(sol); % 4
+                                                                        points_set_convex{i}.points(3, :) = eval(sol);
                                                                         calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z_aux
@@ -7211,7 +7211,7 @@ for i = indexset1
                                                                 z = z_sol; p_new = eval(eval(sol));
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(3, :) = eval(sol); %
+                                                                        points_set_convex{j}.points(3, :) = eval(sol);
                                                                         calc_intersect = 1;
                                                                     end
                                                                     if points_actual_i(2, 2) >= y && points_actual_i(2, 3) <= z_aux
@@ -7346,7 +7346,7 @@ for i = indexset1
                                                                 z = z_sol; p_new = eval(eval(sol));
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
+                                                                        points_set_convex{i}.points(3, :) = eval(sol);
                                                                         calc_intersect = 1;
                                                                     end
                                                                     if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
@@ -7427,7 +7427,7 @@ for i = indexset1
                                                                 z = z_sol; p_new = eval(eval(sol));
                                                                 if all(p_new(:) >= 0)
                                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z_aux
-                                                                        points_set_convex{j}.points(4, :) = eval(sol);
+                                                                        points_set_convex{j}.points(3, :) = eval(sol);
                                                                         calc_intersect = 1;
                                                                     end
 
@@ -8570,7 +8570,7 @@ global Dimension points_set_nonred points_set_convex all_points;
 p1 = points_set_convex{i}.points;
 if i > Dimension(1) %&& pasar == 1 
     if size(unique(p1, 'rows'), 1) >= 3
-        if ~(isempty(setdiff(points_set_convex{i}.points, points_set_nonred{i}.points, 'rows')))% || ...
+        if ~(isempty(setdiff(points_set_nonred{i}.points, points_set_convex{i}.points, 'rows')))% || ...
                 %isempty(setdiff(all_points, points_set_nonred{i}.points, 'rows')))
             points_i = unique(points_set_convex{i}.points, 'rows');
             dim_i = size(points_i);
@@ -9799,7 +9799,7 @@ elseif points_set_nonred{i}.points(1, 3) >= points_set_nonred{j}.points(1, 3) &&
                points_set_i_con.points(4, :) = [ 0 0 max([points(1,3) points(2,3)])];
            elseif (abs(C3) < e && ~(abs(C) < e || abs(C2) < e) || ...
                    abs(C2) < e && abs(C3) < e) && any(points(:,1) ~= 0)
-               points_set_i_con.points(4, :) = [ 0 0 max([points(1,1) points(2,1)])];
+               points_set_i_con.points(4, :) = [max([points(1,1) points(2,1)]) 0 0 ];
            end
        else
            pasar = 0;
@@ -9926,7 +9926,7 @@ if plano == 1
     points = unique(points_sets(ind,:), 'rows'); 
     dim = size(points);
     if dim(1) == 1
-        ind2 = find(points_sets(:,3) ~= 0);
+        ind2 = find(points_sets(:,3) ~= 0 & ~(points_sets(:,1) == 0 | points_sets(:,2) == 0));
         [V, i] = min(points_sets(ind2,3)); %#ok<ASGLU>
         ind = [ind; ind2(i)];
     end   
@@ -9935,7 +9935,7 @@ elseif plano == 2
     points = unique(points_sets(ind,:), 'rows');
     dim = size(points);
     if dim(1) == 1
-        ind2 = find(points_sets(:,2) ~= 0);
+        ind2 = find(points_sets(:,2) ~= 0 & ~(points_sets(:,1) == 0 | points_sets(:,3) == 0));
         [V, i] = min(points_sets(ind2,2)); %#ok<ASGLU>
         ind = [ind; ind2(i)];
     end
@@ -9944,7 +9944,7 @@ elseif plano == 3
     points = unique(points_sets(ind,:), 'rows');
     dim = size(points);
     if dim(1) == 1
-        ind2 = find(points_sets(:,1) ~= 0);
+        ind2 = find(points_sets(:,1) ~= 0  & ~(points_sets(:,2) == 0 | points_sets(:,3) == 0));
         [V, i] = min(points_sets(ind2,1)); %#ok<ASGLU>
         ind = [ind; ind2(i)];
     end
