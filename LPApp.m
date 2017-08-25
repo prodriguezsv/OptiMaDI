@@ -3842,8 +3842,8 @@ else
     %indexset1 = [1:Dimension(1)-1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
     %indexset2 = 1:Dimension(1)-1; 
     %indexset2_copy = indexset2;
-    indexset1 = [3, 2, 1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3]; %% [2 3 1]; [1 2 3]
-    indexset2 = [3, 1, 2];  
+    indexset1 = [2, 1, 3, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3]; %% [1, 4, 3, 2]; [2 4 3 1]
+    indexset2 = [1 3 2];  
     indexset2_copy = indexset2;
 end
     s = get(handles.listbox_operations, 'string');
@@ -3946,36 +3946,49 @@ for i = indexset1
                                     if x > 0 && y > 0                                        
                                         %if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1) %%% m_i <= m_j
                                         if m_i <= m_j
-                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_actual_i(2, 1) <= x && points_actual_i(2, 2) >= y%%%11/01  Agregar tipo 
-                                                    %%%%%%%
-                                                    %points_actual_j_before = points_set_convex{j}.points;
-                                                    %[points_set_convex{i}.points, points_set_convex{j}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                    %    x, y, table_copy, i, j, 2, 3, 4, 1);
-                                                    %%%%%%%
+                                            if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
+                                                if points_set_convex{i}.points(3, 3) == 0
+                                                    if points_actual_i(2, 1) <= x && points_actual_i(2, 2) >= y%%%11/01  Agregar tipo 
+                                                        %%%%%%%
+                                                        %points_actual_j_before = points_set_convex{j}.points;
+                                                        %[points_set_convex{i}.points, points_set_convex{j}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
+                                                        %    x, y, table_copy, i, j, 2, 3, 4, 1);
+                                                        %%%%%%%
 
-                                                    points_set_convex{i}.points(2, :) = [x y 0];
+                                                        points_set_convex{i}.points(2, :) = [x y 0];
 
-                                                    %if points_set_convex{j}.points(3, 1) >= x && points_set_convex{j}.points(3, 2) <= y%%%11/01  Agregar tipo 
-                                                    %    if all(points_actual_j_before(3, :) == points_actual_j_before(4, :))
-                                                    %         points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
-                                                    %    end
-                                                    %    points_set_convex{j}.points(3, :) = [x y 0]; 
-                                                    %end
-                                                %else
-                                                end
-                                                if points_actual_j(3, 1) >= x && points_actual_j(3, 2) <= y%%%11/01  Agregar tipo 
-                                                    %%%%%%%
-                                                    %points_actual_j_before = points_set_convex{j}.points;
-                                                    %[points_set_convex{j}.points, points_set_convex{i}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
-                                                    %    x, y, table_copy, i, j, 3, 2, 4, 1);
-                                                    %%%%%%%
-
-                                                    if all(points_actual_j(3, :) == points_actual_j(4, :))
-                                                         points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                        %if points_set_convex{j}.points(3, 1) >= x && points_set_convex{j}.points(3, 2) <= y%%%11/01  Agregar tipo 
+                                                        %    if all(points_actual_j_before(3, :) == points_actual_j_before(4, :))
+                                                        %         points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                        %    end
+                                                        %    points_set_convex{j}.points(3, :) = [x y 0]; 
+                                                        %end
+                                                    %else
+                                                    else
+                                                        calc_intersect = 1; 
                                                     end
-                                                    points_set_convex{j}.points(3, :) = [x y 0];                                                                                                                                                                        
-                                                end                                                
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(2, 3) == 0
+                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 2) <= y%%%11/01  Agregar tipo 
+                                                        %%%%%%%
+                                                        %points_actual_j_before = points_set_convex{j}.points;
+                                                        %[points_set_convex{j}.points, points_set_convex{i}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
+                                                        %    x, y, table_copy, i, j, 3, 2, 4, 1);
+                                                        %%%%%%%
+
+                                                        if all(points_actual_j(3, :) == points_actual_j(4, :))
+                                                             points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                        end
+                                                        points_set_convex{j}.points(3, :) = [x y 0]; 
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end 
+                                                else
+                                                    calc_intersect = 1;
+                                                end
                                                 %%%%%
                                                 %%%Desarrollar planos tipo 2
                                                 %%%%%
@@ -3993,21 +4006,33 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(2, 1) <= x && points_actual_i(2, 2) >= y
-                                                                        points_set_convex{i}.points(1, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 2) <= y
-                                                                        if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
-                                                                            points_set_convex{i}.tipo == 2 && points_set_convex{j}.tipo == 2
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                        if points_actual_i(2, 1) <= x && points_actual_i(2, 2) >= y
+                                                                            points_set_convex{i}.points(1, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                        if points_actual_j(3, 1) >= x && points_actual_j(3, 2) <= y
+                                                                            if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
+                                                                                points_set_convex{i}.tipo == 2 && points_set_convex{j}.tipo == 2
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4022,31 +4047,44 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_actual_i(3, 2) <= y && points_actual_i(3, 1) >= x %%%%11/01
-                                                    %%%%%%
-                                                    %points_actual_i_before = points_set_convex{i}.points;
-                                                    %[points_set_convex{i}.points, points_set_convex{j}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                    %    x, y, table_copy, i, j, 3, 2, 4, 1);
-                                                    %%%%%%% 
+                                            if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
+                                                if points_set_convex{i}.points(2, 3) == 0
+                                                    if points_actual_i(3, 2) <= y && points_actual_i(3, 1) >= x %%%%11/01
+                                                        %%%%%%
+                                                        %points_actual_i_before = points_set_convex{i}.points;
+                                                        %[points_set_convex{i}.points, points_set_convex{j}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
+                                                        %    x, y, table_copy, i, j, 3, 2, 4, 1);
+                                                        %%%%%%% 
 
-                                                    if all(points_actual_i(3, :) == points_actual_i(4, :))
-                                                         points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                                        if all(points_actual_i(3, :) == points_actual_i(4, :))
+                                                             points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                                        end
+                                                        points_set_convex{i}.points(3, :) = [x y 0];
+
+                                                        %if points_set_convex{j}.points(2, 2) >= y && points_set_convex{j}.points(2, 1) <= x %%%%11/01
+                                                        %    points_set_convex{j}.points(2, :) = [x y 0];
+                                                        %end
+                                                    %else
+                                                    else
+                                                        calc_intersect = 1;
                                                     end
-                                                    points_set_convex{i}.points(3, :) = [x y 0];
-
-                                                    %if points_set_convex{j}.points(2, 2) >= y && points_set_convex{j}.points(2, 1) <= x %%%%11/01
-                                                    %    points_set_convex{j}.points(2, :) = [x y 0];
-                                                    %end
-                                                %else
+                                                else
+                                                    calc_intersect = 1;
                                                 end
-                                                if points_actual_j(2, 2) >= y && points_actual_j(2, 1) <= x %%%%11/01
-                                                    %%%%%%
-                                                    %[points_set_convex{j}.points, points_set_convex{i}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
-                                                    %    x, y, table_copy, i, j, 2, 3, 4, 1);
-                                                    %%%%%%% 
+                                                
+                                                if points_set_convex{j}.points(3, 3) == 0
+                                                    if points_actual_j(2, 2) >= y && points_actual_j(2, 1) <= x %%%%11/01
+                                                        %%%%%%
+                                                        %[points_set_convex{j}.points, points_set_convex{i}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
+                                                        %    x, y, table_copy, i, j, 2, 3, 4, 1);
+                                                        %%%%%%% 
 
-                                                    points_set_convex{j}.points(2, :) = [x y 0];                                                        
+                                                        points_set_convex{j}.points(2, :) = [x y 0];
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 %%%%%
                                                 %%%Desarrollar planos tipo 2
@@ -4064,21 +4102,33 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(2, 2) >= y && points_actual_j(2, 1) <= x
-                                                                        points_set_convex{j}.points(1, :) = eval(sol);
-                                                                        calc_intersect = 1;
+                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                        if points_actual_j(2, 2) >= y && points_actual_j(2, 1) <= x
+                                                                            points_set_convex{j}.points(1, :) = p_new_j;
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
-                                                                    if points_actual_i(3, 2) <= y && points_actual_i(3, 1) >= x
-                                                                        if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
-                                                                            points_set_convex{i}.tipo == 2 && points_set_convex{j}.tipo == 2
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
-                                                                        end  
-                                                                        calc_intersect = 1;
+                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                        if points_actual_i(3, 2) <= y && points_actual_i(3, 1) >= x
+                                                                            if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
+                                                                                points_set_convex{i}.tipo == 2 && points_set_convex{j}.tipo == 2
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end  
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4144,43 +4194,55 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]); C = dot(N, [0 0 1]);
 
                                         if m_i < 0
-                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%%
-                                                if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
-                                                    if points_set_convex{i}.points(3, 3) == 0                                                     
-                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x y 0];
+                                            if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%%
+                                                if points_set_convex{i}.points(2, 3) == 0
+                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
+                                                        if points_set_convex{i}.points(3, 3) == 0                                                     
+                                                            if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x y 0];
+                                                            end
+                                                            points_set_convex{i}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{i}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{j}.points(3, 3) == 0
+                                                    if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
+                                                        if points_set_convex{j}.points(2, 3) == 0 
+                                                            points_set_convex{j}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
+                                                        end
 
-                                                if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
-                                                    if points_set_convex{j}.points(2, 3) == 0 
-                                                        points_set_convex{j}.points(2, :) = [x y 0];
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
+                                                            %points_set_convex{j}.points(1, :) = [x y 0];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
-                                                        %points_set_convex{j}.points(1, :) = [x y 0];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -4199,20 +4261,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
-                                                                        if points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 29
-                                                                            points_set_convex{j}.points(1, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                        if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                        if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
+                                                                            if points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 29
+                                                                                points_set_convex{j}.points(1, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4227,43 +4301,54 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%
-                                                if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
-                                                    if points_set_convex{j}.points(3, 3) == 0
-                                                        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                            points_set_convex{j}.points(4, :) = [x y 0];
+                                            if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%
+                                                if points_set_convex{j}.points(2, 3) == 0
+                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
+                                                        if points_set_convex{j}.points(3, 3) == 0
+                                                            if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                                points_set_convex{j}.points(4, :) = [x y 0];
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                if points_set_convex{i}.points(3, 3) == 0
+                                                    if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
+                                                        if points_set_convex{i}.points(2, 3) == 0 
+                                                            points_set_convex{i}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
+                                                        end
 
-                                                if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
-                                                    if points_set_convex{i}.points(2, 3) == 0 
-                                                        points_set_convex{i}.points(2, :) = [x y 0];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
+                                                            %points_set_convex{i}.points(1, :) = [x y 0];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
-                                                        %points_set_convex{i}.points(1, :) = [x y 0];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -4282,20 +4367,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
-                                                                        points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
-                                                                        if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 29
-                                                                            points_set_convex{i}.points(1, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                        if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
+                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                        if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
+                                                                            if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 29
+                                                                                points_set_convex{i}.points(1, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4378,49 +4475,60 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]); C = dot(N, [0 0 1]);
                                         
                                         if m_i < 0 
-                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%
-                                                if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
-                                                    if points_set_convex{i}.points(2, 3) == 0 
-                                                        points_set_convex{i}.points(2, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
-                                                    end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_set_convex{j}.tipo == 16
-                                                    points_actual_j = points_actual_j([4 3 2 1], :);
-                                                    points_set_convex{j}.points = points_set_convex{j}.points([4 3 2 1], :);
-                                                end
-                                                
-                                                if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
-                                                    if points_set_convex{j}.points(3, 3) == 0
-                                                        if all(points_actual_j(3, :) == points_actual_j(4, :))
-                                                             points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                            if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%
+                                                if points_set_convex{i}.points(3, 3) == 0
+                                                    if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
+                                                        if points_set_convex{i}.points(2, 3) == 0 
+                                                            points_set_convex{i}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
-                                                        %points_set_convex{j}.points(4, :) = [x y 0];
-                                                    %else                                                        
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end                                                                                        
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+
+%                                                 if points_set_convex{j}.tipo == 16
+%                                                     points_actual_j = points_actual_j([4 3 2 1], :);
+%                                                     points_set_convex{j}.points = points_set_convex{j}.points([4 3 2 1], :);
+%                                                 end
+                                                if points_set_convex{j}.points(2, 3) == 0
+                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
+                                                        if points_set_convex{j}.points(3, 3) == 0
+                                                            if all(points_actual_j(3, :) == points_actual_j(4, :))
+                                                                 points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
+                                                        end
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
+                                                            %points_set_convex{j}.points(4, :) = [x y 0];
+                                                        %else                                                        
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end 
+                                                else
+                                                    calc_intersect = 1;
+                                                end
 
                                                 %%%%%% Modificar (Revisar)
                                                 if points_set_convex{i}.tipo == 2 && (points_set_convex{j}.tipo == 4 || points_set_convex{j}.tipo == 8 || ...
@@ -4438,20 +4546,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
-                                                                        points_set_convex{i}.points(1, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
-                                                                        if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 32
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                        if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
+                                                                            points_set_convex{i}.points(1, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                        if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
+                                                                            if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 32
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4459,10 +4579,10 @@ for i = indexset1
                                                     end
                                                 end
 
-                                                if points_set_convex{j}.tipo == 16
-                                                    points_actual_j = points_actual_j([1 2 3 4], :); 
-                                                    points_set_convex{j}.points = points_set_convex{j}.points([1 2 3 4], :);
-                                                end
+%                                                 if points_set_convex{j}.tipo == 16
+%                                                     points_actual_j = points_actual_j([1 2 3 4], :); 
+%                                                     points_set_convex{j}.points = points_set_convex{j}.points([1 2 3 4], :);
+%                                                 end
                                             else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
@@ -4471,47 +4591,59 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%%
-                                                if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
-                                                    if points_set_convex{j}.points(2, 3) == 0 
-                                                        points_set_convex{j}.points(2, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
-                                                    end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_set_convex{i}.tipo == 16
-                                                    points_actual_i = points_actual_i([4 3 2 1], :);  
-                                                    points_set_convex{i}.points = points_set_convex{i}.points([4 3 2 1], :);
-                                                end
-                                                if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
-                                                    if points_set_convex{i}.points(3, 3) == 0 
-                                                        if all(points_actual_i(3, :) == points_actual_i(4, :))
-                                                             points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                            if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%%
+                                                if points_set_convex{j}.points(3, 3) == 0
+                                                    if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
+                                                        if points_set_convex{j}.points(2, 3) == 0 
+                                                            points_set_convex{j}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{i}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
-                                                        %points_set_convex{i}.points(4, :) = [x y 0];
-                                                    %else                                                        
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+
+%                                                 if points_set_convex{i}.tipo == 16
+%                                                     points_actual_i = points_actual_i([4 3 2 1], :);  
+%                                                     points_set_convex{i}.points = points_set_convex{i}.points([4 3 2 1], :);
+%                                                 end
+                                                if points_set_convex{i}.points(2, 3) == 0
+                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
+                                                        if points_set_convex{i}.points(3, 3) == 0 
+                                                            if all(points_actual_i(3, :) == points_actual_i(4, :))
+                                                                 points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                                            end
+                                                            points_set_convex{i}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
+                                                        end
+
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
+                                                            %points_set_convex{i}.points(4, :) = [x y 0];
+                                                        %else                                                        
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -4530,20 +4662,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
-                                                                        points_set_convex{j}.points(1, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
-                                                                        if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 32
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                        if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
+                                                                            points_set_convex{j}.points(1, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                        if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
+                                                                            if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 32
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4551,10 +4695,10 @@ for i = indexset1
                                                     end
                                                 end
 
-                                                if points_set_convex{i}.tipo == 16
-                                                    points_actual_i = points_actual_i([1 2 3 4], :);
-                                                    points_set_convex{i}.points = points_set_convex{i}.points([1 2 3 4], :);
-                                                end
+%                                                 if points_set_convex{i}.tipo == 16
+%                                                     points_actual_i = points_actual_i([1 2 3 4], :);
+%                                                     points_set_convex{i}.points = points_set_convex{i}.points([1 2 3 4], :);
+%                                                 end
                                             else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
@@ -4643,32 +4787,44 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]);
 
                                         if m_i < m_j
-                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
-                                                    if all(points_actual_i(3, :) == points_actual_i(4, :))
-                                                        points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
-                                                    end
-                                                    points_set_convex{i}.points(3, :) = [x y 0];
-                                                    
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];                                            
-                                                    %else                                                    
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end                                                
+                                            if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
+                                                if points_set_convex{i}.points(2, 3) == 0
+                                                    if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
+                                                        if all(points_actual_i(3, :) == points_actual_i(4, :))
+                                                            points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                                        end
+                                                        points_set_convex{i}.points(3, :) = [x y 0];
 
-                                                if points_actual_j(2, 1) >= x && points_actual_j(2, 2) >= y
-                                                    points_set_convex{j}.points(2, :) = [x y 0];
-                                                    
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];                                            
+                                                        %else                                                    
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end 
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(3, 3) == 0
+                                                    if points_actual_j(2, 1) >= x && points_actual_j(2, 2) >= y
+                                                        points_set_convex{j}.points(2, :) = [x y 0];
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
@@ -4686,20 +4842,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
-                                                                if all(p_new(:) >= 0)
-                                                                    if points_actual_j(2, 1) >= x && points_actual_j(2, 2) >= y
-                                                                        points_set_convex{j}.points(1, :) = eval(sol); %%%4
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
-                                                                        if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
+                                                                if all(p_new(:) >= 0)    
+                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                        if points_actual_j(2, 1) >= x && points_actual_j(2, 2) >= y                                                                        
+                                                                            points_set_convex{j}.points(1, :) = p_new_j; %%%4
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                        if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
+                                                                            if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4714,33 +4882,45 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
-                                                    points_set_convex{i}.points(2, :) = [x y 0];
-                                                    
-                                                %    if abs(C) < e
-                                                %        points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                %    end
-                                                end                                                
+                                            if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
+                                                if points_set_convex{i}.points(3, 3) == 0
+                                                    if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
+                                                        points_set_convex{i}.points(2, :) = [x y 0];
 
-                                                if points_actual_j(3, 1) >= x && points_actual_j(3, 2) >= y
-                                                    if all(points_actual_j(3, :) == points_actual_j(4, :))
-                                                        points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                    %    if abs(C) < e
+                                                    %        points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                    %    end
+                                                    else
+                                                        calc_intersect = 1;
                                                     end
-                                                    points_set_convex{j}.points(3, :) = [x y 0];
-                                                    
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
-                                                    %else                                                    
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end 
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(2, 3) == 0
+                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 2) >= y
+                                                        if all(points_actual_j(3, :) == points_actual_j(4, :))
+                                                            points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                        end
+                                                        points_set_convex{j}.points(3, :) = [x y 0];
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
+                                                        %else                                                    
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end 
+                                                else
+                                                    calc_intersect = 1;
+                                                end
                                                 
                                                 %%%%%% Modificar (Revisar)
                                                 if points_set_convex{i}.tipo == 5 && (points_set_convex{j}.tipo == 32 || points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 6) || ...
@@ -4757,20 +4937,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
-                                                                        points_set_convex{i}.points(1, :) = eval(sol); %%4
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 2) >= y
-                                                                        if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 32
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                        if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
+                                                                            points_set_convex{i}.points(1, :) = p_new_i; %%4
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                        if points_actual_j(3, 1) >= x && points_actual_j(3, 2) >= y
+                                                                            if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 32
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4854,42 +5046,54 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]);
                                         
                                         if m_i < m_j
-                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
-                                                    if points_set_convex{i}.points(2, 3) == 0 
-                                                        points_set_convex{i}.points(2, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
-                                                    end
-                                                    
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
-                                                    if points_set_convex{j}.points(3, 3) == 0 
-                                                        if all(points_actual_j(3, :) == points_actual_j(4, :))
-                                                            points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                            if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
+                                                if points_set_convex{i}.points(3, 3) == 0
+                                                    if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
+                                                        if points_set_convex{i}.points(2, 3) == 0 
+                                                            points_set_convex{i}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
-                                                    %else                                                        
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(2, 3) == 0
+                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
+                                                        if points_set_convex{j}.points(3, 3) == 0 
+                                                            if all(points_actual_j(3, :) == points_actual_j(4, :))
+                                                                points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
+                                                        end
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
+                                                        %else                                                        
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
@@ -4907,20 +5111,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
-                                                                        points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
-                                                                        if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
-                                                                            points_set_convex{i}.points(1, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                        if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
+                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                        if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
+                                                                            if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
+                                                                                points_set_convex{i}.points(1, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -4935,42 +5151,54 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
-                                                    if points_set_convex{j}.points(2, 3) == 0 
-                                                        points_set_convex{j}.points(2, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
-                                                    end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
-                                                    if points_set_convex{i}.points(3, 3) == 0 
-                                                        if all(points_actual_i(3, :) == points_actual_i(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                            if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
+                                                if points_set_convex{j}.points(3, 3) == 0
+                                                    if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
+                                                        if points_set_convex{j}.points(2, 3) == 0 
+                                                            points_set_convex{j}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{i}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
-                                                    %else                                                        
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{i}.points(2, 3) == 0
+                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
+                                                        if points_set_convex{i}.points(3, 3) == 0 
+                                                            if all(points_actual_i(3, :) == points_actual_i(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                                            end
+                                                            points_set_convex{i}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
+                                                        end
+
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
+                                                        %else                                                        
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
@@ -4988,20 +5216,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
-                                                                        points_set_convex{j}.points(1, :) = eval(sol); %%4
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
-                                                                        if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                        if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
+                                                                            points_set_convex{j}.points(1, :) = p_new_j; %%4
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                        if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
+                                                                            if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -5092,42 +5332,54 @@ for i = indexset1
                                         %C2 = dot(N2, [0 0 1]);
                                         
                                         if m_i < m_j
-                                            if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
-                                                    if points_set_convex{i}.points(2, 3) == 0 
-                                                        points_set_convex{i}.points(2, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
-                                                    end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_j(3, 1) <= x  && points_actual_j(3, 2) <= y
-                                                    if points_set_convex{j}.points(3, 3) == 0
-                                                        if all(points_actual_j(3, :) == points_actual_j(4, :))
-                                                            points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                            if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
+                                                if points_set_convex{i}.points(3, 3) == 0
+                                                    if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
+                                                        if points_set_convex{i}.points(2, 3) == 0 
+                                                            points_set_convex{i}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(1, :) = [x y points_set_convex{i}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(2, 3) == 0
+                                                    if points_actual_j(3, 1) <= x  && points_actual_j(3, 2) <= y
+                                                        if points_set_convex{j}.points(3, 3) == 0
+                                                            if all(points_actual_j(3, :) == points_actual_j(4, :))
+                                                                points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
+                                                        end
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x y points_set_convex{j}.points(4, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
@@ -5145,20 +5397,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(3, 1) <= x  && points_actual_j(3, 2) <= y
-                                                                        points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
-                                                                        if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
-                                                                            points_set_convex{i}.points(1, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                        if points_actual_j(3, 1) <= x  && points_actual_j(3, 2) <= y
+                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                        if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
+                                                                            if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
+                                                                                points_set_convex{i}.points(1, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -5173,42 +5437,54 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
-                                                    if points_set_convex{j}.points(2, 3) == 0 
-                                                        points_set_convex{j}.points(2, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
-                                                    end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_i(3, 1) <= x  && points_actual_i(3, 2) <= y
-                                                    if points_set_convex{i}.points(3, 3) == 0 
-                                                        if all(points_actual_i(3, :) == points_actual_i(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                            if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
+                                                if points_set_convex{j}.points(3, 3) == 0
+                                                    if points_actual_j(2, 1) >= x  || points_actual_j(2, 2) >= y
+                                                        if points_set_convex{j}.points(2, 3) == 0 
+                                                            points_set_convex{j}.points(2, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x y 0];
                                                         end
-                                                        points_set_convex{i}.points(3, :) = [x y 0];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
-                                                    end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
-                                                    %else                                                        
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(1, :) = [x y points_set_convex{j}.points(1, 3)];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{i}.points(2, 3) == 0
+                                                    if points_actual_i(3, 1) <= x  && points_actual_i(3, 2) <= y
+                                                        if points_set_convex{i}.points(3, 3) == 0 
+                                                            if all(points_actual_i(3, :) == points_actual_i(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
+                                                            end
+                                                            points_set_convex{i}.points(3, :) = [x y 0];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x y 0];
+                                                        end
+
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x y points_set_convex{i}.points(4, 3)];
+                                                        %else                                                        
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
@@ -5226,26 +5502,39 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(3)-max([points_actual_i(:,3);points_actual_j(:,3)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x y 0], [0, 0, 1]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_i(:,3)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(3)-max(points_actual_j(:,3)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
-                                                                        points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) <= x  && points_actual_i(3, 2) <= y
-                                                                        if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                        if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
+                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                        if points_actual_i(3, 1) <= x  && points_actual_i(3, 2) <= y
+                                                                            if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
                                                         end
                                                     end
                                                 end
+                                            end
                                             %else
                                                 %%%%%%%%%%%%%
                                             %    [points_set_convex{i}.points, points_set_convex{j}.points, table_copy] = PlaneCrossInterceptXY(handles, points_set_convex{i}.points, points_set_convex{j}.points, table_copy, ...
@@ -5432,84 +5721,96 @@ for i = indexset1
                                     if x > 0 && z > 0                                          
                                         %if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
                                         if m_i <= m_j                                            
-                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z %%%%11/01
-                                                    if points_set_convex{i}.points(1, 2) == 0 
-                                                        %%%%%%
-                                                        %points_actual_j_before = points_set_convex{j}.points;
-                                                        %[points_set_convex{i}.points, points_set_convex{j}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                        %    x, z, table_copy, i, j, 1, 3, 4, 2);
-                                                        %%%%%%%
-                                                        points_set_convex{i}.points(1, :) = [x 0 z];
-
-                                                        %if points_set_convex{j}.points(3, 2) == 0
-                                                            %if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z %%%%11/01
-                                                        %        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                        %             points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
-                                                        %        end
-                                                        %        points_set_convex{j}.points(3, :) = [x 0 z];
-                                                            %end
-                                                        %else
-                                                            %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01
-                                                        %        points_set_convex{j}.points(4, :) = [x 0 z];
-                                                            %end
-                                                        %end
-                                                    else %if points_set_convex{i}.points(4, 2) == 0 
-                                                        %if points_actual_i(4, 1) <= x && points_actual_i(4, 3) >= z %% Plano i
+                                            if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0 ) 
+                                                if points_set_convex{i}.points(3, 2) == 0
+                                                    if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z %%%%11/01
+                                                        if points_set_convex{i}.points(1, 2) == 0 
                                                             %%%%%%
-                                                         %   points_actual_j_before = points_set_convex{j}.points;
-                                                         %   [points_set_convex{i}.points, points_set_convex{j}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                         %       x, z, table_copy, i, j, 4, 3, 1, 2);
-                                                            %%%%%%%                                                                                                                
-                                                            dim = size(points_set_convex{i}.points);
-                                                            if dim(1) == 4
-                                                                points_set_convex{i}.points(4, :) = [x 0 z];
-                                                            else
-                                                                points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                            end
+                                                            %points_actual_j_before = points_set_convex{j}.points;
+                                                            %[points_set_convex{i}.points, points_set_convex{j}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
+                                                            %    x, z, table_copy, i, j, 1, 3, 4, 2);
+                                                            %%%%%%%
+                                                            points_set_convex{i}.points(1, :) = [x 0 z];
 
-                                                         %   if points_set_convex{j}.points(3, 2) == 0 
+                                                            %if points_set_convex{j}.points(3, 2) == 0
                                                                 %if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z %%%%11/01
-                                                         %           if all(points_actual_j_before(3, :) == points_actual_j_before(4, :))
-                                                         %                points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
-                                                         %           end
-                                                         %           points_set_convex{j}.points(3, :) = [x 0 z];
+                                                            %        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                            %             points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
+                                                            %        end
+                                                            %        points_set_convex{j}.points(3, :) = [x 0 z];
                                                                 %end
-                                                         %   else
-                                                                %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01                                                            
-                                                         %           points_set_convex{j}.points(4, :) = [x 0 z];
+                                                            %else
+                                                                %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01
+                                                            %        points_set_convex{j}.points(4, :) = [x 0 z];
                                                                 %end
-                                                         %   end
-                                                        %else
-                                                            %%%%%
-                                                        %end
-                                                    end
-                                                end
-                                                if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z%%%11/01  Agregar tipo 
-                                                    %points_actual_j_before = points_set_convex{j}.points;
-                                                    %[points_set_convex{j}.points, points_set_convex{i}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
-                                                    %    x, z, table_copy, i, j, 3, 1, 4, 2);
-                                                    %%%%%%%
+                                                            %end
+                                                        else %if points_set_convex{i}.points(4, 2) == 0 
+                                                            %if points_actual_i(4, 1) <= x && points_actual_i(4, 3) >= z %% Plano i
+                                                                %%%%%%
+                                                             %   points_actual_j_before = points_set_convex{j}.points;
+                                                             %   [points_set_convex{i}.points, points_set_convex{j}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
+                                                             %       x, z, table_copy, i, j, 4, 3, 1, 2);
+                                                                %%%%%%%                                                                                                                
+                                                                dim = size(points_set_convex{i}.points);
+                                                                if dim(1) == 4
+                                                                    points_set_convex{i}.points(4, :) = [x 0 z];
+                                                                else
+                                                                    points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                                end
 
-                                                    if points_set_convex{j}.points(3, 2) == 0
-                                                        %if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z %%%%11/01
-                                                            if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                                 points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
-                                                            end
-                                                            points_set_convex{j}.points(3, :) = [x 0 z];
-                                                        %end
+                                                             %   if points_set_convex{j}.points(3, 2) == 0 
+                                                                    %if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z %%%%11/01
+                                                             %           if all(points_actual_j_before(3, :) == points_actual_j_before(4, :))
+                                                             %                points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
+                                                             %           end
+                                                             %           points_set_convex{j}.points(3, :) = [x 0 z];
+                                                                    %end
+                                                             %   else
+                                                                    %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01                                                            
+                                                             %           points_set_convex{j}.points(4, :) = [x 0 z];
+                                                                    %end
+                                                             %   end
+                                                            %else
+                                                                %%%%%
+                                                            %end
+                                                        end
                                                     else
-                                                        %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01
-                                                            
-                                                            dim = size(points_set_convex{j}.points);
-                                                            if dim(1) == 4
-                                                                points_set_convex{j}.points(4, :) = [x 0 z];
-                                                            else
-                                                                points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                            end
-                                                        %end
+                                                        calc_intersect = 1;
                                                     end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(1, 2) == 0
+                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z%%%11/01  Agregar tipo 
+                                                        %points_actual_j_before = points_set_convex{j}.points;
+                                                        %[points_set_convex{j}.points, points_set_convex{i}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
+                                                        %    x, z, table_copy, i, j, 3, 1, 4, 2);
+                                                        %%%%%%%
+
+                                                        if points_set_convex{j}.points(3, 2) == 0
+                                                            %if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z %%%%11/01
+                                                                if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                                     points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
+                                                                end
+                                                                points_set_convex{j}.points(3, :) = [x 0 z];
+                                                            %end
+                                                        else
+                                                            %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01
+
+                                                                dim = size(points_set_convex{j}.points);
+                                                                if dim(1) == 4
+                                                                    points_set_convex{j}.points(4, :) = [x 0 z];
+                                                                else
+                                                                    points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                                end
+                                                            %end
+                                                        end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 %%%%%
                                                 %%%Desarrollar planos tipo 3
@@ -5529,21 +5830,33 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(2, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z_aux
-                                                                        if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
-                                                                            points_set_convex{i}.tipo == 3 && points_set_convex{j}.tipo == 3
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                        if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(2, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                        if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z_aux
+                                                                            if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
+                                                                                points_set_convex{i}.tipo == 3 && points_set_convex{j}.tipo == 3
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -5558,76 +5871,88 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_j(1, 3) >= z && points_actual_j(1, 1) <= x %%%11/01
-                                                    if points_set_convex{j}.points(1, 2) == 0
-                                                        %points_actual_i_before = points_set_convex{i}.points;
-                                                        %%%%%%
-                                                        %[points_set_convex{i}.points, points_set_convex{j}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                        %    x, z, table_copy, i, j, 3, 1, 4, 2);
-                                                        %%%%%%% 
-                                                                                                                
-                                                        points_set_convex{j}.points(1, :) = [x 0 z];
-
-                                                        %if points_set_convex{j}.points(1, 2) == 0
-                                                            %if points_actual_j(1, 3) >= z && points_actual_j(1, 1) <= x %%%11/01
-                                                        %        points_set_convex{j}.points(1, :) = [x 0 z];
-                                                            %end
-                                                        %else
-                                                            %if points_actual_j(4, 3) >= z && points_actual_j(4, 1) <= x %%%11/01
-                                                        %        points_set_convex{j}.points(4, :) = [x 0 z];
-                                                            %end
-                                                        %end
-                                                    else %if points_set_convex{i}.points(3, 2) == 0
-                                                        %if points_actual_i(4, 1) <= x && points_actual_i(4, 3) >= z %% Plano i
+                                            if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0 ) %%%% OJO
+                                                if points_set_convex{j}.points(3, 2) == 0
+                                                    if points_actual_j(1, 3) >= z && points_actual_j(1, 1) <= x %%%11/01
+                                                        if points_set_convex{j}.points(1, 2) == 0
+                                                            %points_actual_i_before = points_set_convex{i}.points;
                                                             %%%%%%
                                                             %[points_set_convex{i}.points, points_set_convex{j}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                            %    x, z, table_copy, i, j, 4, 1, 3, 2);
-                                                            %%%%%%%                                                                                                                
-                                                            dim = size(points_set_convex{j}.points);
-                                                            if dim(1) == 4
-                                                                points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
-                                                            else
-                                                                points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                            end
+                                                            %    x, z, table_copy, i, j, 3, 1, 4, 2);
+                                                            %%%%%%% 
+
+                                                            points_set_convex{j}.points(1, :) = [x 0 z];
+
                                                             %if points_set_convex{j}.points(1, 2) == 0
-                                                                %if points_actual_j(1, 1) >= x && points_actual_j(1, 3) <= z %%%%11/01
+                                                                %if points_actual_j(1, 3) >= z && points_actual_j(1, 1) <= x %%%11/01
                                                             %        points_set_convex{j}.points(1, :) = [x 0 z];
                                                                 %end
                                                             %else
-                                                                %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01
+                                                                %if points_actual_j(4, 3) >= z && points_actual_j(4, 1) <= x %%%11/01
                                                             %        points_set_convex{j}.points(4, :) = [x 0 z];
                                                                 %end
                                                             %end
-                                                        %else
-                                                            %%%%%%%
-                                                        %end     
-                                                    end
-                                                end
-                                                if points_actual_i(3, 1) >= x && points_actual_i(3, 3) <= z%%%11/01  Agregar tipo 
-                                                    %%%%%%
-                                                    %[points_set_convex{j}.points, points_set_convex{i}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
-                                                    %    x, z, table_copy, i, j, 1, 3, 4, 2);
-                                                    %%%%%%% 
-
-                                                    if points_set_convex{i}.points(3, 2) == 0
-                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x 0 z];
+                                                        else %if points_set_convex{i}.points(3, 2) == 0
+                                                            %if points_actual_i(4, 1) <= x && points_actual_i(4, 3) >= z %% Plano i
+                                                                %%%%%%
+                                                                %[points_set_convex{i}.points, points_set_convex{j}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
+                                                                %    x, z, table_copy, i, j, 4, 1, 3, 2);
+                                                                %%%%%%%                                                                                                                
+                                                                dim = size(points_set_convex{j}.points);
+                                                                if dim(1) == 4
+                                                                    points_set_convex{j}.points(4, :) = [x 0 z]; %%%7/01 
+                                                                else
+                                                                    points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                                end
+                                                                %if points_set_convex{j}.points(1, 2) == 0
+                                                                    %if points_actual_j(1, 1) >= x && points_actual_j(1, 3) <= z %%%%11/01
+                                                                %        points_set_convex{j}.points(1, :) = [x 0 z];
+                                                                    %end
+                                                                %else
+                                                                    %if points_actual_j(4, 1) >= x && points_actual_j(4, 3) <= z %%%%11/01
+                                                                %        points_set_convex{j}.points(4, :) = [x 0 z];
+                                                                    %end
+                                                                %end
+                                                            %else
+                                                                %%%%%%%
+                                                            %end     
                                                         end
-                                                        %if points_actual_j(1, 3) >= z && points_actual_j(1, 1) <= x %%%11/01
-                                                        points_set_convex{i}.points(3, :) = [x 0 z];
-                                                        %end
                                                     else
-                                                        %if points_actual_j(4, 3) >= z && points_actual_j(4, 1) <= x %%%11/01
-                                                        dim = size(points_set_convex{i}.points);
-                                                        if dim(1) == 4
-                                                            points_set_convex{i}.points(4, :) = [x 0 z];
-                                                        else
-                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                        end                                                            
-                                                        %end
+                                                        calc_intersect = 1;
                                                     end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{i}.points(1, 2) == 0
+                                                    if points_actual_i(3, 1) >= x && points_actual_i(3, 3) <= z%%%11/01  Agregar tipo 
+                                                        %%%%%%
+                                                        %[points_set_convex{j}.points, points_set_convex{i}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
+                                                        %    x, z, table_copy, i, j, 1, 3, 4, 2);
+                                                        %%%%%%% 
+
+                                                        if points_set_convex{i}.points(3, 2) == 0
+                                                            if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x 0 z];
+                                                            end
+                                                            %if points_actual_j(1, 3) >= z && points_actual_j(1, 1) <= x %%%11/01
+                                                            points_set_convex{i}.points(3, :) = [x 0 z];
+                                                            %end
+                                                        else
+                                                            %if points_actual_j(4, 3) >= z && points_actual_j(4, 1) <= x %%%11/01
+                                                            dim = size(points_set_convex{i}.points);
+                                                            if dim(1) == 4
+                                                                points_set_convex{i}.points(4, :) = [x 0 z];
+                                                            else
+                                                                points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                            end                                                            
+                                                            %end
+                                                        end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 %%%%%
                                                 %%%Desarrollar planos tipo 3
@@ -5647,21 +5972,33 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(1, 1) <= x && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(2, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) >= x && points_actual_i(3, 3) <= z_aux
-                                                                        if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
-                                                                            points_set_convex{i}.tipo == 3 && points_set_convex{j}.tipo == 3
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                        if points_actual_j(1, 1) <= x && points_actual_j(1, 3) >= z_aux
+                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                        if points_actual_i(3, 1) >= x && points_actual_i(3, 3) <= z_aux
+                                                                            if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
+                                                                                points_set_convex{i}.tipo == 3 && points_set_convex{j}.tipo == 3
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -5728,44 +6065,55 @@ for i = indexset1
                                         %N2 = cross(points_actual_j(1,:)-points_actual_j(2,:), points_actual_j(1,:)-points_actual_j(3,:));
                                         %C2 = dot(N2, [0 1 0]);
                                         
-                                        if m_i < 0
-                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z
-                                                    if points_set_convex{i}.points(3, 2) == 0
-                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x 0 z];
+                                        if m_i < 0                                            
+                                            if (points_set_convex{i}.points(1, 2) == 0  || points_set_convex{j}.points(3, 2) == 0)
+                                                if points_set_convex{i}.points(1, 2) == 0
+                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z
+                                                        if points_set_convex{i}.points(3, 2) == 0
+                                                            if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x 0 z];
+                                                            end
+                                                            points_set_convex{i}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
                                                         end
-                                                        points_set_convex{i}.points(3, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{j}.points(3, 2) == 0
+                                                    if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
+                                                        if points_set_convex{j}.points(1, 2) == 0 
+                                                            points_set_convex{j}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
 
-                                                if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
-                                                    if points_set_convex{j}.points(1, 2) == 0 
-                                                        points_set_convex{j}.points(1, :) = [x 0 z];
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -5785,20 +6133,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z + 1; 
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 19 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 29
-                                                                            points_set_convex{j}.points(2, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                        if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                        if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 19 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 29
+                                                                                points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -5813,43 +6173,54 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z
-                                                    if points_set_convex{j}.points(3, 2) == 0
-                                                        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                            points_set_convex{j}.points(4, :) = [x 0 z];
+                                            if (points_set_convex{i}.points(3, 2) == 0  || points_set_convex{j}.points(1, 2) == 0)
+                                                if points_set_convex{j}.points(1, 2) == 0
+                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z
+                                                        if points_set_convex{j}.points(3, 2) == 0
+                                                            if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                                points_set_convex{j}.points(4, :) = [x 0 z];
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{i}.points(3, 2) == 0
+                                                    if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
+                                                        if points_set_convex{i}.points(1, 2) == 0 
+                                                            points_set_convex{i}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
 
-                                                if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
-                                                    if points_set_convex{i}.points(1, 2) == 0 
-                                                        points_set_convex{i}.points(1, :) = [x 0 z];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -5869,20 +6240,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z_aux
-                                                                        points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
-                                                                        if points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 29
-                                                                            points_set_convex{i}.points(2, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                        if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z_aux
+                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                        if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
+                                                                            if points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 29
+                                                                                points_set_convex{i}.points(2, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -5964,43 +6347,54 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < 0
-                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z
-                                                    if points_set_convex{i}.points(1, 2) == 0 
-                                                        points_set_convex{i}.points(1, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z
-                                                    if points_set_convex{j}.points(3, 2) == 0
-                                                        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                            points_set_convex{j}.points(4, :) = [x 0 z];
+                                            if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0) 
+                                                if points_set_convex{i}.points(3, 2) == 0
+                                                    if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z
+                                                        if points_set_convex{i}.points(1, 2) == 0 
+                                                            points_set_convex{i}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
-                                                    %else                                                        
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(1, 2) == 0
+                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z
+                                                        if points_set_convex{j}.points(3, 2) == 0
+                                                            if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                                points_set_convex{j}.points(4, :) = [x 0 z];
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
+                                                        %else                                                        
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -6020,20 +6414,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(2, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                        if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(2, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                        if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 35
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -6048,43 +6454,54 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z
-                                                    if points_set_convex{j}.points(1, 2) == 0 
-                                                        points_set_convex{j}.points(1, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z
-                                                    if points_set_convex{i}.points(3, 2) == 0 
-                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x 0 z];
+                                            if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0) 
+                                                if points_set_convex{j}.points(3, 2) == 0
+                                                    if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z
+                                                        if points_set_convex{j}.points(1, 2) == 0 
+                                                            points_set_convex{j}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
                                                         end
-                                                        points_set_convex{i}.points(3, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{i}.points(1, 2) == 0
+                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z
+                                                        if points_set_convex{i}.points(3, 2) == 0 
+                                                            if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x 0 z];
+                                                            end
+                                                            points_set_convex{i}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
+
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -6104,20 +6521,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(2, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
-                                                                        if points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 35
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                        if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z_aux
+                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                        if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
+                                                                            if points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 35
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -6207,39 +6636,50 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < m_j
-                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z
-                                                    if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                        points_set_convex{i}.points(4, :) = [x 0 z];
-                                                    end
-                                                    points_set_convex{i}.points(3, :) = [x 0 z];
-                                                    
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end                                                
+                                            if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0)
+                                                if points_set_convex{i}.points(1, 2) == 0
+                                                    if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z
+                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                            points_set_convex{i}.points(4, :) = [x 0 z];
+                                                        end
+                                                        points_set_convex{i}.points(3, :) = [x 0 z];
 
-                                                if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z
-                                                    points_set_convex{j}.points(1, :) = [x 0 z];
-                                                    
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end  
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(3, 2) == 0
+                                                    if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z
+                                                        points_set_convex{j}.points(1, :) = [x 0 z];
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
                                                 if points_set_convex{j}.tipo == 7 && (points_set_convex{i}.tipo == 35 || points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 5) || ...
                                                     points_set_convex{j}.tipo == 19 && (points_set_convex{i}.tipo == 35 || points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 5) || ...
-                                                    points_set_convex{j}.tipo == 29 && (points_set_convex{i}.tipo == 35 || points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 5)
+                                                    points_set_convex{j}.tipo == 29 && (points_set_convex{i}.tipo == 35 || points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 5)                                                    
                                                     if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z || ...
                                                        points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z
                                                         z_aux = z;
@@ -6252,20 +6692,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(2, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z_aux
-                                                                        if points_set_convex{i}.tipo == 35
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                        if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z_aux
+                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                        if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z_aux
+                                                                            if points_set_convex{i}.tipo == 35
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -6280,39 +6732,50 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z
-                                                    points_set_convex{i}.points(1, :) = [x 0 z];
-                                                    
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(s, handles.listbox_operations, 'string', ...
-                                                    %        char('La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end                                                
+                                            if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0)
+                                                if points_set_convex{i}.points(3, 2) == 0
+                                                    if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z
+                                                        points_set_convex{i}.points(1, :) = [x 0 z];
 
-                                                if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z
-                                                    if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                        points_set_convex{j}.points(4, :) = [x 0 z];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(s, handles.listbox_operations, 'string', ...
+                                                        %        char('La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end   
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(1, 2) == 0
+                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z
+                                                        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                            points_set_convex{j}.points(4, :) = [x 0 z];
+                                                        end
+                                                        points_set_convex{j}.points(3, :) = [x 0 z];
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
                                                     end
-                                                    points_set_convex{j}.points(3, :) = [x 0 z];
-                                                    
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
-                                                if points_set_convex{i}.tipo == 7 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 5) || ...
-                                                    points_set_convex{i}.tipo == 19 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 5) || ...
-                                                    points_set_convex{i}.tipo == 29 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 5)
+                                                if points_set_convex{i}.tipo == 7 && (points_set_convex{j}.tipo == 35  || points_set_convex{j}.tipo == 23 || points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 5) || ...
+                                                    points_set_convex{i}.tipo == 19 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 23 || points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 5) || ...
+                                                    points_set_convex{i}.tipo == 29 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 23 || points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 5)                                                    
                                                     if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z || ...
                                                        points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z
                                                         z_aux = z;
@@ -6325,20 +6788,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(2, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                        if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(2, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                        if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 35
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;                
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -6421,43 +6896,54 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < m_j
-                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z
-                                                    if points_set_convex{i}.points(1, 2) == 0 
-                                                        points_set_convex{i}.points(1, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z
-                                                    if points_set_convex{j}.points(3, 2) == 0
-                                                        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                            points_set_convex{j}.points(4, :) = [x 0 z];
+                                            if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0)
+                                                if points_set_convex{i}.points(3, 2) == 0
+                                                    if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z
+                                                        if points_set_convex{i}.points(1, 2) == 0 
+                                                            points_set_convex{i}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(1, 2) == 0
+                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z
+                                                        if points_set_convex{j}.points(3, 2) == 0
+                                                            if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                                points_set_convex{j}.points(4, :) = [x 0 z];
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
@@ -6476,20 +6962,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                        if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                        if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 35
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -6504,43 +7002,54 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z
-                                                    if points_set_convex{j}.points(1, 2) == 0 
-                                                        points_set_convex{j}.points(1, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
+                                            if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0)
+                                                if points_set_convex{j}.points(3, 2) == 0
+                                                    if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z
+                                                        if points_set_convex{j}.points(1, 2) == 0 
+                                                            points_set_convex{j}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{i}.points(1, 2) == 0
+                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z
+                                                        if points_set_convex{i}.points(3, 2) == 0
+                                                            if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x 0 z];
+                                                            end                                                        
+                                                            points_set_convex{i}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
 
-                                                if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z
-                                                    if points_set_convex{i}.points(3, 2) == 0
-                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x 0 z];
-                                                        end                                                        
-                                                        points_set_convex{i}.points(3, :) = [x 0 z];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 %%%%%% Modificar (Revisar)
@@ -6559,20 +7068,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z_aux
-                                                                        points_set_convex{j}.points(2, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
-                                                                        if points_set_convex{i}.tipo == 35
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                        if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z_aux
+                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                        if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
+                                                                            if points_set_convex{i}.tipo == 35
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -6662,43 +7183,54 @@ for i = indexset1
                                         %C2 = dot(N2, [0 1 0]);
                                         
                                         if m_i < m_j
-                                            if (points_set_convex{i}.points(3, 2) == 0 || (points_set_convex{i}.points(3, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(1, 2) == 0 || (points_set_convex{j}.points(1, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
-                                                    if points_set_convex{i}.points(1, 2) == 0 
-                                                        points_set_convex{i}.points(1, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z
-                                                    if points_set_convex{j}.points(3, 2) == 0 
-                                                        if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
-                                                            points_set_convex{j}.points(4, :) = [x y 0];
+                                            if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0)
+                                                if points_set_convex{i}.points(3, 2) == 0
+                                                    if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
+                                                        if points_set_convex{i}.points(1, 2) == 0 
+                                                            points_set_convex{i}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
                                                         end
-                                                        points_set_convex{j}.points(3, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(2, :) = [x points_set_convex{i}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.points(1, 2) == 0
+                                                    if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z
+                                                        if points_set_convex{j}.points(3, 2) == 0 
+                                                            if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
+                                                                points_set_convex{j}.points(4, :) = [x y 0];
+                                                            end
+                                                            points_set_convex{j}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [x points_set_convex{j}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -6717,20 +7249,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(2, :) = eval(sol); %%3
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z_aux
-                                                                        if points_set_convex{j}.tipo == 29
-                                                                            points_set_convex{j}.points(4, :) = eval(sol); %%2
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                        if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(2, :) = p_new_i; %%3
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                        if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z_aux
+                                                                            if points_set_convex{j}.tipo == 29
+                                                                                points_set_convex{j}.points(4, :) = p_new_j; %%2
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -6745,43 +7289,54 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if (points_set_convex{i}.points(1, 2) == 0 || (points_set_convex{i}.points(1, 2) > 0 && points_set_convex{i}.points(4, 2) == 0 )) && ... %%%% OJO
-                                               (points_set_convex{j}.points(3, 2) == 0 || (points_set_convex{j}.points(3, 2) > 0 && points_set_convex{j}.points(4, 2) == 0 )) %%%% OJO
-                                                if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
-                                                    if points_set_convex{j}.points(1, 2) == 0 
-                                                        points_set_convex{j}.points(1, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
-                                                end
-
-                                                if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z
-                                                    if points_set_convex{i}.points(3, 2) == 0
-                                                        if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
-                                                            points_set_convex{i}.points(4, :) = [x y 0];
+                                            if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0)
+                                                if points_set_convex{j}.points(3, 2) == 0
+                                                    if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
+                                                        if points_set_convex{j}.points(1, 2) == 0 
+                                                            points_set_convex{j}.points(1, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [x 0 z];
                                                         end
-                                                        points_set_convex{i}.points(3, :) = [x 0 z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
-                                                    end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(2, :) = [x points_set_convex{j}.points(2, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{i}.points(1, 2) == 0
+                                                    if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z
+                                                        if points_set_convex{i}.points(3, 2) == 0
+                                                            if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
+                                                                points_set_convex{i}.points(4, :) = [x y 0];
+                                                            end
+                                                            points_set_convex{i}.points(3, :) = [x 0 z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [x 0 z];
+                                                        end
+
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [x points_set_convex{i}.points(4, 2) z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.'));
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar (Revisar)
@@ -6800,20 +7355,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(2)-max([points_actual_i(:,2);points_actual_j(:,2)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[x 0 z_aux], [0, 1, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_i(:,2)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(2)-max(points_actual_j(:,2)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(2, :) = eval(sol); %%3
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z_aux
-                                                                        if points_set_convex{i}.tipo == 29
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);%%2
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                        if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
+                                                                            points_set_convex{j}.points(2, :) = p_new_j; %%3
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                        if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z_aux
+                                                                            if points_set_convex{i}.tipo == 29
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;%%2
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7003,38 +7570,16 @@ for i = indexset1
                                     if y > 0 && z > 0   
                                         %if points_set_nonred{i}.points(2, 2) <= points_set_nonred{j}.points(2, 2)
                                         if m_i <= m_j
-                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
                                                 %if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z %%%11/01
-                                                if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z
-                                                    if points_set_convex{i}.points(1, 1) == 0 
-                                                        %%%%%%
-                                                        %[points_set_convex{i}.points, points_set_convex{j}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                        %    y, z, table_copy, i, j, 1, 2, 4, 3);
-                                                        %%%%%%%                                                    
-                                                        points_set_convex{i}.points(1, :) = [0 y z];
-
-                                                        %if points_set_convex{j}.points(2, 1) == 0
-                                                            %if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) >= z %%%11/01
-                                                        %        points_set_convex{j}.points(2, :) = [0 y z];
-                                                            %end
-                                                        %else
-                                                            %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01
-                                                        %        points_set_convex{j}.points(4, :) = [0 y z];
-                                                            %end
-                                                        %end
-                                                    else %if points_set_convex{i}.points(4, 1) == 0 
-                                                        %if points_actual_i(4, 2) <= y  && points_actual_i(4, 3) >= z %%%11/01
+                                                if points_set_convex{i}.points(2, 1) == 0
+                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z
+                                                        if points_set_convex{i}.points(1, 1) == 0 
                                                             %%%%%%
                                                             %[points_set_convex{i}.points, points_set_convex{j}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                            %    y, z, table_copy, i, j, 4, 2, 1, 3);
-                                                            %%%%%%%                                                                                                                
-                                                            dim = size(points_set_convex{i}.points);
-                                                            if dim(1) == 4
-                                                                points_set_convex{i}.points(4, :) = [0 y z];
-                                                            else
-                                                                points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
-                                                            end
+                                                            %    y, z, table_copy, i, j, 1, 2, 4, 3);
+                                                            %%%%%%%                                                    
+                                                            points_set_convex{i}.points(1, :) = [0 y z];
 
                                                             %if points_set_convex{j}.points(2, 1) == 0
                                                                 %if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) >= z %%%11/01
@@ -7045,34 +7590,67 @@ for i = indexset1
                                                             %        points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %end
                                                             %end
-                                                        %else
-                                                            %%%%
-                                                        %end 
+                                                        else %if points_set_convex{i}.points(4, 1) == 0 
+                                                            %if points_actual_i(4, 2) <= y  && points_actual_i(4, 3) >= z %%%11/01
+                                                                %%%%%%
+                                                                %[points_set_convex{i}.points, points_set_convex{j}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
+                                                                %    y, z, table_copy, i, j, 4, 2, 1, 3);
+                                                                %%%%%%%                                                                                                                
+                                                                dim = size(points_set_convex{i}.points);
+                                                                if dim(1) == 4
+                                                                    points_set_convex{i}.points(4, :) = [0 y z];
+                                                                else
+                                                                    points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                                end
+
+                                                                %if points_set_convex{j}.points(2, 1) == 0
+                                                                    %if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) >= z %%%11/01
+                                                                %        points_set_convex{j}.points(2, :) = [0 y z];
+                                                                    %end
+                                                                %else
+                                                                    %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01
+                                                                %        points_set_convex{j}.points(4, :) = [0 y z];
+                                                                    %end
+                                                                %end
+                                                            %else
+                                                                %%%%
+                                                            %end 
+                                                        end
+                                                    else
+                                                        calc_intersect = 1;
                                                     end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
-                                                if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z
-                                                    %if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z%%%11/01  Agregar tipo
-                                                    %%%%%%
-                                                    %[points_set_convex{j}.points, points_set_convex{i}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
-                                                    %    y, z, table_copy, i, j, 2, 1, 4, 3);
-                                                    %%%%%%%                                                                                                               
+                                                if points_set_convex{j}.points(1, 1) == 0
+                                                    if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z
+                                                        %if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z%%%11/01  Agregar tipo
+                                                        %%%%%%
+                                                        %[points_set_convex{j}.points, points_set_convex{i}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
+                                                        %    y, z, table_copy, i, j, 2, 1, 4, 3);
+                                                        %%%%%%%                                                                                                               
 
-                                                    if points_set_convex{j}.points(2, 1) == 0
-                                                        %if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) >= z %%%11/01
-                                                            points_set_convex{j}.points(2, :) = [0 y z];
-                                                        %end
+                                                        if points_set_convex{j}.points(2, 1) == 0
+                                                            %if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) >= z %%%11/01
+                                                                points_set_convex{j}.points(2, :) = [0 y z];
+                                                            %end
+                                                        else
+                                                            %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01
+
+                                                                dim = size(points_set_convex{j}.points);
+                                                                if dim(1) == 4
+                                                                    points_set_convex{j}.points(4, :) = [0 y z];
+                                                                else
+                                                                    points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                                end
+                                                            %end
+                                                        end
                                                     else
-                                                        %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01
-                                                            
-                                                            dim = size(points_set_convex{j}.points);
-                                                            if dim(1) == 4
-                                                                points_set_convex{j}.points(4, :) = [0 y z];
-                                                            else
-                                                                points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
-                                                            end
-                                                        %end
+                                                        calc_intersect = 1;
                                                     end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 %%%%%
                                                 %%%Desarrollar planos tipo 4
@@ -7092,21 +7670,33 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(3, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z_aux
-                                                                        if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
-                                                                                points_set_convex{i}.tipo == 4 && points_set_convex{j}.tipo == 4
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                        if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(3, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                        if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z_aux
+                                                                            if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
+                                                                                    points_set_convex{i}.tipo == 4 && points_set_convex{j}.tipo == 4
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7121,38 +7711,17 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
+                                            if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
                                                 %if points_actual_i(2, 3) <= z && points_actual_i(2, 2) >= y%%%11/01
-                                                if points_actual_i(2, 3) <= z && points_actual_i(2, 2) >= y%%%11/01
-                                                    if points_set_convex{i}.points(2, 1) == 0
-                                                        %%%%%%
-                                                        %[points_set_convex{i}.points, points_set_convex{j}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                        %    y, z, table_copy, i, j, 2, 1, 4, 3);
-                                                        %%%%%%%                                                                                                        
-                                                        points_set_convex{i}.points(2, :) = [0 y z];
-
-                                                        %if points_set_convex{j}.points(1, 1) == 0
-                                                            %if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z %%%11/01
-                                                        %        points_set_convex{j}.points(1, :) = [0 y z];
-                                                            %end
-                                                        %else
-                                                            %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01
-                                                        %        points_set_convex{j}.points(4, :) = [0 y z];
-                                                            %end
-                                                        %end
-                                                    else %if points_set_convex{i}.points(4, 1) == 0
-                                                        %if points_actual_i(4, 3) <= z && points_actual_i(4, 2) >= y%%%11/01
+                                                if points_set_convex{i}.points(1, 1) == 0
+                                                    if points_actual_i(2, 3) <= z && points_actual_i(2, 2) >= y%%%11/01
+                                                        if points_set_convex{i}.points(2, 1) == 0
                                                             %%%%%%
                                                             %[points_set_convex{i}.points, points_set_convex{j}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
-                                                            %    y, z, table_copy, i, j, 4, 1, 2, 3);
-                                                            %%%%%%%                                                                                                                
-                                                            dim = size(points_set_convex{i}.points);
-                                                            if dim(1) == 4
-                                                                points_set_convex{i}.points(4, :) = [0 y z];
-                                                            else
-                                                                points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
-                                                            end
+                                                            %    y, z, table_copy, i, j, 2, 1, 4, 3);
+                                                            %%%%%%%                                                                                                        
+                                                            points_set_convex{i}.points(2, :) = [0 y z];
+
                                                             %if points_set_convex{j}.points(1, 1) == 0
                                                                 %if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z %%%11/01
                                                             %        points_set_convex{j}.points(1, :) = [0 y z];
@@ -7162,33 +7731,65 @@ for i = indexset1
                                                             %        points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %end
                                                             %end
-                                                        %else
-                                                            %%%%%%
-                                                        %end  
+                                                        else %if points_set_convex{i}.points(4, 1) == 0
+                                                            %if points_actual_i(4, 3) <= z && points_actual_i(4, 2) >= y%%%11/01
+                                                                %%%%%%
+                                                                %[points_set_convex{i}.points, points_set_convex{j}.points] = XParalelPlanesInterceptYZ(handles, points_set_convex{i}.points, points_set_convex{j}.points, ...
+                                                                %    y, z, table_copy, i, j, 4, 1, 2, 3);
+                                                                %%%%%%%                                                                                                                
+                                                                dim = size(points_set_convex{i}.points);
+                                                                if dim(1) == 4
+                                                                    points_set_convex{i}.points(4, :) = [0 y z];
+                                                                else
+                                                                    points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                                end
+                                                                %if points_set_convex{j}.points(1, 1) == 0
+                                                                    %if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z %%%11/01
+                                                                %        points_set_convex{j}.points(1, :) = [0 y z];
+                                                                    %end
+                                                                %else
+                                                                    %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01
+                                                                %        points_set_convex{j}.points(4, :) = [0 y z];
+                                                                    %end
+                                                                %end
+                                                            %else
+                                                                %%%%%%
+                                                            %end  
+                                                        end
+                                                    else
+                                                        calc_intersect = 1;
                                                     end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
-                                                if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z
-                                                    %if points_actual_j(1, 2) >= y && points_actual_j(1, 3) <= z%%%11/01  Agregar tipo
-                                                    %%%%%%
-                                                    %[points_set_convex{j}.points, points_set_convex{i}.points] = XParalelPlanesInterceptYZ(points_set_convex{j}.points, points_set_convex{i}.points, ...
-                                                    %    y, z, table_copy, i, j, 1, 2, 4, 3);
-                                                    %%%%%%%
+                                                if points_set_convex{j}.points(2, 1) == 0
+                                                    if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z
+                                                        %if points_actual_j(1, 2) >= y && points_actual_j(1, 3) <= z%%%11/01  Agregar tipo
+                                                        %%%%%%
+                                                        %[points_set_convex{j}.points, points_set_convex{i}.points] = XParalelPlanesInterceptYZ(points_set_convex{j}.points, points_set_convex{i}.points, ...
+                                                        %    y, z, table_copy, i, j, 1, 2, 4, 3);
+                                                        %%%%%%%
 
-                                                    if points_set_convex{j}.points(1, 1) == 0
-                                                        %if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z %%%11/01
-                                                            points_set_convex{j}.points(1, :) = [0 y z];
-                                                        %end
+                                                        if points_set_convex{j}.points(1, 1) == 0
+                                                            %if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z %%%11/01
+                                                                points_set_convex{j}.points(1, :) = [0 y z];
+                                                            %end
+                                                        else
+                                                            %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01                                                            
+                                                                dim = size(points_set_convex{j}.points);
+                                                                if dim(1) == 4
+                                                                    points_set_convex{j}.points(4, :) = [0 y z];
+                                                                else
+                                                                    points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                                end
+                                                            %end
+                                                        end
                                                     else
-                                                        %if points_actual_j(4, 2) <= y  && points_actual_j(4, 3) >= z %%%11/01                                                            
-                                                            dim = size(points_set_convex{j}.points);
-                                                            if dim(1) == 4
-                                                                points_set_convex{j}.points(4, :) = [0 y z];
-                                                            else
-                                                                points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
-                                                            end
-                                                        %end
+                                                        calc_intersect = 1;
                                                     end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 %%%%%
                                                 %%%Desarrollar planos tipo 4
@@ -7208,21 +7809,33 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %y = y + 1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(3, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(2, 2) >= y && points_actual_i(2, 3) <= z_aux
-                                                                        if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
-                                                                                points_set_convex{i}.tipo == 4 && points_set_convex{j}.tipo == 4
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                        if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z_aux
+                                                                            points_set_convex{j}.points(3, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                        if points_actual_i(2, 2) >= y && points_actual_i(2, 3) <= z_aux
+                                                                            if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
+                                                                                    points_set_convex{i}.tipo == 4 && points_set_convex{j}.tipo == 4
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7290,40 +7903,51 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < 0
-                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z
-                                                    if points_set_convex{i}.points(2, 1) == 0 
-                                                        points_set_convex{i}.points(2, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                            if (points_set_convex{i}.points(1, 1) == 0  || points_set_convex{j}.points(2, 1) == 0 )
+                                                if points_set_convex{i}.points(1, 1) == 0
+                                                    if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z
+                                                        if points_set_convex{i}.points(2, 1) == 0 
+                                                            points_set_convex{i}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{j}.points(2, 1) == 0 
+                                                    if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
+                                                        if points_set_convex{j}.points(1, 1) == 0 
+                                                            points_set_convex{j}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
-                                                    if points_set_convex{j}.points(1, 1) == 0 
-                                                        points_set_convex{j}.points(1, :) = [0 y z];
+                                                        %if abs(C2) < e                                                        
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C2) < e                                                        
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar
@@ -7343,20 +7967,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z_aux
-                                                                        points_set_convex{i}.points(3, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 24 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                        if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z_aux
+                                                                            points_set_convex{i}.points(3, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(2, 1) == 0 
+                                                                        if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 24 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7370,41 +8006,52 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                                 calc_intersect = 1;  
                                             end
-                                        else
-                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z
-                                                    if points_set_convex{j}.points(2, 1) == 0 
-                                                        points_set_convex{j}.points(2, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                        else                                            
+                                            if (points_set_convex{i}.points(2, 1) == 0  || points_set_convex{j}.points(1, 1) == 0 )
+                                                if points_set_convex{j}.points(1, 1) == 0 
+                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z
+                                                        if points_set_convex{j}.points(2, 1) == 0 
+                                                            points_set_convex{j}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{i}.points(2, 1) == 0
+                                                    if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
+                                                        if points_set_convex{i}.points(1, 1) == 0 
+                                                            points_set_convex{i}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
-                                                    if points_set_convex{i}.points(1, 1) == 0 
-                                                        points_set_convex{i}.points(1, :) = [0 y z];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 2 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%% Modificar
@@ -7424,21 +8071,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z_aux
-                                                                        points_set_convex{j}.points(3, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-
-                                                                    if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
-                                                                        if points_set_convex{i}.tipo == 24 || points_set_convex{i}.tipo == 26 || points_set_convex{i}.tipo == 32
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(1, 1) == 0 
+                                                                        if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z_aux
+                                                                            points_set_convex{j}.points(3, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                        if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
+                                                                            if points_set_convex{i}.tipo == 24 || points_set_convex{i}.tipo == 26 || points_set_convex{i}.tipo == 32
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7522,40 +8180,51 @@ for i = indexset1
                                         %N2 = cross(points_actual_j(1,:)-points_actual_j(2,:), points_actual_j(1,:)-points_actual_j(3,:));
                                         %C2 = dot(N2, [1 0 0]);
                                         if m_i < 0
-                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z
-                                                    if points_set_convex{i}.points(1, 1) == 0 
-                                                        points_set_convex{i}.points(1, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                            if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
+                                                if points_set_convex{i}.points(2, 1) == 0
+                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z
+                                                        if points_set_convex{i}.points(1, 1) == 0 
+                                                            points_set_convex{i}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{j}.points(1, 1) == 0
+                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
+                                                        if points_set_convex{j}.points(2, 1) == 0 
+                                                            points_set_convex{j}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
-                                                    if points_set_convex{j}.points(2, 1) == 0 
-                                                        points_set_convex{j}.points(2, :) = [0 y z];
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%%
@@ -7575,20 +8244,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z+1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                        if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                        if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 35
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7603,40 +8284,51 @@ for i = indexset1
                                                 calc_intersect = 1;  
                                             end
                                         else
-                                             if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z
-                                                    if points_set_convex{j}.points(1, 1) == 0 
-                                                        points_set_convex{j}.points(1, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                             if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
+                                                 if points_set_convex{j}.points(2, 1) == 0
+                                                    if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z
+                                                        if points_set_convex{j}.points(1, 1) == 0 
+                                                            points_set_convex{j}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{i}.points(1, 1) == 0
+                                                    if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
+                                                        if points_set_convex{i}.points(2, 1) == 0 
+                                                            points_set_convex{i}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
-                                                    if points_set_convex{i}.points(2, 1) == 0 
-                                                        points_set_convex{i}.points(2, :) = [0 y z];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 3 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 %%%%%%
@@ -7656,20 +8348,32 @@ for i = indexset1
                                                                 %points_set_convex{j}.points(4, :) = [0 y z];
                                                                 %z = z + 1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
-                                                                        if points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 26 || points_set_convex{i}.tipo == 35
-                                                                            points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                        if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
+                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                        if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
+                                                                            if points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 26 || points_set_convex{i}.tipo == 35
+                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7760,35 +8464,46 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < m_j
-                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
-                                                    points_set_convex{i}.points(2, :) = [0 y z];
-                                                    
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                            if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
+                                                if points_set_convex{i}.points(1, 1) == 0
+                                                    if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
+                                                        points_set_convex{i}.points(2, :) = [0 y z];
+
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
-                                                if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
-                                                    points_set_convex{j}.points(1, :) = [0 y z];
-                                                    
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                if points_set_convex{j}.points(2, 1) == 0
+                                                    if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
+                                                        points_set_convex{j}.points(1, :) = [0 y z];
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.tipo == 7 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 6) || ...
-                                                    points_set_convex{i}.tipo == 24 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 6) || ...
-                                                    points_set_convex{i}.tipo == 32 && (points_set_convex{j}.tipo == 35 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 6)
+                                                if points_set_convex{i}.tipo == 7 && (points_set_convex{j}.tipo == 32 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 6) || ...
+                                                    points_set_convex{i}.tipo == 24 && (points_set_convex{j}.tipo == 32 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 6) || ...
+                                                    points_set_convex{i}.tipo == 35 && (points_set_convex{j}.tipo == 32 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 6)                                                    
                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z || ...
                                                         points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
                                                         z_aux = z;
@@ -7801,20 +8516,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z+1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                        if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                        if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 32
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7829,35 +8556,46 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
-                                                    points_set_convex{i}.points(1, :) = [0 y z];
-                                                    
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
-                                                    %end
-                                                end                                                
+                                            if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
+                                                if points_set_convex{i}.points(2, 1) == 0
+                                                    if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
+                                                        points_set_convex{i}.points(1, :) = [0 y z];
 
-                                                if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
-                                                    points_set_convex{j}.points(2, :) = [0 y z];
-                                                    
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end 
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.tipo == 7 && (points_set_convex{i}.tipo == 35 || points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 6) || ...
-                                                    points_set_convex{j}.tipo == 24 && (points_set_convex{i}.tipo == 35 || points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 6) || ...
-                                                    points_set_convex{j}.tipo == 32 && (points_set_convex{i}.tipo == 35 || points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 6)
+                                                if points_set_convex{j}.points(1, 1) == 0
+                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
+                                                        points_set_convex{j}.points(2, :) = [0 y z];
+
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 4 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
+                                                end
+                                                
+                                                if points_set_convex{j}.tipo == 7 && (points_set_convex{i}.tipo == 32 || points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 6) || ...
+                                                    points_set_convex{j}.tipo == 24 && (points_set_convex{i}.tipo == 32 || points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 6) || ...
+                                                    points_set_convex{j}.tipo == 35 && (points_set_convex{i}.tipo == 32 || points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 6)                                                    
                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z || ...
                                                         points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
                                                         z_aux = z;
@@ -7870,20 +8608,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z+1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                        if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                        if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 35
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -7968,40 +8718,51 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < m_j
-                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) <= z
-                                                    if points_set_convex{i}.points(1, 1) == 0 
-                                                        points_set_convex{i}.points(1, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                            if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
+                                                if points_set_convex{i}.points(2, 1) == 0
+                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) <= z
+                                                        if points_set_convex{i}.points(1, 1) == 0 
+                                                            points_set_convex{i}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{j}.points(1, 1) == 0
+                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
+                                                        if points_set_convex{j}.points(2, 1) == 0 
+                                                            points_set_convex{j}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
-                                                    if points_set_convex{j}.points(2, 1) == 0 
-                                                        points_set_convex{j}.points(2, :) = [0 y z];
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 if points_set_convex{i}.tipo == 7 && (points_set_convex{j}.tipo == 7 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 35) || ...
@@ -8019,20 +8780,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z+1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                        if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                        if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 35
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -8047,40 +8820,51 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) <= z
-                                                    if points_set_convex{j}.points(1, 1) == 0 
-                                                        points_set_convex{j}.points(1, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                            if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
+                                                if points_set_convex{j}.points(2, 1) == 0
+                                                    if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) <= z
+                                                        if points_set_convex{j}.points(1, 1) == 0 
+                                                            points_set_convex{j}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z]; 
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z]; 
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{i}.points(1, 1) == 0
+                                                    if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
+                                                        if points_set_convex{i}.points(2, 1) == 0 
+                                                            points_set_convex{i}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
-                                                    if points_set_convex{i}.points(2, 1) == 0 
-                                                        points_set_convex{i}.points(2, :) = [0 y z];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 5 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
                                                 
                                                 if points_set_convex{i}.tipo == 7 && (points_set_convex{j}.tipo == 7 || points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 35) || ...
@@ -8098,20 +8882,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z+1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol);
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
-                                                                        if points_set_convex{j}.tipo == 35
-                                                                            points_set_convex{j}.points(4, :) = eval(sol);
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                        if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                        if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
+                                                                            if points_set_convex{j}.tipo == 35
+                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -8202,40 +8998,51 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         
                                         if m_i < m_j
-                                            if (points_set_convex{i}.points(2, 1) == 0 || (points_set_convex{i}.points(2, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                                (points_set_convex{j}.points(1, 1) == 0 || (points_set_convex{j}.points(1, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
-                                                    if points_set_convex{i}.points(1, 1) == 0 
-                                                        points_set_convex{i}.points(1, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                            if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
+                                                if points_set_convex{i}.points(2, 1) == 0
+                                                    if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
+                                                        if points_set_convex{i}.points(1, 1) == 0 
+                                                            points_set_convex{i}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{j}.points(1, 1) == 0
+                                                    if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z
+                                                        if points_set_convex{j}.points(2, 1) == 0 
+                                                            points_set_convex{j}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z
-                                                    if points_set_convex{j}.points(2, 1) == 0 
-                                                        points_set_convex{j}.points(2, :) = [0 y z];
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z];
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 if points_set_convex{i}.tipo == 6 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
@@ -8253,20 +9060,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z+1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
-                                                                        points_set_convex{i}.points(4, :) = eval(sol); %%3
-                                                                        calc_intersect = 1;
-                                                                    end
-                                                                    if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z_aux
-                                                                        if points_set_convex{j}.tipo == 32
-                                                                            points_set_convex{j}.points(4, :) = eval(sol); %%3
-                                                                        else
-                                                                            dim = size(points_set_convex{j}.points);
-                                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                        if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
+                                                                            points_set_convex{i}.points(4, :) = p_new_i; %%3
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
+                                                                    end
+                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                        if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z_aux
+                                                                            if points_set_convex{j}.tipo == 32
+                                                                                points_set_convex{j}.points(4, :) = p_new_j; %%3
+                                                                            else
+                                                                                dim = size(points_set_convex{j}.points);
+                                                                                points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
+                                                                            end
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -8281,40 +9100,51 @@ for i = indexset1
                                                 %%%%%%%%%%%%%
                                             end
                                         else
-                                            if (points_set_convex{i}.points(1, 1) == 0 || (points_set_convex{i}.points(1, 1) > 0 && points_set_convex{i}.points(4, 1) == 0 )) && ...%%%% OJO
-                                               (points_set_convex{j}.points(2, 1) == 0 || (points_set_convex{j}.points(2, 1) > 0 && points_set_convex{j}.points(4, 1) == 0 )) %%%% OJO
-                                                if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
-                                                    if points_set_convex{j}.points(1, 1) == 0 
-                                                        points_set_convex{j}.points(1, :) = [0 y z];
-                                                    else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
-                                                    end
+                                            if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
+                                                if points_set_convex{j}.points(2, 1) == 0
+                                                    if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
+                                                        if points_set_convex{j}.points(1, 1) == 0 
+                                                            points_set_convex{j}.points(1, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                    %if abs(C2) < e
-                                                    %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z]; 
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                        %if abs(C2) < e
+                                                        %    points_set_convex{j}.points(4, :) = [points_set_convex{j}.points(4, 1) y z]; 
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                        %end
+                                                    else
+                                                        calc_intersect = 1;
+                                                    end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
+                                                
+                                                if points_set_convex{i}.points(1, 1) == 0
+                                                    if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z
+                                                        if points_set_convex{i}.points(2, 1) == 0 
+                                                            points_set_convex{i}.points(2, :) = [0 y z];
+                                                        else
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        end
 
-                                                if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z
-                                                    if points_set_convex{i}.points(2, 1) == 0 
-                                                        points_set_convex{i}.points(2, :) = [0 y z];
+                                                        %if abs(C) < e
+                                                        %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
+                                                        %else
+                                                        %    s = get(handles.listbox_operations, 'string');
+                                                        %    set(handles.listbox_operations, 'string', ...
+                                                        %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
+                                                        %end
                                                     else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = [0 y z];
+                                                        calc_intersect = 1;
                                                     end
-
-                                                    %if abs(C) < e
-                                                    %    points_set_convex{i}.points(4, :) = [points_set_convex{i}.points(4, 1) y z]; 
-                                                    %else
-                                                    %    s = get(handles.listbox_operations, 'string');
-                                                    %    set(handles.listbox_operations, 'string', ...
-                                                    %        char(s, 'La reconstrucción puede ser incompleta.', 'Caso 6 de tipo de plano en desarrollo.')); 
-                                                    %end
+                                                else
+                                                    calc_intersect = 1;
                                                 end
 
                                                 if points_set_convex{i}.tipo == 6 && (points_set_convex{j}.tipo == 6 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32) || ...
@@ -8332,20 +9162,32 @@ for i = indexset1
                                                                 %points_set_convex{i}.points(4, :) = [0 y z];
                                                                 %z = z+1;
                                                                 z_sol = solve(sol(1)-max([points_actual_i(:,1);points_actual_j(:,1)]),z);
-                                                                z = z_sol; p_new = eval(eval(sol));
+                                                                z = z_sol; p_new = eval(eval(sol)); p_new_i = p_new; p_new_j = p_new;
+                                                                if all(cross(p_new-[0 y z_aux], [1, 0, 0]) == 0)
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_i(:,1)),z);
+                                                                    z = z_sol; p_new_i = eval(eval(sol));
+                                                                    syms z clear;
+                                                                    z_sol = solve(sol(1)-max(points_actual_j(:,1)),z);
+                                                                    z = z_sol; p_new_j = eval(eval(sol));
+                                                                end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z_aux
-                                                                        if points_set_convex{i}.tipo == 32
-                                                                            points_set_convex{i}.points(4, :) = eval(sol); %%3                                                                    
-                                                                        else
-                                                                            dim = size(points_set_convex{i}.points);
-                                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                        if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z_aux
+                                                                            if points_set_convex{i}.tipo == 32
+                                                                                points_set_convex{i}.points(4, :) = p_new_i; %%3                                                                    
+                                                                            else
+                                                                                dim = size(points_set_convex{i}.points);
+                                                                                points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
+                                                                            end
+                                                                            calc_intersect = 1;
                                                                         end
-                                                                        calc_intersect = 1;
                                                                     end
-                                                                    if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
-                                                                        points_set_convex{j}.points(4, :) = eval(sol); %%3
-                                                                        calc_intersect = 1;
+                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                        if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
+                                                                            points_set_convex{j}.points(4, :) = p_new_j; %%3
+                                                                            calc_intersect = 1;
+                                                                        end
                                                                     end
                                                                 end
                                                             end
@@ -10082,33 +10924,46 @@ else
                                     alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
                                             (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
             %                         if ~isnan(alpha)
-                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
+                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
                                             if ~(abs(alpha) < e || abs(alpha-1) < e)
                                                 %dim = size(points_set{i}.points);
                                                 nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
                                                 if ~(all(nonintersect==0)|| all(nonintersect==1))
                                                     points_set_convex{i}.points(K_i(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                else
+                                                    istheretoplot = 1;
+                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
     %                                                 points_set_convex{i}.points(K_i(s+1), :) = eval(sol);
                                                     dim = size(points_set_convex{i}.points);
                                                     points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
-                                                end
-                                                istheretoplot = 1;
+                                                    istheretoplot = 1;
+                                                end                                                
                                             end
                                             if all([x y z] > 0)
                                                 if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
                                                         abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1) || ...
-                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
-                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)) )) %#ok<ST2NM>
-                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM> 
-                                                    first_index = find(nonintersect', 1);
+                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
+                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
+                                                        %all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)) )) %#ok<ST2NM>                                                    
+                                                    index = setdiff(indexset1(1:Dimension(1)-1), l);
+                                                    for t = index
+                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
+                                                        if any(nonintersect'  & all(points_set_convex{l}.points > 0,2)')
+                                                            break;
+                                                        end
+                                                    end
+                                                    first_index = find(nonintersect'  & all(points_set_convex{l}.points > 0,2)', 1);
                                                     if ~isempty(first_index)
                                                         points_set_convex{l}.points(first_index, :) = eval(sol);
+                                                        istheretoplot = 1;
                                                     else
-                                                        dim = size(points_set_convex{l}.points);
-                                                        points_set_convex{l}.points(dim(1)+1, :) = eval(sol);                                            
-                                                    end
-                                                    istheretoplot = 1;
+                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), i);
+                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                            dim = size(points_set_convex{l}.points);
+                                                            points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                            istheretoplot = 1;
+                                                        end
+                                                    end                                                    
                                                 end
                                             end
                                         end
@@ -10140,33 +10995,47 @@ else
                                     alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
                                             (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
             %                         if ~isnan(alpha)
-                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
+                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) - table_copy(i, 4)) < e)) %#ok<ST2NM>
                                             if ~(abs(alpha) < e || abs(alpha-1) < e)
                                                 %dim = size(points_set{l}.points);
                                                 nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM>
                                                 if ~(all(nonintersect==0)|| all(nonintersect==1))
                                                     points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                else
+                                                    istheretoplot = 1;
+                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) - table_copy(i, 4)) < e)) %#ok<ST2NM>
     %                                                 points_set_convex{l}.points(K_l(s+1), :) = eval(sol);
                                                     dim = size(points_set_convex{l}.points);
                                                     points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                end
-                                                istheretoplot = 1;
+                                                    istheretoplot = 1;
+                                                end                                                
                                             end
                                             if all([x y z] > 0)
                                                 if ~(watchismember(points_set_convex{i}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{i}.points, p2) || ...
                                                         abs(alpha-1) < e && watchismember(points_set_convex{i}.points, p1) || ...
-                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) > table_copy(i, 4)) || ...
-                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) <= table_copy(i, 4)))) %#ok<ST2NM>
-                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{i}.points*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM> 
-                                                    first_index = find(nonintersect', 1);
-                                                    if ~isempty(first_index)
-                                                        points_set_convex{i}.points(first_index, :) = eval(sol);
-                                                    else
-                                                        dim = size(points_set_convex{i}.points);
-                                                        points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) - table_copy(i, 4)) < e)) %#ok<ST2NM>
+                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) > table_copy(i, 4)) || ...
+                                                        %all(eval(sym(str2n
+                                                        %um(rat([p1; p2]*table_copy(i, 1:3)')))) <= table_copy(i, 4)))) %#ok<ST2NM>                                                    
+                                                    index = setdiff(indexset1(1:Dimension(1)-1), i);
+                                                    for t = index
+                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{i}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
+                                                        if any(nonintersect' & all(points_set_convex{i}.points > 0,2)')
+                                                            break;
+                                                        end
                                                     end
-                                                    istheretoplot = 1;
+                                                    first_index = find(nonintersect' & all(points_set_convex{i}.points > 0,2)', 1);
+                                                    if ~isempty(first_index) 
+                                                        points_set_convex{i}.points(first_index, :) = eval(sol);
+                                                        istheretoplot = 1;
+                                                    else
+                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), i);
+                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                            dim = size(points_set_convex{i}.points);
+                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
+                                                            istheretoplot = 1;
+                                                        end
+                                                    end                                                    
                                                 end
                                             end
                                         end
@@ -10214,33 +11083,46 @@ else
                                     alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
                                             (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
             %                         if ~isnan(alpha)
-                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
+                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
                                             if ~(abs(alpha) < e || abs(alpha-1) < e)
                                                 %dim = size(points_set{i}.points);
                                                 nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
                                                 if ~(all(nonintersect==0)|| all(nonintersect==1))
                                                     points_set_convex{j}.points(K_j(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                else
+                                                    istheretoplot = 1;
+                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
     %                                                 points_set_convex{j}.points(K_j(s+1), :) = eval(sol);
                                                     dim = size(points_set_convex{j}.points);
                                                     points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
-                                                end   
-                                                istheretoplot = 1;
+                                                    istheretoplot = 1;
+                                                end                                                   
                                             end
                                             if all([x y z] > 0)
                                                 if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
                                                         abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1) || ...
-                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
-                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)))) %#ok<ST2NM>
-                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM> 
-                                                    first_index = find(nonintersect', 1);
+                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
+                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
+                                                        %all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)))) %#ok<ST2NM>                                                    
+                                                    index = setdiff(indexset1(1:Dimension(1)-1), l);
+                                                    for t = index
+                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
+                                                        if any(nonintersect' & all(points_set_convex{l}.points > 0,2)')
+                                                            break;
+                                                        end
+                                                    end
+                                                    first_index = find(nonintersect'  & all(points_set_convex{l}.points > 0,2)', 1);
                                                     if ~isempty(first_index)
                                                         points_set_convex{l}.points(first_index, :) = eval(sol);
+                                                        istheretoplot = 1;
                                                     else
-                                                        dim = size(points_set_convex{l}.points);
-                                                        points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                    end
-                                                    istheretoplot = 1;
+                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), j);
+                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                            dim = size(points_set_convex{l}.points);
+                                                            points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                            istheretoplot = 1;
+                                                        end
+                                                    end                                                    
                                                 end
                                             end
                                         end
@@ -10273,33 +11155,47 @@ else
                                     alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
                                             (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
             %                         if ~isnan(alpha)
-                                        if alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)
+                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
+                                                ~all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) - table_copy(j, 4)) < e) %#ok<ST2NM>
                                             if ~(abs(alpha) < e || abs(alpha-1) < e)
                                                 %dim = size(points_set{l}.points);
                                                 nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM>
                                                 if ~(all(nonintersect==0)|| all(nonintersect==1))
                                                     points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                else 
+                                                    istheretoplot = 1;
+                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) - table_copy(j, 4)) < e)) %#ok<ST2NM>
                                                       %points_set_convex{l}.points(K_l(s+1), :) = eval(sol);
                                                     dim = size(points_set_convex{l}.points);
                                                     points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                end                                         
-                                                istheretoplot = 1;
+                                                    istheretoplot = 1;
+                                                end                                                                                         
                                             end
                                             if all([x y z] > 0)
                                                 if ~(watchismember(points_set_convex{j}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{j}.points, p2) || ...
                                                         abs(alpha-1) < e && watchismember(points_set_convex{j}.points, p1) || ...
-                                                        (all(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) > table_copy(j, 4)) || ...
-                                                        all(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) <= table_copy(j, 4)))) %#ok<ST2NM>
-                                                    nonintersect = eval(sym(str2num(rat(points_set_convex{j}.points*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM> 
-                                                    first_index = find(nonintersect', 1);
+                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) - table_copy(j, 4)) < e)) %#ok<ST2NM>
+                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) > table_copy(j, 4)) || ...
+                                                        %all(eval(sym(str2n
+                                                        %um(rat([p1; p2]*table_copy(j, 1:3)')))) <= table_copy(j, 4)))) %#ok<ST2NM>
+                                                    index = setdiff(indexset1(1:Dimension(1)-1), j);
+                                                    for t = index
+                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{j}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
+                                                        if any(nonintersect' & all(points_set_convex{j}.points > 0,2)')
+                                                            break;
+                                                        end
+                                                    end
+                                                    first_index = find(nonintersect' & all(points_set_convex{j}.points > 0,2)', 1);
                                                     if ~isempty(first_index)
                                                         points_set_convex{j}.points(first_index, :) = eval(sol);
+                                                        istheretoplot = 1;
                                                     else
-                                                        dim = size(points_set_convex{j}.points);
-                                                        points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
-                                                    end
-                                                    istheretoplot = 1;
+                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), j);
+                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                            dim = size(points_set_convex{j}.points);
+                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                            istheretoplot = 1;
+                                                        end
+                                                    end                                                    
                                                 end
                                             end
                                         end
