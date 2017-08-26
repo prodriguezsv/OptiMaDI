@@ -3826,7 +3826,7 @@ function uipushtool1_ClickedCallback(hObject, eventdata, handles) %#ok<DEFNU,INU
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global points_set Dimension table handles_surf handles_norm x_minmax y_minmax z_minmax minxyz ...
-    points_set_nonred m_i m_j indexset1 points_set_convex all_points; %#ok<NUSED>
+    points_set_nonred m_i m_j indexset1 indexset2_copy points_set_convex all_points; %#ok<NUSED>
 %e = 0.00005; %%%% Cambiar si se cambia precisión
 
 points_set_nonred = points_set;
@@ -10859,7 +10859,7 @@ end
 
 %%%%%%
 function table_copy = PlaneCrossIntercept(handles, table_copy, i, j)
-global points_set_nonred indexset1 Dimension points_set_convex handles_surf handles_norm;
+global points_set_nonred indexset1 indexset2_copy Dimension points_set_convex handles_surf handles_norm;
 
 e = 0.00005; %%%% Cambiar si se cambia precisión
 
@@ -10892,28 +10892,28 @@ elseif all(points_set_nonred{i}.points*table_copy(j, 1:3)' <= table_copy(j, 4)) 
     delete(handles_norm(j));
     handles_surf(j) = patch('xdata',p(:,1), 'ydata',p(:,2), 'zdata', p(:,3), 'FaceColor', 'g'); hold on;
     handles_norm(j) = quiver3(0, 0, 0, table_copy(j, 1), table_copy(j, 2), table_copy(j, 3), 'Color', 'red');
-else
-    % indexset1_already = [j, setdiff(indexset1,indexset1(find(indexset1==i):Dimension(1)-1+3))];
-    indexset1_already2 = setdiff(indexset1,indexset1(find(indexset1==i):Dimension(1)-1+3));
-    indexset1_already = [j, indexset1_already2];
+else       
+    index1 = indexset1(1:find(indexset1==i));    
+    index2 = indexset2_copy;
 
-    for l = indexset1_already
-        istheretoplot = 0;
-    %     if ~((points_set_convex{i}.tipo == 8 || points_set_convex{i}.tipo == 9 || points_set_convex{i}.tipo == 10 || ...
-    %             points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 26) && ...
-    %        (points_set_convex{l}.tipo == 8 || points_set_convex{l}.tipo == 9 || points_set_convex{l}.tipo == 10 || ...
-    %             points_set_convex{l}.tipo == 16 || points_set_convex{l}.tipo == 21 || points_set_convex{l}.tipo == 26))
-            if size(unique(points_set_convex{i}.points, 'rows'), 1) >= 3
-                K_i = convex_hull(points_set_convex{i}.points, points_set_nonred{i}.points);
-                dim_K_i = size(K_i);
-                for s = 1:dim_K_i(1)-1
-                    p2 = points_set_convex{i}.points(K_i(s+1),:);
-                    p1 = points_set_convex{i}.points(K_i(s),:);
+    for l = index1
+        index2 = setdiff(index2,index1(1:find(indexset1==l)));
+        if l == i
+            index2 = index2(1:find(index2==j));
+        end
+        for k = index2
+            istheretoplot = 0;
+            if size(unique(points_set_convex{k}.points, 'rows'), 1) >= 3
+                K_k = convex_hull(points_set_convex{k}.points, points_set_nonred{k}.points);
+                dim_K_k = size(K_k);
+                for s = 1:dim_K_k(1)-1
+                    p2 = points_set_convex{k}.points(K_k(s+1),:);
+                    p1 = points_set_convex{k}.points(K_k(s),:);
                     if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
                          p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
                          p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
                          all(abs(p1 - p2)< e))
-                        sol = findIntercept(p1, p2, table_copy, i, l);
+                        sol = findIntercept(p1, p2, table_copy, k, l);
                         if ~(isempty(sol))
                             sol = [sol.x1 sol.y1 sol.z1];
                             if isempty(symvar(sol))
@@ -10927,24 +10927,22 @@ else
                                         if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
                                                 ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
                                             if ~(abs(alpha) < e || abs(alpha-1) < e)
-                                                %dim = size(points_set{i}.points);
                                                 nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
                                                 if ~(all(nonintersect==0)|| all(nonintersect==1))
-                                                    points_set_convex{i}.points(K_i(s-1+find(nonintersect',1)), :) = eval(sol);
+                                                    points_set_convex{k}.points(K_k(s-1+find(nonintersect',1)), :) = eval(sol);
                                                     istheretoplot = 1;
-                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
-    %                                                 points_set_convex{i}.points(K_i(s+1), :) = eval(sol);
-                                                    dim = size(points_set_convex{i}.points);
-                                                    points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
-                                                    istheretoplot = 1;
+                                                else
+                                                    index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+                                                    if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM> 
+                                                        dim = size(points_set_convex{k}.points);
+                                                        points_set_convex{k}.points(dim(1)+1, :) = eval(sol);
+                                                        istheretoplot = 1;
+                                                    end
                                                 end                                                
                                             end
                                             if all([x y z] > 0)
                                                 if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
-                                                        abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1) || ...
-                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
-                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
-                                                        %all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)) )) %#ok<ST2NM>                                                    
+                                                        abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1))                                                  
                                                     index = setdiff(indexset1(1:Dimension(1)-1), l);
                                                     for t = index
                                                         nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
@@ -10957,7 +10955,7 @@ else
                                                         points_set_convex{l}.points(first_index, :) = eval(sol);
                                                         istheretoplot = 1;
                                                     else
-                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), i);
+                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
                                                         if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
                                                             dim = size(points_set_convex{l}.points);
                                                             points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
@@ -10984,7 +10982,7 @@ else
                          p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
                          p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
                          all(abs(p1 - p2)< e))
-                        sol = findIntercept(p1, p2, table_copy, i, l);
+                        sol = findIntercept(p1, p2, table_copy, k, l);
                         if ~(isempty(sol))
                             sol = [sol.x1 sol.y1 sol.z1];
                             if isempty(symvar(sol))
@@ -10996,203 +10994,41 @@ else
                                             (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
             %                         if ~isnan(alpha)
                                         if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
-                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) - table_copy(i, 4)) < e)) %#ok<ST2NM>
+                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(k, 1:3)')))) - table_copy(k, 4)) < e)) %#ok<ST2NM>
                                             if ~(abs(alpha) < e || abs(alpha-1) < e)
                                                 %dim = size(points_set{l}.points);
-                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM>
+                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(k, 1:3)')))) > table_copy(k, 4); %#ok<ST2NM>
                                                 if ~(all(nonintersect==0)|| all(nonintersect==1))
                                                     points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
                                                     istheretoplot = 1;
-                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) - table_copy(i, 4)) < e)) %#ok<ST2NM>
-    %                                                 points_set_convex{l}.points(K_l(s+1), :) = eval(sol);
-                                                    dim = size(points_set_convex{l}.points);
-                                                    points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                    istheretoplot = 1;
+                                                else
+                                                    index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+                                                    if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM> 
+                                                        dim = size(points_set_convex{l}.points);
+                                                        points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                        istheretoplot = 1;
+                                                    end
                                                 end                                                
                                             end
                                             if all([x y z] > 0)
-                                                if ~(watchismember(points_set_convex{i}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{i}.points, p2) || ...
-                                                        abs(alpha-1) < e && watchismember(points_set_convex{i}.points, p1) || ...
-                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) - table_copy(i, 4)) < e)) %#ok<ST2NM>
-                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(i, 1:3)')))) > table_copy(i, 4)) || ...
-                                                        %all(eval(sym(str2n
-                                                        %um(rat([p1; p2]*table_copy(i, 1:3)')))) <= table_copy(i, 4)))) %#ok<ST2NM>                                                    
+                                                if ~(watchismember(points_set_convex{k}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{k}.points, p2) || ...
+                                                        abs(alpha-1) < e && watchismember(points_set_convex{k}.points, p1))
                                                     index = setdiff(indexset1(1:Dimension(1)-1), i);
                                                     for t = index
-                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{i}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
-                                                        if any(nonintersect' & all(points_set_convex{i}.points > 0,2)')
+                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{k}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
+                                                        if any(nonintersect' & all(points_set_convex{k}.points > 0,2)')
                                                             break;
                                                         end
                                                     end
-                                                    first_index = find(nonintersect' & all(points_set_convex{i}.points > 0,2)', 1);
+                                                    first_index = find(nonintersect' & all(points_set_convex{k}.points > 0,2)', 1);
                                                     if ~isempty(first_index) 
-                                                        points_set_convex{i}.points(first_index, :) = eval(sol);
+                                                        points_set_convex{k}.points(first_index, :) = eval(sol);
                                                         istheretoplot = 1;
                                                     else
-                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), i);
+                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
                                                         if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
-                                                            dim = size(points_set_convex{i}.points);
-                                                            points_set_convex{i}.points(dim(1)+1, :) = eval(sol);
-                                                            istheretoplot = 1;
-                                                        end
-                                                    end                                                    
-                                                end
-                                            end
-                                        end
-            %                         end
-                                end
-                            end
-                        end
-                    end
-                end
-                if istheretoplot == 1 %%%&& l ~= j        
-                    arrangetoplotPlane(table_copy, i, l);
-                    if l ~= j %|| l == indexset1(Dimension(1)-1)
-                        pasar = arrangetoplotCanonicPlane(1, l);
-                        plotPlane(handles, pasar, table_copy, l);
-                    end
-                end
-            end
-    %     end
-    end
-
-    for l = indexset1_already2
-        istheretoplot = 0;
-    %     if ~((points_set_convex{j}.tipo == 8 || points_set_convex{j}.tipo == 9 || points_set_convex{j}.tipo == 10 || ...
-    %             points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 26) && ...
-    %        (points_set_convex{l}.tipo == 8 || points_set_convex{l}.tipo == 9 || points_set_convex{l}.tipo == 10 || ...
-    %             points_set_convex{l}.tipo == 16 || points_set_convex{l}.tipo == 21 || points_set_convex{l}.tipo == 26))
-            if size(unique(points_set_convex{j}.points, 'rows'), 1) >= 3
-                K_j = convex_hull(points_set_convex{j}.points, points_set_nonred{j}.points);
-                dim_K_j = size(K_j);
-                for s = 1:dim_K_j(1)-1
-                    p2 = points_set_convex{j}.points(K_j(s+1),:);
-                    p1 = points_set_convex{j}.points(K_j(s),:);
-                    if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
-                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
-                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
-                         all(abs(p1 - p2)< e))
-                        sol = findIntercept(p1, p2, table_copy, j, l);
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    p3 = [x y z];                    
-                                    first_nonzero = find(p1-p2, 1);
-                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
-                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
-            %                         if ~isnan(alpha)
-                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
-                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
-                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
-                                                %dim = size(points_set{i}.points);
-                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
-                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
-                                                    points_set_convex{j}.points(K_j(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                    istheretoplot = 1;
-                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
-    %                                                 points_set_convex{j}.points(K_j(s+1), :) = eval(sol);
-                                                    dim = size(points_set_convex{j}.points);
-                                                    points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
-                                                    istheretoplot = 1;
-                                                end                                                   
-                                            end
-                                            if all([x y z] > 0)
-                                                if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
-                                                        abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1) || ...
-                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
-                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4)) || ...
-                                                        %all(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) <= table_copy(l, 4)))) %#ok<ST2NM>                                                    
-                                                    index = setdiff(indexset1(1:Dimension(1)-1), l);
-                                                    for t = index
-                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
-                                                        if any(nonintersect' & all(points_set_convex{l}.points > 0,2)')
-                                                            break;
-                                                        end
-                                                    end
-                                                    first_index = find(nonintersect'  & all(points_set_convex{l}.points > 0,2)', 1);
-                                                    if ~isempty(first_index)
-                                                        points_set_convex{l}.points(first_index, :) = eval(sol);
-                                                        istheretoplot = 1;
-                                                    else
-                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), j);
-                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
-                                                            dim = size(points_set_convex{l}.points);
-                                                            points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                            istheretoplot = 1;
-                                                        end
-                                                    end                                                    
-                                                end
-                                            end
-                                        end
-            %                         end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-
-            if size(unique(points_set_convex{l}.points, 'rows'), 1) >= 3
-                K_l = convex_hull(points_set_convex{l}.points, points_set_nonred{l}.points);
-                dim_K_l = size(K_l);
-                for s = 1:dim_K_l(1)-1
-                    p2 = points_set_convex{l}.points(K_l(s+1),:);
-                    p1 = points_set_convex{l}.points(K_l(s),:);
-                   if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
-                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
-                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
-                         all(abs(p1 - p2)< e))
-                        sol = findIntercept(p1, p2, table_copy, j, l);
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    p3 = [x y z]; 
-                                    first_nonzero = find(p1-p2, 1);
-                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
-                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
-            %                         if ~isnan(alpha)
-                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
-                                                ~all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) - table_copy(j, 4)) < e) %#ok<ST2NM>
-                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
-                                                %dim = size(points_set{l}.points);
-                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM>
-                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
-                                                    points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                    istheretoplot = 1;
-                                                elseif ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) - table_copy(j, 4)) < e)) %#ok<ST2NM>
-                                                      %points_set_convex{l}.points(K_l(s+1), :) = eval(sol);
-                                                    dim = size(points_set_convex{l}.points);
-                                                    points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                    istheretoplot = 1;
-                                                end                                                                                         
-                                            end
-                                            if all([x y z] > 0)
-                                                if ~(watchismember(points_set_convex{j}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{j}.points, p2) || ...
-                                                        abs(alpha-1) < e && watchismember(points_set_convex{j}.points, p1) || ...
-                                                        all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) - table_copy(j, 4)) < e)) %#ok<ST2NM>
-                                                        %(all(eval(sym(str2num(rat([p1; p2]*table_copy(j, 1:3)')))) > table_copy(j, 4)) || ...
-                                                        %all(eval(sym(str2n
-                                                        %um(rat([p1; p2]*table_copy(j, 1:3)')))) <= table_copy(j, 4)))) %#ok<ST2NM>
-                                                    index = setdiff(indexset1(1:Dimension(1)-1), j);
-                                                    for t = index
-                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{j}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
-                                                        if any(nonintersect' & all(points_set_convex{j}.points > 0,2)')
-                                                            break;
-                                                        end
-                                                    end
-                                                    first_index = find(nonintersect' & all(points_set_convex{j}.points > 0,2)', 1);
-                                                    if ~isempty(first_index)
-                                                        points_set_convex{j}.points(first_index, :) = eval(sol);
-                                                        istheretoplot = 1;
-                                                    else
-                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), j);
-                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
-                                                            dim = size(points_set_convex{j}.points);
-                                                            points_set_convex{j}.points(dim(1)+1, :) = eval(sol);
+                                                            dim = size(points_set_convex{k}.points);
+                                                            points_set_convex{k}.points(dim(1)+1, :) = eval(sol);
                                                             istheretoplot = 1;
                                                         end
                                                     end                                                    
@@ -11206,13 +11042,16 @@ else
                     end
                 end
                 if istheretoplot == 1
-                    arrangetoplotPlane(table_copy, j, l);
-                    pasar = arrangetoplotCanonicPlane(1, l);
-                    plotPlane(handles, pasar, table_copy, l);
+                    arrangetoplotPlane(table_copy, k, l);
+                    if l ~= i && l~=j 
+                        pasar = arrangetoplotCanonicPlane(1, l);
+                        plotPlane(handles, pasar, table_copy, l);
+                    end
                 end
             end
+        end
     %     end
-    end
+    end   
 end
 
 
