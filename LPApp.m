@@ -3187,7 +3187,8 @@ else
 end
 
 function trace3D(handles)
-global Matrix_problem Dimension Tableau handles_surf handles_norm x_minmax y_minmax z_minmax Order_current points_set table h;
+global Matrix_problem Dimension Tableau handles_surf handles_norm x_minmax y_minmax z_minmax ...
+    Order_current points_set table h points_set_nonred;
 %Construimos el sistema de coordenadas en la ventana
 view(3); grid on;
 xlabel(handles.axes_simplex3D, 'Eje X1');
@@ -3740,8 +3741,8 @@ for i=1:Dimension(1)
         %p = [x1 y1 z1; x2 y2 z2; x3 y3 z3; x4 y4 z4];
         p = points_set{i}.points;
         if ~(all(p(1,:) == p(2,:)) || all( p(1,:) == p(3,:)) || all(p(2,:) == p(3,:)))
-            %points_set_nonred = points_set;
-            K = convex_hull(p, points_set{i}.points);
+            points_set_nonred = points_set;
+            K = convex_hull(p, i);
             K_dim = size(K);
             if i == Dimension(1)
                 c = 'y';
@@ -3842,8 +3843,8 @@ else
     %indexset1 = [1:Dimension(1)-1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3];
     %indexset2 = 1:Dimension(1)-1; 
     %indexset2_copy = indexset2;
-    indexset1 = [2, 1, 3, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3]; %% [1, 4, 3, 2]; [2 4 3 1]
-    indexset2 = [1 3 2];  
+    indexset1 = [4, 2, 3, 1, Dimension(1)+1, Dimension(1)+2, Dimension(1)+3]; %% [1, 4, 3, 2]; [2 4 3 1]
+    indexset2 = [2 3 4 1];  
     indexset2_copy = indexset2;
 end
     s = get(handles.listbox_operations, 'string');
@@ -3888,39 +3889,41 @@ for i = indexset1
                             sol = [];
                         end
                         
-                        if (points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29 || ... %%%% Orden X-Y-Z-W
-                                points_set_convex{i}.tipo == 3 || points_set_convex{i}.tipo == 18 || points_set_convex{i}.tipo == 16)
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 4 3 1],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 4 3 1],:);    
-                        end
-                        if (points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 29 || ...
-                                points_set_convex{j}.tipo == 3 || points_set_convex{j}.tipo == 18 || points_set_convex{j}.tipo == 16)
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 4 3 1],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 4 3 1],:);    
-                        end
-                        if points_set_convex{i}.tipo == 26
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 1 3],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 1 3],:);    
-                        end
-                        if points_set_convex{j}.tipo == 26
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 1 3],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 1 3],:);    
-                        end
-                        if points_set_convex{i}.tipo == 8 || points_set_convex{i}.tipo == 21
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 8 || points_set_convex{j}.tipo == 21
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
-                        end                        
+%                         if (points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29 || ... %%%% Orden X-Y-Z-W
+%                                 points_set_convex{i}.tipo == 3 || points_set_convex{i}.tipo == 18 || points_set_convex{i}.tipo == 16)
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 4 3 1],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 4 3 1],:);    
+%                         end
+%                         if (points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 29 || ...
+%                                 points_set_convex{j}.tipo == 3 || points_set_convex{j}.tipo == 18 || points_set_convex{j}.tipo == 16)
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 4 3 1],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 4 3 1],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 26
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 1 3],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 1 3],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 26
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 1 3],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 1 3],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 8 || points_set_convex{i}.tipo == 21
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 8 || points_set_convex{j}.tipo == 21
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
+%                         end                        
                         
+                        InterchangeInterceptPoints_NR(i, 1, table_copy);
+                        InterchangeInterceptPoints_NR(j, 1, table_copy);
                         %%%% El vector director ya está considerado al eliminar casos redundantes cuando encontramos
                         %%%% interceptos y los casos acá desarrollados.
                         %%%% Agregar casos degenerados que pasan por el
@@ -3928,14 +3931,22 @@ for i = indexset1
                         %m_i = (points_actual_i(2,2)-points_actual_i(3,2))/(points_actual_i(2,1)-points_actual_i(3,1));
                         %if isnan(m_i)
                             m_i = (points_set_nonred{i}.points(2,2)-points_set_nonred{i}.points(3,2))/(points_set_nonred{i}.points(2,1)-points_set_nonred{i}.points(3,1));
+                            if isinf(m_i)
+                                m_i = abs(m_i);
+                            end
                         %end
                         %m_j = (points_actual_j(2,2)-points_actual_j(3,2))/(points_actual_j(2,1)-points_actual_j(3,1));
                         %if isnan(m_j)
                             m_j = (points_set_nonred{j}.points(2,2)-points_set_nonred{j}.points(3,2))/(points_set_nonred{j}.points(2,1)-points_set_nonred{j}.points(3,1));
+                            if isinf(m_j)
+                                m_j = abs(m_j);
+                            end
                         %end
-                        %if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...
-                        InterchangeInterceptPoints(i, 1);
-                        InterchangeInterceptPoints(j, 1);
+                        %if ((m_i < 0 || m_i == Inf)&& (m_j < 0 || m_j == Inf)) || ...                        
+                        points_set_convex{i}.points = InterchangeInterceptPoints(i, 1, points_set_convex{i}.points, table_copy);
+                        points_set_convex{j}.points = InterchangeInterceptPoints(j, 1, points_set_convex{j}.points, table_copy);
+                        points_actual_i = InterchangeInterceptPoints(i, 1, points_actual_i, table_copy);
+                        points_actual_j = InterchangeInterceptPoints(j, 1, points_actual_j, table_copy);
                         if (m_i < 0 && m_j < 0) || ...
                                 (points_set_convex{i}.tipo == 36 || points_set_convex{i}.tipo == 33 || points_set_convex{i}.tipo == 30)
                                 %((m_i == 0 || m_i == Inf) && (points_set_convex{i}.tipo == 36))
@@ -3947,7 +3958,8 @@ for i = indexset1
                                         %if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1) %%% m_i <= m_j
                                         if m_i <= m_j
                                             if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_set_convex{i}.points(3, 3) == 0
+                                                %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{i}.points(2, 3) == 0
+                                                if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                     if points_actual_i(2, 1) <= x && points_actual_i(2, 2) >= y%%%11/01  Agregar tipo 
                                                         %%%%%%%
                                                         %points_actual_j_before = points_set_convex{j}.points;
@@ -3971,7 +3983,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(2, 3) == 0
+                                                %if points_set_convex{j}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0
+                                                if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 2) <= y%%%11/01  Agregar tipo 
                                                         %%%%%%%
                                                         %points_actual_j_before = points_set_convex{j}.points;
@@ -4016,17 +4029,17 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                    if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                                         if points_actual_i(2, 1) <= x && points_actual_i(2, 2) >= y
-                                                                            points_set_convex{i}.points(1, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 3), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                    if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                                         if points_actual_j(3, 1) >= x && points_actual_j(3, 2) <= y
                                                                             if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
                                                                                 points_set_convex{i}.tipo == 2 && points_set_convex{j}.tipo == 2
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 2), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -4048,7 +4061,8 @@ for i = indexset1
                                             end
                                         else
                                             if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_set_convex{i}.points(2, 3) == 0
+                                                %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{i}.points(3, 3) == 0
+                                                if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                     if points_actual_i(3, 2) <= y && points_actual_i(3, 1) >= x %%%%11/01
                                                         %%%%%%
                                                         %points_actual_i_before = points_set_convex{i}.points;
@@ -4072,7 +4086,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(3, 3) == 0
+                                                %if points_set_convex{j}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0
+                                                if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                     if points_actual_j(2, 2) >= y && points_actual_j(2, 1) <= x %%%%11/01
                                                         %%%%%%
                                                         %[points_set_convex{j}.points, points_set_convex{i}.points] = ZParalelPlanesInterceptXY(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
@@ -4112,17 +4127,17 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                    if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                                         if points_actual_j(2, 2) >= y && points_actual_j(2, 1) <= x
-                                                                            points_set_convex{j}.points(1, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 3), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                    if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                                         if points_actual_i(3, 2) <= y && points_actual_i(3, 1) >= x
                                                                             if points_set_convex{i}.tipo == 13 && points_set_convex{j}.tipo == 13 || ...
                                                                                 points_set_convex{i}.tipo == 2 && points_set_convex{j}.tipo == 2
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 2), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -4195,7 +4210,8 @@ for i = indexset1
 
                                         if m_i < 0
                                             if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%%
-                                                if points_set_convex{i}.points(2, 3) == 0
+                                                %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{i}.points(3, 3) == 0
+                                                if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
                                                         if points_set_convex{i}.points(3, 3) == 0                                                     
                                                             if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
@@ -4221,7 +4237,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(3, 3) == 0
+                                                %if points_set_convex{j}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0
+                                                if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                     if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
                                                         if points_set_convex{j}.points(2, 3) == 0 
                                                             points_set_convex{j}.points(2, :) = [x y 0];
@@ -4271,16 +4288,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                    if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                                         if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) <= y
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 2), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                    if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                                         if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
                                                                             if points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 29
-                                                                                points_set_convex{j}.points(1, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 3), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -4302,7 +4319,8 @@ for i = indexset1
                                             end
                                         else
                                             if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%
-                                                if points_set_convex{j}.points(2, 3) == 0
+                                                %if points_set_convex{j}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0
+                                                if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
                                                         if points_set_convex{j}.points(3, 3) == 0
                                                             if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
@@ -4327,7 +4345,8 @@ for i = indexset1
                                                 else
                                                     calc_intersect = 1;
                                                 end
-                                                if points_set_convex{i}.points(3, 3) == 0
+                                                %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{i}.points(2, 3) == 0
+                                                if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                     if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
                                                         if points_set_convex{i}.points(2, 3) == 0 
                                                             points_set_convex{i}.points(2, :) = [x y 0];
@@ -4377,16 +4396,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                    if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                                         if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) <= y
-                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 2), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                    if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                                         if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
                                                                             if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 29
-                                                                                points_set_convex{i}.points(1, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 3), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -4476,7 +4495,8 @@ for i = indexset1
                                         
                                         if m_i < 0 
                                             if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%
-                                                if points_set_convex{i}.points(3, 3) == 0
+                                                %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{i}.points(2, 3) == 0
+                                                if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                     if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
                                                         if points_set_convex{i}.points(2, 3) == 0 
                                                             points_set_convex{i}.points(2, :) = [x y 0];
@@ -4503,7 +4523,8 @@ for i = indexset1
 %                                                     points_actual_j = points_actual_j([4 3 2 1], :);
 %                                                     points_set_convex{j}.points = points_set_convex{j}.points([4 3 2 1], :);
 %                                                 end
-                                                if points_set_convex{j}.points(2, 3) == 0
+                                                %if points_set_convex{j}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0
+                                                if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
                                                         if points_set_convex{j}.points(3, 3) == 0
                                                             if all(points_actual_j(3, :) == points_actual_j(4, :))
@@ -4556,16 +4577,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                    if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                                         if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) >= y
-                                                                            points_set_convex{i}.points(1, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 3), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                    if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                                         if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
                                                                             if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 32
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 2), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -4592,7 +4613,8 @@ for i = indexset1
                                             end
                                         else
                                             if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%%
-                                                if points_set_convex{j}.points(3, 3) == 0
+                                                %if points_set_convex{j}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0
+                                                if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                     if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
                                                         if points_set_convex{j}.points(2, 3) == 0 
                                                             points_set_convex{j}.points(2, :) = [x y 0];
@@ -4619,7 +4641,7 @@ for i = indexset1
 %                                                     points_actual_i = points_actual_i([4 3 2 1], :);  
 %                                                     points_set_convex{i}.points = points_set_convex{i}.points([4 3 2 1], :);
 %                                                 end
-                                                if points_set_convex{i}.points(2, 3) == 0
+                                                if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
                                                         if points_set_convex{i}.points(3, 3) == 0 
                                                             if all(points_actual_i(3, :) == points_actual_i(4, :))
@@ -4672,16 +4694,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                    if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                                         if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) >= y
-                                                                            points_set_convex{j}.points(1, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 3), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                    if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                                         if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
                                                                             if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 32
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 2), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -4788,7 +4810,8 @@ for i = indexset1
 
                                         if m_i < m_j
                                             if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_set_convex{i}.points(2, 3) == 0
+                                                %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{i}.points(3, 3) == 0
+                                                if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                     if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
                                                         if all(points_actual_i(3, :) == points_actual_i(4, :))
                                                             points_set_convex{i}.points(4, :) = [x y 0]; %%%7/01 
@@ -4809,7 +4832,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(3, 3) == 0
+                                                %if points_set_convex{j}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0
+                                                if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                     if points_actual_j(2, 1) >= x && points_actual_j(2, 2) >= y
                                                         points_set_convex{j}.points(2, :) = [x y 0];
 
@@ -4852,16 +4876,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)    
-                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                    if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                                         if points_actual_j(2, 1) >= x && points_actual_j(2, 2) >= y                                                                        
-                                                                            points_set_convex{j}.points(1, :) = p_new_j; %%%4
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 3), :) = p_new_j; %%%4
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                    if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                                         if points_actual_i(3, 1) >= x && points_actual_i(3, 2) >= y
                                                                             if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 2), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -4883,7 +4907,8 @@ for i = indexset1
                                             end
                                         else
                                             if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_set_convex{i}.points(3, 3) == 0
+                                                %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{i}.points(2, 3) == 0
+                                                if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                     if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
                                                         points_set_convex{i}.points(2, :) = [x y 0];
 
@@ -4901,7 +4926,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(2, 3) == 0
+                                                %if points_set_convex{j}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0
+                                                if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 2) >= y
                                                         if all(points_actual_j(3, :) == points_actual_j(4, :))
                                                             points_set_convex{j}.points(4, :) = [x y 0]; %%%7/01 
@@ -4947,16 +4973,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                    if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{i}.points(2, 3) == 0
                                                                         if points_actual_i(2, 1) >= x && points_actual_i(2, 2) >= y
-                                                                            points_set_convex{i}.points(1, :) = p_new_i; %%4
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 3), :) = p_new_i; %%4
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                    if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                                         if points_actual_j(3, 1) >= x && points_actual_j(3, 2) >= y
                                                                             if points_set_convex{j}.tipo == 15 || points_set_convex{j}.tipo == 32
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 2), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -5047,7 +5073,8 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_set_convex{i}.points(3, 3) == 0
+                                                %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{i}.points(2, 3) == 0
+                                                if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                     if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
                                                         if points_set_convex{i}.points(2, 3) == 0 
                                                             points_set_convex{i}.points(2, :) = [x y 0];
@@ -5070,7 +5097,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(2, 3) == 0
+                                                if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
                                                         if points_set_convex{j}.points(3, 3) == 0 
                                                             if all(points_actual_j(3, :) == points_actual_j(4, :))
@@ -5121,16 +5148,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                    if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                                         if points_actual_j(3, 1) >= x  && points_actual_j(3, 2) >= y
-                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 2), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                    if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                                         if points_actual_i(2, 1) <= x  && points_actual_i(2, 2) <= y
                                                                             if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
-                                                                                points_set_convex{i}.points(1, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 3), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -5152,7 +5179,8 @@ for i = indexset1
                                             end
                                         else
                                             if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_set_convex{j}.points(3, 3) == 0
+                                                %if points_set_convex{j}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0
+                                                if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                     if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
                                                         if points_set_convex{j}.points(2, 3) == 0 
                                                             points_set_convex{j}.points(2, :) = [x y 0];
@@ -5175,7 +5203,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(2, 3) == 0
+                                                %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{i}.points(3, 3) == 0
+                                                if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
                                                         if points_set_convex{i}.points(3, 3) == 0 
                                                             if all(points_actual_i(3, :) == points_actual_i(4, :))
@@ -5226,16 +5255,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                    if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                                         if points_actual_j(2, 1) <= x  && points_actual_j(2, 2) <= y
-                                                                            points_set_convex{j}.points(1, :) = p_new_j; %%4
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 3), :) = p_new_j; %%4
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                    if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                                         if points_actual_i(3, 1) >= x  && points_actual_i(3, 2) >= y
                                                                             if points_set_convex{i}.tipo == 15 || points_set_convex{i}.tipo == 32
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 2), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -5333,7 +5362,8 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if points_set_convex{i}.points(3, 3) == 0 || points_set_convex{j}.points(2, 3) == 0 %%%%%
-                                                if points_set_convex{i}.points(3, 3) == 0
+                                                %if points_set_convex{i}.points(3, 3) == 0 && points_set_convex{i}.points(2, 3) == 0
+                                                if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                     if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
                                                         if points_set_convex{i}.points(2, 3) == 0 
                                                             points_set_convex{i}.points(2, :) = [x y 0];
@@ -5356,7 +5386,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(2, 3) == 0
+                                                %if points_set_convex{j}.points(2, 3) == 0 && points_set_convex{j}.points(3, 3) == 0
+                                                if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                     if points_actual_j(3, 1) <= x  && points_actual_j(3, 2) <= y
                                                         if points_set_convex{j}.points(3, 3) == 0
                                                             if all(points_actual_j(3, :) == points_actual_j(4, :))
@@ -5407,16 +5438,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(2, 3) == 0
+                                                                    if points_actual_j(2, 3) == 0 && points_actual_j(3, 3) == 0
                                                                         if points_actual_j(3, 1) <= x  && points_actual_j(3, 2) <= y
-                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 2), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(3, 3) == 0
+                                                                    if points_actual_i(3, 3) == 0 && points_actual_i(2, 3) == 0
                                                                         if points_actual_i(2, 1) >= x  && points_actual_i(2, 2) >= y
                                                                             if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
-                                                                                points_set_convex{i}.points(1, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 3), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -5438,7 +5469,8 @@ for i = indexset1
                                             end
                                         else
                                             if points_set_convex{i}.points(2, 3) == 0 || points_set_convex{j}.points(3, 3) == 0 %%%%
-                                                if points_set_convex{j}.points(3, 3) == 0
+                                                %if points_set_convex{j}.points(3, 3) == 0 && points_set_convex{j}.points(2, 3) == 0
+                                                if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                     if points_actual_j(2, 1) >= x  || points_actual_j(2, 2) >= y
                                                         if points_set_convex{j}.points(2, 3) == 0 
                                                             points_set_convex{j}.points(2, :) = [x y 0];
@@ -5461,7 +5493,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(2, 3) == 0
+                                                %if points_set_convex{i}.points(2, 3) == 0 && points_set_convex{i}.points(3, 3) == 0
+                                                if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                     if points_actual_i(3, 1) <= x  && points_actual_i(3, 2) <= y
                                                         if points_set_convex{i}.points(3, 3) == 0 
                                                             if all(points_actual_i(3, :) == points_actual_i(4, :))
@@ -5512,16 +5545,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 3) == 0
+                                                                    if points_actual_j(3, 3) == 0 && points_actual_j(2, 3) == 0
                                                                         if points_actual_j(2, 1) >= x  && points_actual_j(2, 2) >= y
-                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 3), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(2, 3) == 0
+                                                                    if points_actual_i(2, 3) == 0 && points_actual_i(3, 3) == 0
                                                                         if points_actual_i(3, 1) <= x  && points_actual_i(3, 2) <= y
                                                                             if points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 2), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -5591,38 +5624,38 @@ for i = indexset1
 %                                 end
                             end
                         end
-                        if (points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29 || ...
-                                points_set_convex{i}.tipo == 3 || points_set_convex{i}.tipo == 18 || points_set_convex{i}.tipo == 16)
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 1 3 2],:); 
-                            points_actual_i(1:4, :) = points_actual_i([4 1 3 2],:); 
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 1 3 2],:);    
-                        end
-                        if (points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 29 || ...
-                                points_set_convex{j}.tipo == 3 || points_set_convex{j}.tipo == 18 || points_set_convex{j}.tipo == 16)
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 1 3 2],:);
-                            points_actual_j(1:4, :) = points_actual_j([4 1 3 2],:);  
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 1 3 2],:);    
-                        end  
-                        if points_set_convex{i}.tipo == 26
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 4 1],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 4 1],:);    
-                        end
-                        if points_set_convex{j}.tipo == 26
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 4 1],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 4 1],:);    
-                        end
-                        if points_set_convex{i}.tipo == 8 || points_set_convex{i}.tipo == 21
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 8 || points_set_convex{j}.tipo == 21
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
-                        end
+%                         if (points_set_convex{i}.tipo == 14 || points_set_convex{i}.tipo == 29 || ...
+%                                 points_set_convex{i}.tipo == 3 || points_set_convex{i}.tipo == 18 || points_set_convex{i}.tipo == 16)
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 1 3 2],:); 
+%                             points_actual_i(1:4, :) = points_actual_i([4 1 3 2],:); 
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 1 3 2],:);    
+%                         end
+%                         if (points_set_convex{j}.tipo == 14 || points_set_convex{j}.tipo == 29 || ...
+%                                 points_set_convex{j}.tipo == 3 || points_set_convex{j}.tipo == 18 || points_set_convex{j}.tipo == 16)
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 1 3 2],:);
+%                             points_actual_j(1:4, :) = points_actual_j([4 1 3 2],:);  
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 1 3 2],:);    
+%                         end  
+%                         if points_set_convex{i}.tipo == 26
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 4 1],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 4 1],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 26
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 4 1],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 4 1],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 8 || points_set_convex{i}.tipo == 21
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 8 || points_set_convex{j}.tipo == 21
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
+%                         end
                     end
                 end
 
@@ -5646,57 +5679,59 @@ for i = indexset1
                             sol = [];
                         end
                         
-                        if points_set_convex{i}.tipo == 4 %%%% Orden X-Z-Y-W
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 2 4 3],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 2 4 3],:);    
-                        end
-                        if points_set_convex{j}.tipo == 4
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 2 4 3],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 2 4 3],:);    
-                        end
-                        if points_set_convex{i}.tipo == 2 || points_set_convex{i}.tipo == 13%|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 3 1],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 3 1],:);    
-                        end
-                        if points_set_convex{j}.tipo == 2 || points_set_convex{j}.tipo == 13%|| points_set_convex{i}.tipo == 16
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 3 1],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 3 1],:);    
-                        end
-                        if points_set_convex{i}.tipo == 10 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 10
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
-                        end  
-                        if points_set_convex{i}.tipo == 8 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 8
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
-                        end
-                        if points_set_convex{i}.tipo == 26 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 3 1 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 3 1 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 26
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 3 1 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 3 1 4],:);    
-                        end
+%                         if points_set_convex{i}.tipo == 4 %%%% Orden X-Z-Y-W
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 2 4 3],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 2 4 3],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 4
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 2 4 3],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 2 4 3],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 2 || points_set_convex{i}.tipo == 13%|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 3 1],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 3 1],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 2 || points_set_convex{j}.tipo == 13%|| points_set_convex{i}.tipo == 16
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 3 1],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 3 1],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 10 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 10
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
+%                         end  
+%                         if points_set_convex{i}.tipo == 8 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 8
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 26 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 3 1 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 3 1 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 26
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 3 1 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 3 1 4],:);    
+%                         end
                         
+                        InterchangeInterceptPoints_NR(i, 2, table_copy);
+                        InterchangeInterceptPoints_NR(j, 2, table_copy);
                         %%%% El vector director ya está considerado al eliminar casos redundantes cuando encontramos
                         %%%% interceptos y los casos acá desarrollados.
                         %%%% Agregar casos degenerados que pasan por el
@@ -5704,13 +5739,21 @@ for i = indexset1
                         %m_i = (points_actual_i(1,3)-points_actual_i(3,3))/(points_actual_i(1,1)-points_actual_i(3,1));
                         %if isnan(m_i)
                             m_i = (points_set_nonred{i}.points(1,3)-points_set_nonred{i}.points(3,3))/(points_set_nonred{i}.points(1,1)-points_set_nonred{i}.points(3,1));
+                            if isinf(m_i)
+                                m_i = abs(m_i);
+                            end
                         %end
                         %m_j = (points_actual_j(1,3)-points_actual_j(3,3))/(points_actual_j(1,1)-points_actual_j(3,1));
                         %if isnan(m_j)
                             m_j = (points_set_nonred{j}.points(1,3)-points_set_nonred{j}.points(3,3))/(points_set_nonred{j}.points(1,1)-points_set_nonred{j}.points(3,1));
-                        %end
-                        InterchangeInterceptPoints(i, 2);
-                        InterchangeInterceptPoints(j, 2);
+                            if isinf(m_j)
+                                m_j = abs(m_j);
+                            end
+                        %end                        
+                        points_set_convex{i}.points = InterchangeInterceptPoints(i, 2, points_set_convex{i}.points, table_copy);
+                        points_set_convex{j}.points = InterchangeInterceptPoints(j, 2, points_set_convex{j}.points, table_copy);
+                        points_actual_i = InterchangeInterceptPoints(i, 2, points_actual_i, table_copy);
+                        points_actual_j = InterchangeInterceptPoints(j, 2, points_actual_j, table_copy);
                         if (m_i < 0 && m_j < 0 ) || ...
                                 (points_set_convex{i}.tipo == 36 || points_set_convex{i}.tipo == 33 || points_set_convex{i}.tipo == 30)
                                 %((m_i == 0 || m_i == Inf) && (points_set_convex{i}.tipo == 33))
@@ -5722,7 +5765,7 @@ for i = indexset1
                                         %if points_set_nonred{i}.points(3, 1) <= points_set_nonred{j}.points(3, 1)
                                         if m_i <= m_j                                            
                                             if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0 ) 
-                                                if points_set_convex{i}.points(3, 2) == 0
+                                                if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                     if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z %%%%11/01
                                                         if points_set_convex{i}.points(1, 2) == 0 
                                                             %%%%%%
@@ -5781,7 +5824,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 2) == 0
+                                                if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z%%%11/01  Agregar tipo 
                                                         %points_actual_j_before = points_set_convex{j}.points;
                                                         %[points_set_convex{j}.points, points_set_convex{i}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
@@ -5840,17 +5883,17 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                    if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                                         if points_actual_i(1, 1) <= x && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(2, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 3), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                    if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                                         if points_actual_j(3, 1) >= x && points_actual_j(3, 3) <= z_aux
                                                                             if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
                                                                                 points_set_convex{i}.tipo == 3 && points_set_convex{j}.tipo == 3
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -5872,7 +5915,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0 ) %%%% OJO
-                                                if points_set_convex{j}.points(3, 2) == 0
+                                                if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                     if points_actual_j(1, 3) >= z && points_actual_j(1, 1) <= x %%%11/01
                                                         if points_set_convex{j}.points(1, 2) == 0
                                                             %points_actual_i_before = points_set_convex{i}.points;
@@ -5924,7 +5967,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(1, 2) == 0
+                                                if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                     if points_actual_i(3, 1) >= x && points_actual_i(3, 3) <= z%%%11/01  Agregar tipo 
                                                         %%%%%%
                                                         %[points_set_convex{j}.points, points_set_convex{i}.points] = YParalelPlanesInterceptXZ(handles, points_set_convex{j}.points, points_set_convex{i}.points, ...
@@ -5982,17 +6025,17 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                    if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                                         if points_actual_j(1, 1) <= x && points_actual_j(1, 3) >= z_aux
-                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 3), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                    if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                                         if points_actual_i(3, 1) >= x && points_actual_i(3, 3) <= z_aux
                                                                             if points_set_convex{i}.tipo == 18 && points_set_convex{j}.tipo == 18 || ...
                                                                                 points_set_convex{i}.tipo == 3 && points_set_convex{j}.tipo == 3
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 1), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -6067,7 +6110,7 @@ for i = indexset1
                                         
                                         if m_i < 0                                            
                                             if (points_set_convex{i}.points(1, 2) == 0  || points_set_convex{j}.points(3, 2) == 0)
-                                                if points_set_convex{i}.points(1, 2) == 0
+                                                if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z
                                                         if points_set_convex{i}.points(3, 2) == 0
                                                             if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
@@ -6093,7 +6136,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(3, 2) == 0
+                                                if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                     if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
                                                         if points_set_convex{j}.points(1, 2) == 0 
                                                             points_set_convex{j}.points(1, :) = [x 0 z];
@@ -6143,16 +6186,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                    if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                                         if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) <= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 1), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                    if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                                         if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 19 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 29
-                                                                                points_set_convex{j}.points(2, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 3), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -6174,7 +6217,8 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(3, 2) == 0  || points_set_convex{j}.points(1, 2) == 0)
-                                                if points_set_convex{j}.points(1, 2) == 0
+                                                %if points_set_convex{j}.points(1, 2) == 0 && points_set_convex{j}.points(3, 2) == 0
+                                                if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z
                                                         if points_set_convex{j}.points(3, 2) == 0
                                                             if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
@@ -6200,7 +6244,8 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(3, 2) == 0
+                                                %if points_set_convex{i}.points(3, 2) == 0 && points_set_convex{i}.points(1, 2) == 0
+                                                if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                     if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
                                                         if points_set_convex{i}.points(1, 2) == 0 
                                                             points_set_convex{i}.points(1, :) = [x 0 z];
@@ -6250,16 +6295,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                    if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                                         if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) <= z_aux
-                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 1), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                    if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                                         if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
                                                                             if points_set_convex{i}.tipo == 19 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 29
-                                                                                points_set_convex{i}.points(2, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 3), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -6348,7 +6393,7 @@ for i = indexset1
                                         
                                         if m_i < 0
                                             if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0) 
-                                                if points_set_convex{i}.points(3, 2) == 0
+                                                if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                     if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z
                                                         if points_set_convex{i}.points(1, 2) == 0 
                                                             points_set_convex{i}.points(1, :) = [x 0 z];
@@ -6371,7 +6416,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 2) == 0
+                                                if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z
                                                         if points_set_convex{j}.points(3, 2) == 0
                                                             if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
@@ -6424,16 +6469,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                    if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                                         if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(2, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 3), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                    if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                                         if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 20 || points_set_convex{j}.tipo == 21 || points_set_convex{j}.tipo == 35
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -6455,7 +6500,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0) 
-                                                if points_set_convex{j}.points(3, 2) == 0
+                                                if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                     if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z
                                                         if points_set_convex{j}.points(1, 2) == 0 
                                                             points_set_convex{j}.points(1, :) = [x 0 z];
@@ -6478,7 +6523,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(1, 2) == 0
+                                                if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z
                                                         if points_set_convex{i}.points(3, 2) == 0 
                                                             if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
@@ -6531,16 +6576,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                    if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                                         if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) >= z_aux
-                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 3), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                    if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                                         if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
                                                                             if points_set_convex{i}.tipo == 20 || points_set_convex{i}.tipo == 21 || points_set_convex{i}.tipo == 35
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 1), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -6637,7 +6682,7 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0)
-                                                if points_set_convex{i}.points(1, 2) == 0
+                                                if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                     if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z
                                                         if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
                                                             points_set_convex{i}.points(4, :) = [x 0 z];
@@ -6658,7 +6703,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(3, 2) == 0
+                                                if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                     if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z
                                                         points_set_convex{j}.points(1, :) = [x 0 z];
 
@@ -6702,16 +6747,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                    if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                                         if points_actual_j(1, 1) >= x && points_actual_j(1, 3) >= z_aux
-                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 3), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                    if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                                         if points_actual_i(3, 1) >= x && points_actual_i(3, 3) >= z_aux
                                                                             if points_set_convex{i}.tipo == 35
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 1), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -6733,7 +6778,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0)
-                                                if points_set_convex{i}.points(3, 2) == 0
+                                                if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                     if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z
                                                         points_set_convex{i}.points(1, :) = [x 0 z];
 
@@ -6751,7 +6796,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 2) == 0
+                                                if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                     if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z
                                                         if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
                                                             points_set_convex{j}.points(4, :) = [x 0 z];
@@ -6798,16 +6843,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                    if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                                         if points_actual_i(1, 1) >= x && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(2, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 3), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                    if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                                         if points_actual_j(3, 1) >= x && points_actual_j(3, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 35
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -6897,7 +6942,7 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0)
-                                                if points_set_convex{i}.points(3, 2) == 0
+                                                if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                     if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z
                                                         if points_set_convex{i}.points(1, 2) == 0 
                                                             points_set_convex{i}.points(1, :) = [x 0 z];
@@ -6920,7 +6965,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 2) == 0
+                                                if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                     if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z
                                                         if points_set_convex{j}.points(3, 2) == 0
                                                             if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
@@ -6972,16 +7017,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                    if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                                         if points_actual_i(1, 1) <= x  && points_actual_i(1, 3) <= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 3), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                    if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                                         if points_actual_j(3, 1) >= x  && points_actual_j(3, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 35
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -7003,7 +7048,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0)
-                                                if points_set_convex{j}.points(3, 2) == 0
+                                                if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                     if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z
                                                         if points_set_convex{j}.points(1, 2) == 0 
                                                             points_set_convex{j}.points(1, :) = [x 0 z];
@@ -7026,7 +7071,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(1, 2) == 0
+                                                if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0 
                                                     if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z
                                                         if points_set_convex{i}.points(3, 2) == 0
                                                             if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
@@ -7078,16 +7123,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                    if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                                         if points_actual_j(1, 1) <= x  && points_actual_j(1, 3) <= z_aux
-                                                                            points_set_convex{j}.points(2, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 3), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                    if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                                         if points_actual_i(3, 1) >= x  && points_actual_i(3, 3) >= z_aux
                                                                             if points_set_convex{i}.tipo == 35
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 1), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -7184,7 +7229,7 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if (points_set_convex{i}.points(3, 2) == 0 || points_set_convex{j}.points(1, 2) == 0)
-                                                if points_set_convex{i}.points(3, 2) == 0
+                                                if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                     if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z
                                                         if points_set_convex{i}.points(1, 2) == 0 
                                                             points_set_convex{i}.points(1, :) = [x 0 z];
@@ -7207,7 +7252,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 2) == 0
+                                                if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                     if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z
                                                         if points_set_convex{j}.points(3, 2) == 0 
                                                             if all(points_set_convex{j}.points(3, :) == points_set_convex{j}.points(4, :))
@@ -7259,16 +7304,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(3, 2) == 0
+                                                                    if points_actual_i(3, 2) == 0 && points_actual_i(1, 2) == 0
                                                                         if points_actual_i(1, 1) >= x  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(2, :) = p_new_i; %%3
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 3), :) = p_new_i; %%3
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 2) == 0
+                                                                    if points_actual_j(1, 2) == 0 && points_actual_j(3, 2) == 0
                                                                         if points_actual_j(3, 1) <= x  && points_actual_j(3, 3) <= z_aux
                                                                             if points_set_convex{j}.tipo == 29
-                                                                                points_set_convex{j}.points(4, :) = p_new_j; %%2
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 3, 1), :) = p_new_j; %%2
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -7290,7 +7335,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 2) == 0 || points_set_convex{j}.points(3, 2) == 0)
-                                                if points_set_convex{j}.points(3, 2) == 0
+                                                if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                     if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z
                                                         if points_set_convex{j}.points(1, 2) == 0 
                                                             points_set_convex{j}.points(1, :) = [x 0 z];
@@ -7313,7 +7358,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(1, 2) == 0
+                                                if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                     if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z
                                                         if points_set_convex{i}.points(3, 2) == 0
                                                             if all(points_set_convex{i}.points(3, :) == points_set_convex{i}.points(4, :))
@@ -7365,16 +7410,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(3, 2) == 0
+                                                                    if points_actual_j(3, 2) == 0 && points_actual_j(1, 2) == 0
                                                                         if points_actual_j(1, 1) >= x  && points_actual_j(1, 3) >= z_aux
-                                                                            points_set_convex{j}.points(2, :) = p_new_j; %%3
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 3), :) = p_new_j; %%3
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(1, 2) == 0
+                                                                    if points_actual_i(1, 2) == 0 && points_actual_i(3, 2) == 0
                                                                         if points_actual_i(3, 1) <= x  && points_actual_i(3, 3) <= z_aux
                                                                             if points_set_convex{i}.tipo == 29
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;%%2
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 3, 1), :) = p_new_i;%%2
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -7443,56 +7488,56 @@ for i = indexset1
 %                                 end
                             end
                         end
-                        if points_set_convex{i}.tipo == 4
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 2 4 3],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 2 4 3],:);    
-                        end
-                        if points_set_convex{j}.tipo == 4
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 2 4 3],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 2 4 3],:);    
-                        end
-                        if points_set_convex{i}.tipo == 2 || points_set_convex{i}.tipo == 13%|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 3 1],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 3 1],:);    
-                        end
-                        if points_set_convex{j}.tipo == 2 || points_set_convex{j}.tipo == 13%|| points_set_convex{j}.tipo == 16
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 3 1],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 3 1],:);    
-                        end
-                        if points_set_convex{i}.tipo == 10 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 10
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
-                        end
-                        if points_set_convex{i}.tipo == 8 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 8
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
-                        end
-                        if points_set_convex{i}.tipo == 26 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 1 2 4],:); 
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 1 2 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 26
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 1 2 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 1 2 4],:);    %[3 1 2 4]
-                        end
+%                         if points_set_convex{i}.tipo == 4
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 2 4 3],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 2 4 3],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 4
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 2 4 3],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 2 4 3],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 2 || points_set_convex{i}.tipo == 13%|| points_set_convex{i}.tipo == 16 %%%% Orden X-Z-Y-W
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([4 2 3 1],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([4 2 3 1],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 2 || points_set_convex{j}.tipo == 13%|| points_set_convex{j}.tipo == 16
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([4 2 3 1],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([4 2 3 1],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 10 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 10
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 8 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 1 3 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 1 3 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 8
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 1 3 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 1 3 4],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 26 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 1 2 4],:); 
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 1 2 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 26
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 1 2 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 1 2 4],:);    %[3 1 2 4]
+%                         end
                      end                     
                  end
 
@@ -7515,37 +7560,38 @@ for i = indexset1
                         else
                             sol = [];
                         end
-                        if points_set_convex{i}.tipo == 10 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);%[2 1 3 4]
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 10 
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
-                        end
-                        if points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 21 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 3 2 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 3 2 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 21
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 3 2 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 3 2 4],:);    
-                        end
-                        if points_set_convex{i}.tipo == 9
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 3 1 4],:);
-                            points_actual_i = points_set_convex{i}.points;
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 3 1 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 9
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 3 1 4],:);
-                            points_actual_j = points_set_convex{j}.points;
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 3 1 4],:);    
-                        end
-
+%                         if points_set_convex{i}.tipo == 10 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);%[2 1 3 4]
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 10 
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 21 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 3 2 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 3 2 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 21
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 3 2 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 3 2 4],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 9
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([2 3 1 4],:);
+%                             points_actual_i = points_set_convex{i}.points;
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([2 3 1 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 9
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([2 3 1 4],:);
+%                             points_actual_j = points_set_convex{j}.points;
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([2 3 1 4],:);    
+%                         end
+                        InterchangeInterceptPoints_NR(i, 3, table_copy);
+                        InterchangeInterceptPoints_NR(j, 3, table_copy);
                         %%%% El vector director ya está considerado al eliminar casos redundantes cuando encontramos
                         %%%% interceptos y los casos acá desarrollados.
                         %%%% Agregar casos degenerados que pasan por el
@@ -7553,13 +7599,21 @@ for i = indexset1
                         %m_i = (points_actual_i(1,3)-points_actual_i(2,3))/(points_actual_i(1,2)-points_actual_i(2,2));
                         %if isnan(m_i)
                             m_i = (points_set_nonred{i}.points(1,3)-points_set_nonred{i}.points(2,3))/(points_set_nonred{i}.points(1,2)-points_set_nonred{i}.points(2,2));
+                            if isinf(m_i)
+                                m_i = abs(m_i);
+                            end
                         %end
                         %m_j = (points_actual_j(1,3)-points_actual_j(2,3))/(points_actual_j(1,2)-points_actual_j(2,2));
                         %if isnan(m_j)
                             m_j = (points_set_nonred{j}.points(1,3)-points_set_nonred{j}.points(2,3))/(points_set_nonred{j}.points(1,2)-points_set_nonred{j}.points(2,2));
-                        %end
-                        InterchangeInterceptPoints(i, 3);
-                        InterchangeInterceptPoints(j, 3);
+                            if isinf(m_j)
+                                m_j = abs(m_j);
+                            end
+                        %end                        
+                        points_set_convex{i}.points = InterchangeInterceptPoints(i, 3, points_set_convex{i}.points, table_copy);
+                        points_set_convex{j}.points = InterchangeInterceptPoints(j, 3, points_set_convex{j}.points, table_copy);
+                        points_actual_i = InterchangeInterceptPoints(i, 3, points_actual_i, table_copy);
+                        points_actual_j = InterchangeInterceptPoints(j, 3, points_actual_j, table_copy);
                         if (m_i < 0 && m_j < 0) || ...
                                 (points_set_convex{i}.tipo == 36 || points_set_convex{i}.tipo == 33 || points_set_convex{i}.tipo == 30)
                                 %((m_i == 0 || m_i == Inf) && (points_set_convex{i}.tipo == 30))
@@ -7572,7 +7626,7 @@ for i = indexset1
                                         if m_i <= m_j
                                             if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
                                                 %if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z %%%11/01
-                                                if points_set_convex{i}.points(2, 1) == 0
+                                                if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z
                                                         if points_set_convex{i}.points(1, 1) == 0 
                                                             %%%%%%
@@ -7623,7 +7677,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 1) == 0
+                                                if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                     if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z
                                                         %if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z%%%11/01  Agregar tipo
                                                         %%%%%%
@@ -7680,17 +7734,17 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                    if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                                         if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(3, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 2), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                    if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                                         if points_actual_j(2, 2) >= y && points_actual_j(2, 3) <= z_aux
                                                                             if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
                                                                                     points_set_convex{i}.tipo == 4 && points_set_convex{j}.tipo == 4
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -7713,7 +7767,7 @@ for i = indexset1
                                         else
                                             if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
                                                 %if points_actual_i(2, 3) <= z && points_actual_i(2, 2) >= y%%%11/01
-                                                if points_set_convex{i}.points(1, 1) == 0
+                                                if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                     if points_actual_i(2, 3) <= z && points_actual_i(2, 2) >= y%%%11/01
                                                         if points_set_convex{i}.points(2, 1) == 0
                                                             %%%%%%
@@ -7763,7 +7817,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(2, 1) == 0
+                                                if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                     if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z
                                                         %if points_actual_j(1, 2) >= y && points_actual_j(1, 3) <= z%%%11/01  Agregar tipo
                                                         %%%%%%
@@ -7819,17 +7873,17 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                    if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                                         if points_actual_j(1, 2) <= y && points_actual_j(1, 3) >= z_aux
-                                                                            points_set_convex{j}.points(3, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 2), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                    if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                                         if points_actual_i(2, 2) >= y && points_actual_i(2, 3) <= z_aux
                                                                             if points_set_convex{i}.tipo == 23 && points_set_convex{j}.tipo == 23 || ...
                                                                                     points_set_convex{i}.tipo == 4 && points_set_convex{j}.tipo == 4
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 1), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -7904,7 +7958,7 @@ for i = indexset1
                                         
                                         if m_i < 0
                                             if (points_set_convex{i}.points(1, 1) == 0  || points_set_convex{j}.points(2, 1) == 0 )
-                                                if points_set_convex{i}.points(1, 1) == 0
+                                                if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z
                                                         if points_set_convex{i}.points(2, 1) == 0 
                                                             points_set_convex{i}.points(2, :) = [0 y z];
@@ -7927,7 +7981,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(2, 1) == 0 
+                                                if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                     if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
                                                         if points_set_convex{j}.points(1, 1) == 0 
                                                             points_set_convex{j}.points(1, :) = [0 y z];
@@ -7977,16 +8031,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                    if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                                         if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) <= z_aux
-                                                                            points_set_convex{i}.points(3, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 1), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(2, 1) == 0 
+                                                                    if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                                         if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 24 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 32
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 2), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -8008,7 +8062,7 @@ for i = indexset1
                                             end
                                         else                                            
                                             if (points_set_convex{i}.points(2, 1) == 0  || points_set_convex{j}.points(1, 1) == 0 )
-                                                if points_set_convex{j}.points(1, 1) == 0 
+                                                if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0 
                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z
                                                         if points_set_convex{j}.points(2, 1) == 0 
                                                             points_set_convex{j}.points(2, :) = [0 y z];
@@ -8031,7 +8085,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(2, 1) == 0
+                                                if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                     if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
                                                         if points_set_convex{i}.points(1, 1) == 0 
                                                             points_set_convex{i}.points(1, :) = [0 y z];
@@ -8081,16 +8135,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(1, 1) == 0 
+                                                                    if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                                         if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) <= z_aux
-                                                                            points_set_convex{j}.points(3, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 1), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                    if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                                         if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
                                                                             if points_set_convex{i}.tipo == 24 || points_set_convex{i}.tipo == 26 || points_set_convex{i}.tipo == 32
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 2), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -8181,7 +8235,7 @@ for i = indexset1
                                         %C2 = dot(N2, [1 0 0]);
                                         if m_i < 0
                                             if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
-                                                if points_set_convex{i}.points(2, 1) == 0
+                                                if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z
                                                         if points_set_convex{i}.points(1, 1) == 0 
                                                             points_set_convex{i}.points(1, :) = [0 y z];
@@ -8204,7 +8258,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 1) == 0
+                                                if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
                                                         if points_set_convex{j}.points(2, 1) == 0 
                                                             points_set_convex{j}.points(2, :) = [0 y z];
@@ -8254,16 +8308,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                    if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                                         if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 2), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                    if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                                         if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 25 || points_set_convex{j}.tipo == 26 || points_set_convex{j}.tipo == 35
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -8285,7 +8339,7 @@ for i = indexset1
                                             end
                                         else
                                              if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
-                                                 if points_set_convex{j}.points(2, 1) == 0
+                                                 if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                     if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z
                                                         if points_set_convex{j}.points(1, 1) == 0 
                                                             points_set_convex{j}.points(1, :) = [0 y z];
@@ -8308,7 +8362,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(1, 1) == 0
+                                                if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
                                                         if points_set_convex{i}.points(2, 1) == 0 
                                                             points_set_convex{i}.points(2, :) = [0 y z];
@@ -8358,16 +8412,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                    if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                                         if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
-                                                                            points_set_convex{j}.points(4, :) = p_new_j;
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 2), :) = p_new_j;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                    if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                                         if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
                                                                             if points_set_convex{i}.tipo == 25 || points_set_convex{i}.tipo == 26 || points_set_convex{i}.tipo == 35
-                                                                                points_set_convex{i}.points(4, :) = p_new_i;
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 1), :) = p_new_i;
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -8465,7 +8519,7 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
-                                                if points_set_convex{i}.points(1, 1) == 0
+                                                if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
                                                         points_set_convex{i}.points(2, :) = [0 y z];
 
@@ -8483,7 +8537,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(2, 1) == 0
+                                                if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                     if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
                                                         points_set_convex{j}.points(1, :) = [0 y z];
 
@@ -8526,16 +8580,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                    if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                                         if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 1), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                    if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                                         if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 32
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 2), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -8557,7 +8611,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
-                                                if points_set_convex{i}.points(2, 1) == 0
+                                                if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                     if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
                                                         points_set_convex{i}.points(1, :) = [0 y z];
 
@@ -8575,7 +8629,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 1) == 0
+                                                if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
                                                         points_set_convex{j}.points(2, :) = [0 y z];
 
@@ -8618,16 +8672,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                    if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                                         if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 2), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                    if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                                         if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 35
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -8719,7 +8773,7 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
-                                                if points_set_convex{i}.points(2, 1) == 0
+                                                if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                     if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) <= z
                                                         if points_set_convex{i}.points(1, 1) == 0 
                                                             points_set_convex{i}.points(1, :) = [0 y z];
@@ -8742,7 +8796,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 1) == 0
+                                                if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                     if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z
                                                         if points_set_convex{j}.points(2, 1) == 0 
                                                             points_set_convex{j}.points(2, :) = [0 y z];
@@ -8790,16 +8844,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                    if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                                         if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 2), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                    if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                                         if points_actual_j(2, 2) >= y  && points_actual_j(2, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 35
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 1), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -8821,7 +8875,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
-                                                if points_set_convex{j}.points(2, 1) == 0
+                                                if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                     if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) <= z
                                                         if points_set_convex{j}.points(1, 1) == 0 
                                                             points_set_convex{j}.points(1, :) = [0 y z];
@@ -8844,7 +8898,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(1, 1) == 0
+                                                if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                     if points_actual_i(2, 2) >= y  && points_actual_i(2, 3) >= z
                                                         if points_set_convex{i}.points(2, 1) == 0 
                                                             points_set_convex{i}.points(2, :) = [0 y z];
@@ -8892,16 +8946,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(1, 1) == 0
-                                                                        if points_actual_i(1, 2) <= y  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i;
+                                                                    if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
+                                                                        if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) >= z_aux
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 1), :) = p_new_i;
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                    if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                                         if points_actual_j(1, 2) <= y  && points_actual_j(1, 3) >= z_aux
                                                                             if points_set_convex{j}.tipo == 35
-                                                                                points_set_convex{j}.points(4, :) = p_new_j;
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 2), :) = p_new_j;
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -8999,7 +9053,7 @@ for i = indexset1
                                         
                                         if m_i < m_j
                                             if (points_set_convex{i}.points(2, 1) == 0 || points_set_convex{j}.points(1, 1) == 0)
-                                                if points_set_convex{i}.points(2, 1) == 0
+                                                if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                     if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z
                                                         if points_set_convex{i}.points(1, 1) == 0 
                                                             points_set_convex{i}.points(1, :) = [0 y z];
@@ -9022,7 +9076,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{j}.points(1, 1) == 0
+                                                if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                     if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z
                                                         if points_set_convex{j}.points(2, 1) == 0 
                                                             points_set_convex{j}.points(2, :) = [0 y z];
@@ -9070,16 +9124,16 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(2, 1) == 0
+                                                                    if points_actual_i(2, 1) == 0 && points_actual_i(1, 1) == 0
                                                                         if points_actual_i(1, 2) >= y  && points_actual_i(1, 3) >= z_aux
-                                                                            points_set_convex{i}.points(4, :) = p_new_i; %%3
+                                                                            points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 1, 2), :) = p_new_i; %%3
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(1, 1) == 0
+                                                                    if points_actual_j(1, 1) == 0 && points_actual_j(2, 1) == 0
                                                                         if points_actual_j(2, 2) <= y  && points_actual_j(2, 3) <= z_aux
                                                                             if points_set_convex{j}.tipo == 32
-                                                                                points_set_convex{j}.points(4, :) = p_new_j; %%3
+                                                                                points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 2, 1), :) = p_new_j; %%3
                                                                             else
                                                                                 dim = size(points_set_convex{j}.points);
                                                                                 points_set_convex{j}.points(dim(1)+1, :) = p_new_j;
@@ -9101,7 +9155,7 @@ for i = indexset1
                                             end
                                         else
                                             if (points_set_convex{i}.points(1, 1) == 0 || points_set_convex{j}.points(2, 1) == 0)
-                                                if points_set_convex{j}.points(2, 1) == 0
+                                                if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                     if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z
                                                         if points_set_convex{j}.points(1, 1) == 0 
                                                             points_set_convex{j}.points(1, :) = [0 y z];
@@ -9124,7 +9178,7 @@ for i = indexset1
                                                     calc_intersect = 1;
                                                 end
                                                 
-                                                if points_set_convex{i}.points(1, 1) == 0
+                                                if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                     if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z
                                                         if points_set_convex{i}.points(2, 1) == 0 
                                                             points_set_convex{i}.points(2, :) = [0 y z];
@@ -9172,10 +9226,10 @@ for i = indexset1
                                                                     z = z_sol; p_new_j = eval(eval(sol));
                                                                 end
                                                                 if all(p_new(:) >= 0)
-                                                                    if points_set_convex{i}.points(1, 1) == 0
+                                                                    if points_actual_i(1, 1) == 0 && points_actual_i(2, 1) == 0
                                                                         if points_actual_i(2, 2) <= y  && points_actual_i(2, 3) <= z_aux
                                                                             if points_set_convex{i}.tipo == 32
-                                                                                points_set_convex{i}.points(4, :) = p_new_i; %%3                                                                    
+                                                                                points_set_convex{i}.points(SearchNextPositivePoint(points_set_convex{i}.points, i, 2, 1), :) = p_new_i; %%3                                                                    
                                                                             else
                                                                                 dim = size(points_set_convex{i}.points);
                                                                                 points_set_convex{i}.points(dim(1)+1, :) = p_new_i;
@@ -9183,9 +9237,9 @@ for i = indexset1
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
-                                                                    if points_set_convex{j}.points(2, 1) == 0
+                                                                    if points_actual_j(2, 1) == 0 && points_actual_j(1, 1) == 0
                                                                         if points_actual_j(1, 2) >= y  && points_actual_j(1, 3) >= z_aux
-                                                                            points_set_convex{j}.points(4, :) = p_new_j; %%3
+                                                                            points_set_convex{j}.points(SearchNextPositivePoint(points_set_convex{j}.points, j, 1, 2), :) = p_new_j; %%3
                                                                             calc_intersect = 1;
                                                                         end
                                                                     end
@@ -9251,30 +9305,30 @@ for i = indexset1
 %                                 end
                             end                            
                         end
-                        if points_set_convex{i}.tipo == 10 %%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);                            
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 10
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);                            
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
-                        end 
-                        if points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 21%%%% Orden
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 3 2 4],:);                            
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 3 2 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 21
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 3 2 4],:);                            
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 3 2 4],:);    
-                        end
-                        if points_set_convex{i}.tipo == 9
-                            points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 1 2 4],:);                            
-                            points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 1 2 4],:);    
-                        end
-                        if points_set_convex{j}.tipo == 9
-                            points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 1 2 4],:);
-                            points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 1 2 4],:);    
-                        end
+%                         if points_set_convex{i}.tipo == 10 %%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 2 1 4],:);                            
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 2 1 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 10
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 2 1 4],:);                            
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 2 1 4],:);    
+%                         end 
+%                         if points_set_convex{i}.tipo == 16 || points_set_convex{i}.tipo == 21%%%% Orden
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([1 3 2 4],:);                            
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([1 3 2 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 16 || points_set_convex{j}.tipo == 21
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([1 3 2 4],:);                            
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([1 3 2 4],:);    
+%                         end
+%                         if points_set_convex{i}.tipo == 9
+%                             points_set_convex{i}.points(1:4, :) = points_set_convex{i}.points([3 1 2 4],:);                            
+%                             points_set_nonred{i}.points(1:4, :) = points_set_nonred{i}.points([3 1 2 4],:);    
+%                         end
+%                         if points_set_convex{j}.tipo == 9
+%                             points_set_convex{j}.points(1:4, :) = points_set_convex{j}.points([3 1 2 4],:);
+%                             points_set_nonred{j}.points(1:4, :) = points_set_nonred{j}.points([3 1 2 4],:);    
+%                         end
                       end                   
                   end
                   
@@ -9458,7 +9512,7 @@ if i > Dimension(1) %&& pasar == 1
 end
 
 function plotPlane(handles, pasar, table_copy, i)
-global Dimension handles_surf handles_norm points_set_nonred points_set_convex all_points;
+global Dimension handles_surf handles_norm points_set_convex all_points;
 
 p = points_set_convex{i}.points;
 if i > Dimension(1)
@@ -9474,9 +9528,9 @@ end
 if  any(p(:)~=0) && pasar                               
     mean_point = 0.3*p(1,:) + 0.3*p(2,:) + 0.4*p(3,:);
     if i <= Dimension(1)
-        K = convex_hull(p, points_set_nonred{i}.points);
+        K = convex_hull(p, i);
     else
-        K = convex_hull(p, p);
+        K = convex_hull(p, i);
     end
     K_dim = size(K);
     if i < Dimension(1)
@@ -9502,63 +9556,67 @@ if  any(p(:)~=0) && pasar
     end
 end
 
-function InterchangeInterceptPoints(i, canonic_plane)
-global points_set_convex points_set_nonred;
+function points = InterchangeInterceptPoints(i, canonic_plane, points, table_copy)
+global points_set_nonred;
  
 e = 0.00005; %%%% Cambiar si se cambia precisión
+d_i = table_copy(i,1:3);
 if canonic_plane == 1
-    points_i = points_set_convex{i}.points(:, 3) == 0;
+    points_i = points(:, 3) == 0;
     index = find(points_i);
     for k = 1:size(index, 1)-1
-        p1 = points_set_convex{i}.points(index(k),:);
+        p1 = points(index(k),:);
         for l = k+1:size(index, 1)
-            p2 = points_set_convex{i}.points(index(l),:);            
+            p2 = points(index(l),:);            
             if ~all(abs(p1 - p2) < e)
-                paux_x = points_set_convex{i}.points(3,:);
-                paux_y = points_set_convex{i}.points(2,:);
-                if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2)                    
-                    points_set_convex{i}.points(3, :) = p1;
-                    points_set_convex{i}.points(2, :) = p2;
+                paux_x = points(3,:);
+                paux_y = points(2,:);
+                if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2) &&  ...
+                        ~((d_i(1) <= 0 && d_i(2) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26)) || ...
+                    norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2) &&  ...
+                         ((d_i(1) <= 0 && d_i(2) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26))
+                    points(3, :) = p1;
+                    points(2, :) = p2;
                     
                     index_common = setdiff([index(k), index(l)], [2,3]);
-                    if isempty(index_common) || size(index_common,1) == 2
-                        points_set_convex{i}.points(index(k), :) = paux_x;
-                        points_set_convex{i}.points(index(l), :) = paux_y;
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points(index(k), :) = paux_x;
+                        points(index(l), :) = paux_y;
                     else
                         if index(k) == index_common
                             if index(l) == 3
-                                points_set_convex{i}.points(index(k), :) = paux_y;
+                                points(index(k), :) = paux_y;
                             else
-                                points_set_convex{i}.points(index(k), :) = paux_x;
+                                points(index(k), :) = paux_x;
                             end
                         else
                             if index(k) == 3
-                                points_set_convex{i}.points(index(l), :) = paux_y;
+                                points(index(l), :) = paux_y;
                             else
-                                points_set_convex{i}.points(index(l), :) = paux_x;
+                                points(index(l), :) = paux_x;
                             end
                         end
                     end                    
                 else                    
-                    points_set_convex{i}.points(3, :) = p2;
-                    points_set_convex{i}.points(2, :) = p1;
+                    points(3, :) = p2;
+                    points(2, :) = p1;
                     
                     index_common = setdiff([index(k), index(l)], [2,3]);
-                    if isempty(index_common) || size(index_common,1) == 2
-                        points_set_convex{i}.points(index(k), :) = paux_y;
-                        points_set_convex{i}.points(index(l), :) = paux_x;
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points(index(k), :) = paux_y;
+                        points(index(l), :) = paux_x;
                     else
                         if index(k) == index_common
                             if index(l) == 3
-                                points_set_convex{i}.points(index(k), :) = paux_y;
+                                points(index(k), :) = paux_y;
                             else
-                                points_set_convex{i}.points(index(k), :) = paux_x;
+                                points(index(k), :) = paux_x;
                             end
                         else
                             if index(k) == 3
-                                points_set_convex{i}.points(index(l), :) = paux_y;
+                                points(index(l), :) = paux_y;
                             else
-                                points_set_convex{i}.points(index(l), :) = paux_x;
+                                points(index(l), :) = paux_x;
                             end
                         end
                     end                                       
@@ -9568,58 +9626,61 @@ if canonic_plane == 1
         end
     end
 elseif canonic_plane == 2
-    points_i = points_set_convex{i}.points(:, 2) == 0;
+    points_i = points(:, 2) == 0;
     index = find(points_i);
     for k = 1:size(index, 1)-1
-        p1 = points_set_convex{i}.points(index(k),:);
+        p1 = points(index(k),:);
         for l = k+1:size(index, 1)
-            p2 = points_set_convex{i}.points(index(l),:);
+            p2 = points(index(l),:);
             if ~all(abs(p1 - p2) < e)
-                paux_x = points_set_convex{i}.points(3,:);
-                paux_z = points_set_convex{i}.points(1,:);
-                if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2)                    
-                    points_set_convex{i}.points(3, :) = p1;
-                    points_set_convex{i}.points(1, :) = p2;
+                paux_x = points(3,:);
+                paux_z = points(1,:);
+                if norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2) && ...
+                        ~((d_i(1) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26)) || ...
+                    norm(points_set_nonred{i}.points(3,:)-p1) <= norm(points_set_nonred{i}.points(3,:)-p2) && ...
+                   ((d_i(1) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26))
+                    points(3, :) = p1;
+                    points(1, :) = p2;
                     
                     index_common = setdiff([index(k), index(l)], [1,3]);
-                    if isempty(index_common) || size(index_common,1) == 2
-                        points_set_convex{i}.points(index(k), :) = paux_x;
-                        points_set_convex{i}.points(index(l), :) = paux_z;
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points(index(k), :) = paux_x;
+                        points(index(l), :) = paux_z;
                     else
                         if index(k) == index_common
                             if index(l) == 3
-                                points_set_convex{i}.points(index(k), :) = paux_z;
+                                points(index(k), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(k), :) = paux_x;
+                                points(index(k), :) = paux_x;
                             end
                         else
                             if index(k) == 3
-                                points_set_convex{i}.points(index(l), :) = paux_z;
+                                points(index(l), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(l), :) = paux_x;
+                                points(index(l), :) = paux_x;
                             end
                         end
                     end                       
                 else                    
-                    points_set_convex{i}.points(3, :) = p2;
-                    points_set_convex{i}.points(1, :) = p1;
+                    points(3, :) = p2;
+                    points(1, :) = p1;
                     
                     index_common = setdiff([index(k), index(l)], [1,3]);
-                    if isempty(index_common) || size(index_common,1) == 2
-                        points_set_convex{i}.points(index(k), :) = paux_z;
-                        points_set_convex{i}.points(index(l), :) = paux_x;
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points(index(k), :) = paux_z;
+                        points(index(l), :) = paux_x;
                     else
                         if index(k) == index_common
                             if index(l) == 3
-                                points_set_convex{i}.points(index(k), :) = paux_z;
+                                points(index(k), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(k), :) = paux_x;
+                                points(index(k), :) = paux_x;
                             end
                         else
                             if index(k) == 3
-                                points_set_convex{i}.points(index(l), :) = paux_z;
+                                points(index(l), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(l), :) = paux_x;
+                                points(index(l), :) = paux_x;
                             end
                         end
                     end
@@ -9629,58 +9690,61 @@ elseif canonic_plane == 2
         end
     end
 elseif canonic_plane == 3
-    points_i = points_set_convex{i}.points(:, 1) == 0;
+    points_i = points(:, 1) == 0;
     index = find(points_i);
     for k = 1:size(index, 1)-1
-        p1 = points_set_convex{i}.points(index(k),:);
+        p1 = points(index(k),:);
         for l = k+1:size(index, 1)
-            p2 = points_set_convex{i}.points(index(l),:);
+            p2 = points(index(l),:);
             if ~all(abs(p1 - p2) < e)
-                paux_y = points_set_convex{i}.points(2,:);
-                paux_z = points_set_convex{i}.points(1,:);
-                if norm(points_set_nonred{i}.points(2,:)-p1) <= norm(points_set_nonred{i}.points(2,:)-p2) 
-                    points_set_convex{i}.points(2, :) = p1;
-                    points_set_convex{i}.points(1, :) = p2;
+                paux_y = points(2,:);
+                paux_z = points(1,:);
+                if norm(points_set_nonred{i}.points(2,:)-p1) <= norm(points_set_nonred{i}.points(2,:)-p2) && ...
+                        ~((d_i(2) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16  || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26)) || ...
+                        norm(points_set_nonred{i}.points(2,:)-p1) <= norm(points_set_nonred{i}.points(2,:)-p2) && ...
+                         ((d_i(2) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16  || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26))
+                    points(2, :) = p1;
+                    points(1, :) = p2;
                     
                     index_common = setdiff([index(k), index(l)], [1,2]);
-                    if isempty(index_common) || size(index_common,1) == 2
-                        points_set_convex{i}.points(index(k), :) = paux_y;
-                        points_set_convex{i}.points(index(l), :) = paux_z;
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points(index(k), :) = paux_y;
+                        points(index(l), :) = paux_z;
                     else
                         if index(k) == index_common
                             if index(l) == 2
-                                points_set_convex{i}.points(index(k), :) = paux_z;
+                                points(index(k), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(k), :) = paux_y;
+                                points(index(k), :) = paux_y;
                             end
                         else
                             if index(k) == 2
-                                points_set_convex{i}.points(index(l), :) = paux_z;
+                                points(index(l), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(l), :) = paux_y;
+                                points(index(l), :) = paux_y;
                             end
                         end
                     end
                 else                    
-                    points_set_convex{i}.points(2, :) = p2;
-                    points_set_convex{i}.points(1, :) = p1;
+                    points(2, :) = p2;
+                    points(1, :) = p1;
                     
                     index_common = setdiff([index(k), index(l)], [1,2]);
-                    if isempty(index_common) || size(index_common,1) == 2
-                        points_set_convex{i}.points(index(k), :) = paux_z;
-                        points_set_convex{i}.points(index(l), :) = paux_y;
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points(index(k), :) = paux_z;
+                        points(index(l), :) = paux_y;
                     else
                         if index(k) == index_common
                             if index(l) == 2
-                                points_set_convex{i}.points(index(k), :) = paux_z;
+                                points(index(k), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(k), :) = paux_y;
+                                points(index(k), :) = paux_y;
                             end
                         else
                             if index(k) == 2
-                                points_set_convex{i}.points(index(l), :) = paux_z;
+                                points(index(l), :) = paux_z;
                             else
-                                points_set_convex{i}.points(index(l), :) = paux_y;
+                                points(index(l), :) = paux_y;
                             end
                         end
                     end                    
@@ -9691,10 +9755,223 @@ elseif canonic_plane == 3
     end
 end 
         
+function InterchangeInterceptPoints_NR(i, canonic_plane, table_copy)
+global points_set_nonred;
+ 
+e = 0.00005; %%%% Cambiar si se cambia precisión
+d_i = table_copy(i,1:3);
+if canonic_plane == 1
+    points_i = points_set_nonred{i}.points(:, 3) == 0;
+    index = find(points_i);
+    for k = 1:size(index, 1)-1
+        p1 = points_set_nonred{i}.points(index(k),:);
+        for l = k+1:size(index, 1)
+            p2 = points_set_nonred{i}.points(index(l),:);            
+            if ~all(abs(p1 - p2) < e)
+                paux_x = points_set_nonred{i}.points(3,:);
+                paux_y = points_set_nonred{i}.points(2,:);
+                if p1(2) == 0 && ~((d_i(1) <= 0 && d_i(2) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26)) || ...
+                   p1(2) ~= 0 && ((d_i(1) <= 0 && d_i(2) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26))
+                    points_set_nonred{i}.points(3, :) = p1;
+                    points_set_nonred{i}.points(2, :) = p2;
+                    
+                    index_common = setdiff([index(k), index(l)], [2,3]);
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points_set_nonred{i}.points(index(k), :) = paux_x;
+                        points_set_nonred{i}.points(index(l), :) = paux_y;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_nonred{i}.points(index(k), :) = paux_y;
+                            else
+                                points_set_nonred{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_nonred{i}.points(index(l), :) = paux_y;
+                            else
+                                points_set_nonred{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end                    
+                else                    
+                    points_set_nonred{i}.points(3, :) = p2;
+                    points_set_nonred{i}.points(2, :) = p1;
+                    
+                    index_common = setdiff([index(k), index(l)], [2,3]);
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points_set_nonred{i}.points(index(k), :) = paux_y;
+                        points_set_nonred{i}.points(index(l), :) = paux_x;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_nonred{i}.points(index(k), :) = paux_y;
+                            else
+                                points_set_nonred{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_nonred{i}.points(index(l), :) = paux_y;
+                            else
+                                points_set_nonred{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end                                       
+                end                 
+                return;
+            end
+        end
+    end
+elseif canonic_plane == 2
+    points_i = points_set_nonred{i}.points(:, 2) == 0;
+    index = find(points_i);
+    for k = 1:size(index, 1)-1
+        p1 = points_set_nonred{i}.points(index(k),:);
+        for l = k+1:size(index, 1)
+            p2 = points_set_nonred{i}.points(index(l),:);
+            if ~all(abs(p1 - p2) < e)
+                paux_x = points_set_nonred{i}.points(3,:);
+                paux_z = points_set_nonred{i}.points(1,:);
+                if p1(3) == 0 && ~((d_i(1) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26)) || ...
+                   p1(3) ~= 0 &&  ((d_i(1) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 8 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16 || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26))
+                    points_set_nonred{i}.points(3, :) = p1;
+                    points_set_nonred{i}.points(1, :) = p2;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,3]);
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points_set_nonred{i}.points(index(k), :) = paux_x;
+                        points_set_nonred{i}.points(index(l), :) = paux_z;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_nonred{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_nonred{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end                       
+                else                    
+                    points_set_nonred{i}.points(3, :) = p2;
+                    points_set_nonred{i}.points(1, :) = p1;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,3]);
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points_set_nonred{i}.points(index(k), :) = paux_z;
+                        points_set_nonred{i}.points(index(l), :) = paux_x;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 3
+                                points_set_nonred{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(k), :) = paux_x;
+                            end
+                        else
+                            if index(k) == 3
+                                points_set_nonred{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(l), :) = paux_x;
+                            end
+                        end
+                    end
+                end
+                return;
+            end
+        end
+    end
+elseif canonic_plane == 3
+    points_i = points_set_nonred{i}.points(:, 1) == 0;
+    index = find(points_i);
+    for k = 1:size(index, 1)-1
+        p1 = points_set_nonred{i}.points(index(k),:);
+        for l = k+1:size(index, 1)
+            p2 = points_set_nonred{i}.points(index(l),:);
+            if ~all(abs(p1 - p2) < e)
+                paux_y = points_set_nonred{i}.points(2,:);
+                paux_z = points_set_nonred{i}.points(1,:);
+                if p1(3) == 0 && ~((d_i(2) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16  || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26)) || ...
+                   p1(3) ~= 0 &&  ((d_i(2) <= 0 && d_i(3) >= 0) && (points_set_nonred{i}.tipo == 9 || points_set_nonred{i}.tipo == 10 || points_set_nonred{i}.tipo == 16  || points_set_nonred{i}.tipo == 21 || points_set_nonred{i}.tipo == 26))
+                    points_set_nonred{i}.points(2, :) = p1;
+                    points_set_nonred{i}.points(1, :) = p2;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,2]);
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points_set_nonred{i}.points(index(k), :) = paux_y;
+                        points_set_nonred{i}.points(index(l), :) = paux_z;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 2
+                                points_set_nonred{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(k), :) = paux_y;
+                            end
+                        else
+                            if index(k) == 2
+                                points_set_nonred{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(l), :) = paux_y;
+                            end
+                        end
+                    end
+                else                    
+                    points_set_nonred{i}.points(2, :) = p2;
+                    points_set_nonred{i}.points(1, :) = p1;
+                    
+                    index_common = setdiff([index(k), index(l)], [1,2]);
+                    if isempty(index_common) || size(index_common,2) == 2
+                        points_set_nonred{i}.points(index(k), :) = paux_z;
+                        points_set_nonred{i}.points(index(l), :) = paux_y;
+                    else
+                        if index(k) == index_common
+                            if index(l) == 2
+                                points_set_nonred{i}.points(index(k), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(k), :) = paux_y;
+                            end
+                        else
+                            if index(k) == 2
+                                points_set_nonred{i}.points(index(l), :) = paux_z;
+                            else
+                                points_set_nonred{i}.points(index(l), :) = paux_y;
+                            end
+                        end
+                    end                    
+                end
+                return;            
+            end
+        end
+    end
+end
+
+
+function point_index = SearchNextPositivePoint(points, i, pivote, before_pivote)
+if size(unique(points, 'rows'), 1) >= 3
+    K = convex_hull(points, i);
+    pivote_index = find(K == pivote, 1);
+    if pivote_index ~= 1
+        if K(pivote_index-1) == before_pivote
+            point_index = K(pivote_index+1);
+        else
+            point_index = K(pivote_index-1);
+        end
+    else
+        if K(size(K, 1)-1) == before_pivote
+            point_index = K(2);
+        else
+            point_index = K(size(K, 1)-1);
+        end
+    end
+end
+
 
 function [points_set_i_con,points_set_j_con, table_copy, calc_intersect] = NonPositiveInterceptXY(points_set_i_con, points_set_j_con, x, y, table_copy, ...
     i, j, caso, calc_intersect)
-global points_set_nonred m_i m_j handles_surf handles_norm;
+global points_set_nonred m_i m_j handles_surf handles_norm z_minmax; %#ok<NUSED>
 e = 0.00005; %%%% Cambiar si se cambia precisión
 
 d_i = table_copy(i, 1:3); % vector director de i
@@ -9766,77 +10043,103 @@ else
                 sol = [sol.x4 sol.y4 sol.z4];
                 if ~isempty(symvar(sol))
                     z_sol = solve(sol(3)-max([points_set_i_con.points(:,3);points_set_j_con.points(:,3)]),z); %#ok<NODEF>
+                    %z_sol = solve(sol(3)-z_minmax(2),z); %#ok<NODEF>
                     z = z_sol; p_new = eval(eval(sol)); %#ok<NASGU>
                     if all(p_new(:) >= 0)
+                        nonintersect = eval(sym(str2num(rat(points_set_i_con.points*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM> 
+                        first_index_i = find(nonintersect & points_set_i_con.points*table_copy(j, 1:3)'==max(points_set_i_con.points*table_copy(j, 1:3)'),1);
+                        nonintersect = eval(sym(str2num(rat(points_set_j_con.points*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM>
+                        first_index_j = find(nonintersect & points_set_j_con.points*table_copy(i, 1:3)'==max(points_set_j_con.points*table_copy(i, 1:3)'),1);
                         if m_i < m_j
                             if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9 || points_set_i_con.tipo == 26) && ...
                                 (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9 || points_set_j_con.tipo == 21)
-                                if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9) && points_set_i_con.tipo == 26  %%Con eje X                                         
+                                if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9 || points_set_i_con.tipo == 26) && ...
+                                    (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9)
+                                %if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9) && points_set_i_con.tipo == 26  %%Con eje X                                         
+                                    %if (caso == 4 && d_j(2) >=0 && d_i(2) <= 0)
                                     if (caso == 4 && d_j(2) >=0 && d_i(2) <= 0)
                                         p2 = eval(eval(sol)); 
-                                        p1_j = points_set_j_con.points(1, :); p1_i = points_set_i_con.points(4, :);
-                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_j = points_set_j_con.points(first_index_j, :); p1_i = points_set_i_con.points(first_index_i, :); %1-4
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(4, :) = eval(sol); %%3  
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_j(2) <=0 && d_i(2) <= 0)
                                         p2 = eval(eval(sol)); 
-                                        p1_j = points_set_j_con.points(1, :); p1_i = points_set_i_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_j = points_set_j_con.points(first_index_j, :); p1_i = points_set_i_con.points(first_index_i, :); %1-2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
-                                elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && points_set_j_con.tipo == 21 %%Con eje Y
+                                elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && ...
+                                        (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9 || points_set_j_con.tipo == 21)
+                                %elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && points_set_j_con.tipo == 21 %%Con eje Y
                                     if (caso == 4 && d_i(2) <=0 && d_j(2) >= 0)
                                         p2 = eval(eval(sol)); 
-                                        p1_j = points_set_j_con.points(4, :); p1_i = points_set_i_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_j = points_set_j_con.points(first_index_j, :); p1_i = points_set_i_con.points(first_index_i, :); %4-2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(2) <=0 && d_j(2) <= 0)
                                         p2 = eval(eval(sol)); 
-                                        p1_j = points_set_j_con.points(4, :); p1_i = points_set_i_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_j = points_set_j_con.points(first_index_j, :); p1_i = points_set_i_con.points(first_index_i, :); % i es 2, j es 4
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
                                 end
@@ -9845,106 +10148,137 @@ else
                             if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9 || points_set_j_con.tipo == 26) && ...
                                 (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9 || points_set_i_con.tipo == 21) || ...
                                 (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && (points_set_j_con.tipo == 21)
-                                if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && points_set_j_con.tipo == 26 %%Con eje X
+                                if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9 || points_set_j_con.tipo == 26) && ...
+                                    (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9)
+                                %if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && points_set_j_con.tipo == 26 %%Con eje X
+                                    %if (caso == 4 && d_i(2) >=0 && d_j(2) <= 0)
                                     if (caso == 4 && d_i(2) >=0 && d_j(2) <= 0)
-                                        p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(4, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p2 = eval(eval(sol));                                        
+                                        p1_i = points_set_i_con.points(first_index_i, :);   p1_j = points_set_j_con.points(first_index_j, :); %1-4
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(2) <=0 && d_j(2) <= 0)
                                         p2 = eval(eval(sol)); 
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(2, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %1-2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(2, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
-                                elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9) && points_set_i_con.tipo == 21 %%Con eje Y
+                                elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9) && ...
+                                        (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9 || points_set_i_con.tipo == 21)                                        
+                                %elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9) && points_set_i_con.tipo == 21%%Con eje Y
                                     if (caso == 4 && d_j(2) <=0 && d_i(2) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(2, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(2, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %4-2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_j(2) <=0 && d_i(2) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 4, j es 2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
-                                elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && (points_set_j_con.tipo == 21)
+                                elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 9 || points_set_j_con.tipo == 21) && ...
+                                        (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9)
+                                %elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 9) && (points_set_j_con.tipo == 21)
                                     if (caso == 4 && d_i(2) <=0 && d_j(2) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(4, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :);
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(2) <=0 && d_j(2) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(4, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %1-4
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
                                 end
@@ -9962,7 +10296,7 @@ end
 
 function [points_set_i_con,points_set_j_con, table_copy, calc_intersect] = NonPositiveInterceptXZ(points_set_i_con, points_set_j_con, x, z, table_copy, ...
     i, j, caso, calc_intersect)
-global points_set_nonred m_i m_j handles_surf handles_norm;
+global points_set_nonred m_i m_j handles_surf handles_norm y_minmax ; %#ok<NUSED>
 e = 0.00005; %%%% Cambiar si se cambia precisión
 
 d_i = table_copy(i, 1:3); % vector director de i
@@ -10036,150 +10370,199 @@ else
                 sol = [sol.x4 sol.y4 sol.z4];
                 if ~isempty(symvar(sol))
                     z_sol = solve(sol(2)-max([points_set_i_con.points(:,2);points_set_j_con.points(:,2)]),z);
+                    %z_sol = solve(sol(2)-y_minmax(2),z);
                     z = z_sol; p_new = eval(eval(sol)); %#ok<NASGU>
                     if all(p_new(:) >= 0)
+                        nonintersect = eval(sym(str2num(rat(points_set_i_con.points*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM> 
+                        first_index_i = find(nonintersect & points_set_i_con.points*table_copy(j, 1:3)'==max(points_set_i_con.points*table_copy(j, 1:3)'),1);
+                        nonintersect = eval(sym(str2num(rat(points_set_j_con.points*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM>
+                        first_index_j = find(nonintersect & points_set_j_con.points*table_copy(i, 1:3)'==max(points_set_j_con.points*table_copy(i, 1:3)'),1);                        
                         if m_i <= m_j
                             if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 26) && ...
-                                (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16)
-                                if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 16  %%Con eje Z                                       
+                                (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16) && ...
+                                ~(points_set_i_con.tipo == 8 && points_set_j_con.tipo == 8)
+                                if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10) && ...
+                                    (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16)
+                                %if (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 16  %%Con eje Z 
+                                    %if (caso == 4 && d_j(3) <=0 && d_i(3) >= 0)
                                     if (caso == 4 && d_j(3) <=0 && d_i(3) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(3, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(3, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(3, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %i es 3-1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_j(3) <=0 && d_i(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(3, :); p1_j = points_set_j_con.points(4, :);
-                                        p1_i0 = points_set_nonred{i}.points(3, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(3, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 1, j es 4
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
-                                elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 26 %%Con eje X
+                                elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 26) && ...
+                                    (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10)
+                                %elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 26 %%Con eje X
                                     if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(2, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(2, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %2-2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(2, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(2, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %1-2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
                                 end
                             end
                         else
                             if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 26) && ...
-                                (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16) 
-                                if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 16 %%Con eje Z
+                                (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16) &&  ...
+                                ~(points_set_j_con.tipo == 8 && points_set_i_con.tipo == 8)
+                                if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10) && ...
+                                    (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16)
+                                %if (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 16 %%Con eje Z
+                                    %if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
                                     if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(3, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(3, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(3, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 1-3
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(3, :);
-                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(3, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(3, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 4, j es 1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
-                                elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 26 %%Con eje X
+                                elseif (points_set_j_con.tipo == 8 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 26) && ...
+                                        (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10)
+                                %elseif (points_set_i_con.tipo == 8 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 26 %%Con eje X
                                     if (caso == 4 && d_i(3) >=0 && d_j(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(2, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :);
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(2, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol); 
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %2-1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol); 
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
                                 end
@@ -10197,7 +10580,7 @@ end
 
 function [points_set_i_con,points_set_j_con, table_copy, calc_intersect] = NonPositiveInterceptYZ(points_set_i_con, points_set_j_con, y, z, table_copy, ...
     i, j, caso, calc_intersect)
-global points_set_nonred m_i m_j handles_surf handles_norm;
+global points_set_nonred m_i m_j handles_surf handles_norm x_minmax; %#ok<NUSED>
 e = 0.00005; %%%% Cambiar si se cambia precisión
 
 d_i = table_copy(i, 1:3); % vector director de i
@@ -10270,182 +10653,241 @@ else
                 sol = [sol.x4 sol.y4 sol.z4];
                 if ~isempty(symvar(sol))
                     z_sol = solve(sol(1)-max([points_set_i_con.points(:,1);points_set_j_con.points(:,1)]),z);
+                    %z_sol = solve(sol(1)-x_minmax(2),z);
                     z = z_sol; p_new = eval(eval(sol)); %#ok<NASGU>
                     if all(p_new(:) >= 0)
+                        nonintersect = eval(sym(str2num(rat(points_set_i_con.points*table_copy(j, 1:3)')))) > table_copy(j, 4); %#ok<ST2NM> 
+                        first_index_i = find(nonintersect & points_set_i_con.points*table_copy(j, 1:3)'==max(points_set_i_con.points*table_copy(j, 1:3)'),1);
+                        nonintersect = eval(sym(str2num(rat(points_set_j_con.points*table_copy(i, 1:3)')))) > table_copy(i, 4); %#ok<ST2NM>
+                        first_index_j = find(nonintersect & points_set_j_con.points*table_copy(i, 1:3)'==max(points_set_j_con.points*table_copy(i, 1:3)'),1);
                         if m_i <= m_j
                             if (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 21) && ...
-                                (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16)                                                        
-                                if (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 16  %%Con eje Z                                         
+                                (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16) && ...
+                                ~(points_set_i_con.tipo == 10 && points_set_j_con.tipo == 10) && ...
+                                ~(points_set_i_con.tipo == 9 && points_set_j_con.tipo == 9)
+                                %if (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 16  %%Con eje Z 
+                                if (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10) && ...
+                                    (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 16)
+                                    %if (caso == 4 && d_j(3) <=0 && d_i(3) >= 0)
                                     if (caso == 4 && d_j(3) <=0 && d_i(3) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 2-1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_j(3) <=0 && d_i(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(2, :); p1_j = points_set_j_con.points(4, :);
-                                        p1_i0 = points_set_nonred{i}.points(2, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(2, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 1, j es 4
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
-                                elseif (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 21  %%Con eje Y
+                                elseif (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 21) && ...
+                                        (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10)
+                                %elseif (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 21  %%Con eje Y
                                     if (caso == 4 && d_i(3) >=0 && d_j(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 2, j es 1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                    elseif (caso == 5 && d_i(3) >=0 && d_j(3) >= 0)
+                                    elseif (caso == 5+5 && d_i(3) >=0 && d_j(3) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 3, j es 1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(3, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(3, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(3, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 2, j es 3
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
                                 end
                             end
                         else
                             if (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 21) && ...
-                                (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16)   
-                                if (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 16 %%Con eje Z                                          
+                                (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16) && ...
+                                ~(points_set_j_con.tipo == 10 && points_set_i_con.tipo == 10) && ...
+                                ~(points_set_j_con.tipo == 9 && points_set_i_con.tipo == 9)
+                                %if (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10) && points_set_i_con.tipo == 16 %%Con eje Z
+                                if (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10) && ...
+                                    (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10 || points_set_i_con.tipo == 16)
+                                    %if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
                                     if (caso == 4 && d_i(3) <=0 && d_j(3) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(2, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(2, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 1-2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_i(3) <=0 && d_j(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(4, :); p1_j = points_set_j_con.points(2, :);
-                                        p1_i0 = points_set_nonred{i}.points(4, :); p1_j0 = points_set_nonred{j}.points(2, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(2, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 4, j es 1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
-                                elseif (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 21  %%Con eje Y                                         
+                                elseif (points_set_j_con.tipo == 9 || points_set_j_con.tipo == 10 || points_set_j_con.tipo == 21) && ...
+                                        (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10)
+                                %elseif (points_set_i_con.tipo == 9 || points_set_i_con.tipo == 10) && points_set_j_con.tipo == 21  %%Con eje Y                                         
                                     if (caso == 4 && d_j(3) >=0 && d_i(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 1, j es 1
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                    elseif (caso == 5 && d_j(3) >=0 && d_i(3) >= 0)
+                                    elseif (caso == 5+5 && d_j(3) >=0 && d_i(3) >= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(1, :); p1_j = points_set_j_con.points(4, :);
-                                        p1_i0 = points_set_nonred{i}.points(1, :); p1_j0 = points_set_nonred{j}.points(4, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(1, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); % i es 2,j es 2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(4, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     elseif (caso == 6 && d_j(3) <=0 && d_i(3) <= 0)
                                         p2 = eval(eval(sol));
-                                        p1_i = points_set_i_con.points(3, :); p1_j = points_set_j_con.points(1, :);
-                                        p1_i0 = points_set_nonred{i}.points(3, :); p1_j0 = points_set_nonred{j}.points(1, :);
-                                        angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_i
-                                            points_set_i_con.points(3, :) = eval(sol);
-                                            calc_intersect = 1;
+                                        p1_i = points_set_i_con.points(first_index_i, :); p1_j = points_set_j_con.points(first_index_j, :); %i es 3, j es 2
+                                        p1_i0 = points_set_nonred{i}.points(first_index_i, :); p1_j0 = points_set_nonred{j}.points(first_index_j, :);
+                                        if ~isempty(first_index_i) && Nonparallel(points_set_i_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_i0, p2)/(norm(p1_i0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_i = acos(str2num(rats(dot(p1_i0, p1_i)/(norm(p1_i0)*norm(p1_i))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_i
+                                                points_set_i_con.points(first_index_i, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
-                                        angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
-                                        angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
-                                        if angulo_p2 > angulo_p1_j
-                                            points_set_j_con.points(1, :) = eval(sol); %%3
-                                            calc_intersect = 1;
+                                        if ~isempty(first_index_j) && Nonparallel(points_set_j_con.points, p2)
+                                            angulo_p2 = acos(str2num(rats(dot(p1_j0, p2)/(norm(p1_j0)*norm(p2))))); %#ok<ST2NM>
+                                            angulo_p1_j = acos(str2num(rats(dot(p1_j0, p1_j)/(norm(p1_j0)*norm(p1_j))))); %#ok<ST2NM>
+                                            if angulo_p2 > angulo_p1_j
+                                                points_set_j_con.points(first_index_j, :) = eval(sol);
+                                                calc_intersect = 1;
+                                            end
                                         end
                                     end
                                 end
@@ -10461,6 +10903,20 @@ else
     end
 end
 
+
+function isnonparallel = Nonparallel(points, point)
+e = 0.00005; %%%% Cambiar si se cambia precisión
+points = unique(points, 'rows');
+isnonparallel = 1;
+for i = 1:size(points,1)
+    p = points(i,:);
+    if all(p ~= 0)
+        if all(abs(cross(p, point)) < e)
+            isnonparallel = 0;
+            break
+        end
+    end
+end
 
 function [points_set_i_con,points_set_j_con, table_copy, pasar] =  LineInterceptXY(points_set_i_con,points_set_j_con, table_copy, ...
      i, j, pasar)
@@ -10895,163 +11351,348 @@ elseif all(points_set_nonred{i}.points*table_copy(j, 1:3)' <= table_copy(j, 4)) 
 else       
     index1 = indexset1(1:find(indexset1==i));    
     index2 = indexset2_copy;
+    index2_copy = setdiff(index2,index1);
+    index2_copy = index2_copy(1:find(index2_copy==j));
 
     for l = index1
         index2 = setdiff(index2,index1(1:find(indexset1==l)));
         if l == i
-            index2 = index2(1:find(index2==j));
+            index2 = index2_copy;
         end
         for k = index2
-            istheretoplot = 0;
-            if size(unique(points_set_convex{k}.points, 'rows'), 1) >= 3
-                K_k = convex_hull(points_set_convex{k}.points, points_set_nonred{k}.points);
-                dim_K_k = size(K_k);
-                for s = 1:dim_K_k(1)-1
-                    p2 = points_set_convex{k}.points(K_k(s+1),:);
-                    p1 = points_set_convex{k}.points(K_k(s),:);
-                    if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
-                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
-                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
-                         all(abs(p1 - p2)< e))
-                        sol = findIntercept(p1, p2, table_copy, k, l);
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    p3 = [x y z];                    
-                                    first_nonzero = find(p1-p2, 1);
-                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
-                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
-            %                         if ~isnan(alpha)
-                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
-                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
-                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
-                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
-                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
-                                                    points_set_convex{k}.points(K_k(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                    istheretoplot = 1;
-                                                else
-                                                    index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
-                                                    if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM> 
-                                                        dim = size(points_set_convex{k}.points);
-                                                        points_set_convex{k}.points(dim(1)+1, :) = eval(sol);
-                                                        istheretoplot = 1;
-                                                    end
-                                                end                                                
-                                            end
-                                            if all([x y z] > 0)
-                                                if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
-                                                        abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1))                                                  
-                                                    index = setdiff(indexset1(1:Dimension(1)-1), l);
+%             if ~((points_set_convex{k}.tipo == 8 || points_set_convex{k}.tipo == 9 || points_set_convex{k}.tipo == 10 || ...
+%                     points_set_convex{k}.tipo == 16 || points_set_convex{k}.tipo == 21 || points_set_convex{k}.tipo == 26) && ...
+%                (points_set_convex{l}.tipo == 8 || points_set_convex{l}.tipo == 9 || points_set_convex{l}.tipo == 10 || ...
+%                     points_set_convex{l}.tipo == 16 || points_set_convex{l}.tipo == 21 || points_set_convex{l}.tipo == 26))
+                istheretoplot = 0;
+                if size(unique(points_set_convex{k}.points, 'rows'), 1) >= 3
+                    K_k = convex_hull(points_set_convex{k}.points, k);
+                    dim_K_k = size(K_k);
+                    for s = 1:dim_K_k(1)-1
+                        p2 = points_set_convex{k}.points(K_k(s+1),:);
+                        p1 = points_set_convex{k}.points(K_k(s),:);
+                        if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
+                             p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
+                             p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
+                             all(abs(p1 - p2)< e))
+                            sol = findIntercept(p1, p2, table_copy, k, l);
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        p3 = [x y z];                    
+                                        first_nonzero = find(p1-p2, 1);
+                                        alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
+                                                (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
+                %                         if ~isnan(alpha)
+                                            if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
+                                                    ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) - table_copy(l, 4)) < e)) %#ok<ST2NM>
+                                                if ~(abs(alpha) < e || abs(alpha-1) < e)
+                                                    %index = setdiff(indexset1(1:Dimension(1)-1), k);
+                                                    index = l;
                                                     for t = index
-                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
-                                                        if any(nonintersect'  & all(points_set_convex{l}.points > 0,2)')
-                                                            break;
+                                                        nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM>
+                                                        if ~(all(nonintersect==0)|| all(nonintersect==1))                                                                
+                                                                break;
                                                         end
                                                     end
-                                                    first_index = find(nonintersect'  & all(points_set_convex{l}.points > 0,2)', 1);
-                                                    if ~isempty(first_index)
-                                                        points_set_convex{l}.points(first_index, :) = eval(sol);
+                                                    %nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(l, 1:3)')))) > table_copy(l, 4); %#ok<ST2NM>                                
+                                                    if ~(all(nonintersect==0)|| all(nonintersect==1))
+                                                        points_set_convex{k}.points(K_k(s-1+find(nonintersect',1)), :) = eval(sol);
                                                         istheretoplot = 1;
-                                                    else
-                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
-                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
-                                                            dim = size(points_set_convex{l}.points);
-                                                            points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                            istheretoplot = 1;
-                                                        end
-                                                    end                                                    
-                                                end
-                                            end
-                                        end
-            %                         end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            if size(unique(points_set_convex{l}.points, 'rows'), 1) >= 3
-                K_l = convex_hull(points_set_convex{l}.points, points_set_nonred{l}.points);
-                dim_K_l = size(K_l);
-                for s = 1:dim_K_l(1)-1
-                    p2 = points_set_convex{l}.points(K_l(s+1),:);
-                    p1 = points_set_convex{l}.points(K_l(s),:);
-                    if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
-                         p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
-                         p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
-                         all(abs(p1 - p2)< e))
-                        sol = findIntercept(p1, p2, table_copy, k, l);
-                        if ~(isempty(sol))
-                            sol = [sol.x1 sol.y1 sol.z1];
-                            if isempty(symvar(sol))
-                                x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
-                                if all([x y z] >= 0)
-                                    p3 = [x y z]; 
-                                    first_nonzero = find(p1-p2, 1);
-                                    alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
-                                            (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
-            %                         if ~isnan(alpha)
-                                        if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
-                                                ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(k, 1:3)')))) - table_copy(k, 4)) < e)) %#ok<ST2NM>
-                                            if ~(abs(alpha) < e || abs(alpha-1) < e)
-                                                %dim = size(points_set{l}.points);
-                                                nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(k, 1:3)')))) > table_copy(k, 4); %#ok<ST2NM>
-                                                if ~(all(nonintersect==0)|| all(nonintersect==1))
-                                                    points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
-                                                    istheretoplot = 1;
-                                                else
-                                                    index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
-                                                    if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM> 
-                                                        dim = size(points_set_convex{l}.points);
-                                                        points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
-                                                        istheretoplot = 1;
-                                                    end
-                                                end                                                
-                                            end
-                                            if all([x y z] > 0)
-                                                if ~(watchismember(points_set_convex{k}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{k}.points, p2) || ...
-                                                        abs(alpha-1) < e && watchismember(points_set_convex{k}.points, p1))
-                                                    index = setdiff(indexset1(1:Dimension(1)-1), i);
-                                                    for t = index
-                                                        nonintersect = eval(sym(str2num(rat(points_set_convex{k}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> 
-                                                        if any(nonintersect' & all(points_set_convex{k}.points > 0,2)')
-                                                            break;
-                                                        end
-                                                    end
-                                                    first_index = find(nonintersect' & all(points_set_convex{k}.points > 0,2)', 1);
-                                                    if ~isempty(first_index) 
-                                                        points_set_convex{k}.points(first_index, :) = eval(sol);
-                                                        istheretoplot = 1;
-                                                    else
-                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
-                                                        if ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                    else                                                        
+    %                                                     if k == i
+    %                                                         index = setdiff(index2_copy,l);
+    %                                                     else
+                                                            index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+    %                                                     end
+                                                        if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM> 
                                                             dim = size(points_set_convex{k}.points);
                                                             points_set_convex{k}.points(dim(1)+1, :) = eval(sol);
                                                             istheretoplot = 1;
                                                         end
-                                                    end                                                    
+                                                    end                                                
+                                                end
+                                                if all([x y z] > 0)
+                                                    if ~(watchismember(points_set_convex{l}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{l}.points, p2) || ...
+                                                            abs(alpha-1) < e && watchismember(points_set_convex{l}.points, p1))
+    %                                                     if l == i
+    %                                                        index = index2_copy;
+    %                                                     else
+                                                            %index = setdiff(indexset1(1:Dimension(1)-1), l);
+                                                            index = k;
+    %                                                     end
+                                                        for t = index
+                                                            nonintersect = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) > table_copy(t, 4);%#ok<ST2NM> % & ...
+                                                                %all(points_set_convex{l}.points > 0,2); %#ok<ST2NM> 
+                                                            nonintersecte = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) == table_copy(t, 4); %#ok<ST2NM> 
+                                                            nonintersectminor = eval(sym(str2num(rat(points_set_convex{l}.points*table_copy(t, 1:3)')))) < table_copy(t, 4); %#ok<ST2NM> 
+                                                            if (sum(nonintersect) > 1 && size(unique(points_set_convex{l}.points(nonintersect,:),'rows'),1) > 1 || ... 
+                                                                any(nonintersect) && any(nonintersecte)) && any(nonintersectminor)
+                                                                    break;
+                                                            end
+                                                        end
+                                                        first_index = find(nonintersect');
+                                                        if size(unique([points_set_convex{l}.points; p3], 'rows'), 1) >= 3
+                                                            K_aux = convex_hull([points_set_convex{l}.points; p3], l);
+                                                            n = size(points_set_convex{l}.points,1);
+                                                            if ismember(n+1, K_aux)
+                                                                if (sum(nonintersect) > 1 && size(unique(points_set_convex{l}.points(nonintersect,:),'rows'),1) > 1 || ... 
+                                                                    any(nonintersect) && any(nonintersecte)) && any(nonintersectminor)
+                                                                        p3_l = find(K_aux==n+1,1);
+                                                                        if p3_l ~= 1
+                                                                            m = length(K_aux);
+                                                                            if ismember(K_aux(p3_l+1), first_index)
+                                                                                if (sum(nonintersect) > 1  && size(unique(points_set_convex{l}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        ismember(K_aux(max(mod(p3_l+2,m), 1)), nonintersecte)) && any(nonintersectminor)
+                                                                                    first_index = K_aux(p3_l+1);
+                                                                                end
+                                                                            elseif ismember(K_aux(p3_l-1), first_index)
+                                                                                if (sum(nonintersect) > 1 && size(unique(points_set_convex{l}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        (p3_l-2 ~= 0 && ismember(K_aux(p3_l-2), nonintersecte) || ...
+                                                                                        p3_l-2 == 0 && ismember(K_aux(m-1), nonintersecte))) && any(nonintersectminor)
+                                                                                    first_index = K_aux(p3_l-1);
+                                                                                end
+                                                                            else
+                                                                                first_index = [];
+                                                                            end
+                                                                        else
+                                                                            if ismember(K_aux(2), first_index)
+                                                                                if (sum(nonintersect) > 1 && size(unique(points_set_convex{l}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        ismember(K_aux(3), nonintersecte)) && any(nonintersectminor)
+                                                                                    first_index = K_aux(2);
+                                                                                end
+                                                                            elseif ismember(K_aux(n+1),first_index)
+                                                                                if (sum(nonintersect) > 1 && size(unique(points_set_convex{l}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        ismember(K_aux(n), nonintersecte)) && any(nonintersectminor)
+                                                                                    first_index = K_aux(n+1);
+                                                                                end
+                                                                            else
+                                                                                first_index = [];
+                                                                            end
+                                                                        end                                                                       
+                                                                        if length(first_index) == 1 && Nonparallel(points_set_convex{l}.points, p3) %&& ...
+                                                                            %all(eval(sym(str2num(rat(points_set_convex{l}.points(first_index, :)*table_copy(index, 1:3)')))) > table_copy(index, 4)) %#ok<ST2NM>
+                                                                            points_set_convex{l}.points(first_index, :) = eval(sol);
+                                                                            istheretoplot = 1;
+                                                                        else
+        %                                                                     if l == i
+        %                                                                        index = setdiff(index2_copy,k);
+        %                                                                     else
+                                                                                index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+        %                                                                     end
+                                                                            if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                                                dim = size(points_set_convex{l}.points);
+                                                                                points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                                                istheretoplot = 1;                                                                
+                                                                            end
+                                                                        end
+                                                                else
+        %                                                             if l == i
+        %                                                                index = setdiff(index2_copy,k);
+        %                                                             else
+                                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+        %                                                             end
+                                                                    if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                                        dim = size(points_set_convex{l}.points);
+                                                                        points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                                        istheretoplot = 1;                                                                
+                                                                    end
+                                                                end
+        %                                                     else
+        %                                                           %if l == i
+        % %                                                                index = setdiff(index2_copy,k);
+        % %                                                             else
+        %                                                         index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+        % %                                                             end
+        %                                                         if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+        %                                                             dim = size(points_set_convex{l}.points);
+        %                                                             points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+        %                                                             istheretoplot = 1;                                                                
+        %                                                         end
+                                                            end
+                                                        end
+                                                    end
                                                 end
                                             end
-                                        end
-            %                         end
+                %                         end
+                                    end
                                 end
                             end
                         end
                     end
                 end
-                if istheretoplot == 1
-                    arrangetoplotPlane(table_copy, k, l);
-                    if l ~= i && l~=j 
-                        pasar = arrangetoplotCanonicPlane(1, l);
-                        plotPlane(handles, pasar, table_copy, l);
-                    end
+                if size(unique(points_set_convex{l}.points, 'rows'), 1) >= 3
+                    K_l = convex_hull(points_set_convex{l}.points, l);
+                    dim_K_l = size(K_l);
+                    for s = 1:dim_K_l(1)-1
+                        p2 = points_set_convex{l}.points(K_l(s+1),:);
+                        p1 = points_set_convex{l}.points(K_l(s),:);
+                        if ~(p1(1) == 0 && p2(1) == 0 || ...%&& (p1(2) == 0 && p1(3) ~= 0 && p2(2) ~= 0 && p2(3) == 0 || p1(2) ~= 0 && p1(3) == 0 &&  p2(2) == 0 && p2(3) ~= 0) || ...
+                             p1(2) == 0 && p2(2) == 0 || ...%&& (p1(1) == 0 && p1(3) ~= 0 && p2(1) ~= 0 && p2(3) == 0 || p1(1) ~= 0 && p1(3) == 0 &&  p2(1) == 0 && p2(3) ~= 0) || ...
+                             p1(3) == 0 && p2(3) == 0 || ... %&& (p1(1) == 0 && p1(2) ~= 0 && p2(1) ~= 0 && p2(2) == 0 || p1(1) ~= 0 && p1(2) == 0 &&  p2(1) == 0 && p2(2) ~= 0) || ...
+                             all(abs(p1 - p2)< e))
+                            sol = findIntercept(p1, p2, table_copy, k, l);
+                            if ~(isempty(sol))
+                                sol = [sol.x1 sol.y1 sol.z1];
+                                if isempty(symvar(sol))
+                                    x=eval(sol(1)); y=eval(sol(2)); z = eval(sol(3));
+                                    if all([x y z] >= 0)
+                                        p3 = [x y z]; 
+                                        first_nonzero = find(p1-p2, 1);
+                                        alpha = (eval(sym(str2num(rat(p3(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero))))))/ ...
+                                                (eval(sym(str2num(rat(p1(first_nonzero)))))-eval(sym(str2num(rat(p2(first_nonzero)))))); %#ok<ST2NM>
+                %                         if ~isnan(alpha)
+                                            if (alpha >= 0 && alpha <= 1 || (abs(alpha) < e || abs(alpha-1) < e)) && ...
+                                                    ~(all(abs(eval(sym(str2num(rat([p1; p2]*table_copy(k, 1:3)')))) - table_copy(k, 4)) < e)) %#ok<ST2NM>
+                                                if ~(abs(alpha) < e || abs(alpha-1) < e)
+                                                    %index = setdiff(indexset1(1:Dimension(1)-1), l);
+                                                    index = k;
+                                                    for t = index
+                                                        nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM>
+                                                        if ~(all(nonintersect==0)|| all(nonintersect==1))                                                                
+                                                                break;
+                                                        end
+                                                    end
+                                                    %nonintersect = eval(sym(str2num(rat([p1; p2]*table_copy(k, 1:3)')))) > table_copy(k, 4); %#ok<ST2NM>
+                                                    if ~(all(nonintersect==0)|| all(nonintersect==1))
+                                                        points_set_convex{l}.points(K_l(s-1+find(nonintersect',1)), :) = eval(sol);
+                                                        istheretoplot = 1;
+                                                    else
+    %                                                     if l == i
+    %                                                         index = setdiff(index2_copy,k);
+    %                                                     else
+                                                            index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+    %                                                     end
+                                                        if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM> 
+                                                            dim = size(points_set_convex{l}.points);
+                                                            points_set_convex{l}.points(dim(1)+1, :) = eval(sol);
+                                                            istheretoplot = 1;
+                                                        end
+                                                    end                                                
+                                                end
+                                                if all([x y z] > 0)
+                                                    if ~(watchismember(points_set_convex{k}.points, p3) || abs(alpha) < e && watchismember(points_set_convex{k}.points, p2) || ...
+                                                            abs(alpha-1) < e && watchismember(points_set_convex{k}.points, p1))
+    %                                                     if k == i
+    %                                                         index = index2_copy;
+    %                                                     else
+                                                            %index = setdiff(indexset1(1:Dimension(1)-1), k);
+                                                            index = l;
+    %                                                     end                                                    
+                                                        for t = index
+                                                            nonintersect = eval(sym(str2num(rat(points_set_convex{k}.points*table_copy(t, 1:3)')))) > table_copy(t, 4); %#ok<ST2NM> %& ...
+                                                                %all(points_set_convex{k}.points > 0,2); %#ok<ST2NM> 
+                                                            nonintersecte = eval(sym(str2num(rat(points_set_convex{k}.points*table_copy(t, 1:3)')))) == table_copy(t, 4); %#ok<ST2NM> 
+                                                            nonintersectminor = eval(sym(str2num(rat(points_set_convex{k}.points*table_copy(t, 1:3)')))) < table_copy(t, 4); %#ok<ST2NM> 
+                                                            if (sum(nonintersect)  > 1 && size(unique(points_set_convex{k}.points(nonintersect,:),'rows'),1) > 1 || ... 
+                                                                any(nonintersect) && any(nonintersecte)) && any(nonintersectminor)
+                                                                    break;
+                                                            end
+                                                        end
+                                                        first_index = find(nonintersect'); 
+                                                        if size(unique([points_set_convex{k}.points; p3], 'rows'), 1) >= 3
+                                                            K_aux = convex_hull([points_set_convex{k}.points; p3], k);                                                        
+                                                            n = size(points_set_convex{k}.points,1);
+                                                            if ismember(n+1,K_aux)
+                                                                if (sum(nonintersect) && size(unique(points_set_convex{k}.points(nonintersect,:),'rows'),1)  > 1 || ... 
+                                                                    any(nonintersect) && any(nonintersecte)) && any(nonintersectminor)
+                                                                        p3_k = find(K_aux==n+1,1);
+                                                                        if p3_k ~= 1
+                                                                            m = length(K_aux);
+                                                                            if ismember(K_aux(p3_k+1), first_index)
+                                                                                if (sum(nonintersect) > 1  && size(unique(points_set_convex{k}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        ismember(K_aux(max(mod(p3_k+2,m), 1)), nonintersecte)) && any(nonintersectminor)
+                                                                                    first_index = K_aux(p3_k+1);
+                                                                                end
+                                                                            elseif ismember(K_aux(p3_k-1), first_index)
+                                                                                if (sum(nonintersect) > 1  && size(unique(points_set_convex{k}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        (p3_k-2 ~= 0 && ismember(K_aux(p3_k-2), nonintersecte) || ...
+                                                                                        p3_k-2 == 0 && ismember(K_aux(m-1), nonintersecte))) && any(nonintersectminor)
+                                                                                    first_index = K_aux(p3_k-1);
+                                                                                end
+                                                                            else
+                                                                                first_index = [];
+                                                                            end
+                                                                        else
+                                                                            if ismember(K_aux(2), first_index)
+                                                                                if (sum(nonintersect) > 1  && size(unique(points_set_convex{k}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        ismember(K_aux(3), nonintersecte)) && any(nonintersectminor)
+                                                                                    first_index = K_aux(2);
+                                                                                end
+                                                                            elseif ismember(K_aux(n+1), first_index)
+                                                                                if (sum(nonintersect) > 1  && size(unique(points_set_convex{k}.points(nonintersect,:),'rows'),1) > 1 || any(nonintersect) && any(nonintersecte) && ...
+                                                                                        ismember(K_aux(n), nonintersecte)) && any(nonintersectminor)
+                                                                                    first_index = K_aux(n+1);
+                                                                                end
+                                                                            else
+                                                                                first_index = [];
+                                                                            end
+                                                                        end
+                                                                        
+                                                                        if length(first_index) == 1 && Nonparallel(points_set_convex{k}.points, p3) %&& ...
+                                                                                %all(eval(sym(str2num(rat(points_set_convex{k}.points(first_index, :)*table_copy(index, 1:3)')))) > table_copy(index, 4)) %#ok<ST2NM>
+                                                                            points_set_convex{k}.points(first_index, :) = eval(sol);
+                                                                            istheretoplot = 1;
+                                                                        else
+        %                                                                     if k == i
+        %                                                                         index = setdiff(index2_copy,l);
+        %                                                                     else
+                                                                                index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+        %                                                                     end
+                                                                            if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                                                dim = size(points_set_convex{k}.points);
+                                                                                points_set_convex{k}.points(dim(1)+1, :) = eval(sol);
+                                                                                istheretoplot = 1;                                                                
+                                                                            end
+                                                                        end
+                                                                else   
+        %                                                             if k == i
+        %                                                                 index = setdiff(index2_copy,l);
+        %                                                             else
+                                                                        index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+        %                                                             end
+                                                                    if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+                                                                        dim = size(points_set_convex{k}.points);
+                                                                        points_set_convex{k}.points(dim(1)+1, :) = eval(sol);
+                                                                        istheretoplot = 1;                                                                
+                                                                    end
+                                                                end
+        %                                                     else
+        %                                                             %if k == i
+        % %                                                                 index = setdiff(index2_copy,l);
+        % %                                                             else
+        %                                                         index = setdiff(indexset1([1:find(indexset1 == l)-1, find(indexset1 ==l )+1:Dimension(1)-1]), k);
+        % %                                                             end
+        %                                                         if isempty(index) || ~isempty(index) && all(eval(sym(str2num(rat(p3*table_copy(index, 1:3)')))) <= table_copy(index, 4)) %#ok<ST2NM>
+        %                                                             dim = size(points_set_convex{k}.points);
+        %                                                             points_set_convex{k}.points(dim(1)+1, :) = eval(sol);
+        %                                                             istheretoplot = 1;                                                                
+        %                                                         end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                %                         end
+                                    end
+                                end
+                            end
+                        end
+                    end                    
                 end
-            end
+                %if istheretoplot == 1
+                    arrangetoplotPlane(table_copy, k, l);                    
+                %end
+%             end
         end
-    %     end
-    end   
+        if l ~= i && l~=j 
+            pasar = arrangetoplotCanonicPlane(1, l);
+            plotPlane(handles, pasar, table_copy, l);
+        end
+    end
+%     end   
 end
 
 
@@ -11069,25 +11710,40 @@ end
 
 %%%
 %%% Calcula el orden de los nodos para trazar un polígono convexo
-function ind = convex_hull(points, ps_i)
-%global points_set_nonred;
+function ind = convex_hull(points, i)
+global points_set_nonred table Dimension;
 
 
 e = 0.00005; %%%% Cambiar si se cambia precisión
-%ps_i = points_set_nonred{i}.points;
-N3 = cross(ps_i(1,:)-ps_i(2,:), ps_i(1,:)-ps_i(3,:));
+if i <= Dimension(1)
+    ps_i = points_set_nonred{i}.points;
+else
+    ps_i = points;        
+end
+ps_i_aux = unique(ps_i, 'rows');
+for k=1:size(ps_i_aux, 1)-2
+    for l=k+1:size(ps_i_aux, 1)-1
+        for s=l+k:size(ps_i_aux, 1)
+            N3 = cross(ps_i_aux(1,:)-ps_i_aux(2,:), ps_i_aux(1,:)-ps_i_aux(3,:));
+            if any(N3 ~= 0)
+                break;
+            end
+        end
+    end
+end
+%N3 = cross(ps_i_aux(1,:)-ps_i_aux(2,:), ps_i_aux(1,:)-ps_i_aux(3,:));
 if any(N3 ~= 0)
     C3 = dot(N3, [0 0 1]);
 else
     C3 = 1;
 end
-N2 = cross(ps_i(1,:)-ps_i(2,:), ps_i(1,:)-ps_i(3,:));
+N2 = N3;
 if any(N2 ~= 0)
     C2 = dot(N2, [0 1 0]);
 else
     C2 = 1;
 end
-N1 = cross(ps_i(1,:)-ps_i(2,:), ps_i(1,:)-ps_i(3,:));
+N1 = N3;
 if any(N1 ~= 0)
     C1 = dot(N1, [1 0 0]);
 else
@@ -11115,7 +11771,18 @@ if abs(C3) < e && ~(abs(C2) < e || abs(C1) < e)
         theta = pi/2;
     %end
 
-    %u = punto1 - punto2;    
+    %u = punto1 - punto2;
+    if i <= Dimension(1)
+        InterchangeInterceptPoints_NR(i, 1, table)
+        ps_i = points_set_nonred{i}.points;
+    else
+        ps_i_aux = unique(ps_i, 'rows');
+        if size(ps_i_aux,1) == 3
+            ps_i_aux(4, :) = ps_i_aux(3, :);
+        end
+        ps_i = InterchangeInterceptPoints(i, 1, ps_i_aux, table);
+    end
+    
     u = ps_i(3,:) - ps_i(2,:);
     R_u = [cos(theta)+u(1)^2*(1-cos(theta))           u(1)*u(2)*(1-cos(theta))-u(3)*sin(theta)    u(1)*u(3)*(1-cos(theta))+u(2)*sin(theta); ...
            u(2)*u(1)*(1-cos(theta))+u(3)*sin(theta)   cos(theta)+u(2)^2*(1-cos(theta))            u(2)*u(3)*(1-cos(theta))-u(1)*sin(theta); ...
@@ -11148,6 +11815,16 @@ else
     elseif ~(abs(C1) < e && abs(C2) < e) 
         syms z1 z2;
         %%%Encontrar el ángulo de rotación con respecto al eje X
+        if i <= Dimension(1)
+            InterchangeInterceptPoints_NR(i, 3, table)
+            ps_i = points_set_nonred{i}.points;
+        else
+            ps_i_aux = unique(ps_i, 'rows');
+            if size(ps_i_aux,1) == 3
+                ps_i_aux(4, :) = ps_i_aux(3, :);
+            end
+            ps_i = InterchangeInterceptPoints(i, 3, ps_i_aux, table);
+        end        
         coef1 = sqrt(ps_i(1, 2)^2 + ps_i(1, 3)^2);
         if ps_i(1, 2) == 0
             angulo1 = 'NaN';    
@@ -11192,7 +11869,11 @@ else
                     end 
                 end
             elseif any([coef1 coef2] ~= 0)
-                theta = pi/2;
+                if (abs(C1) < e || abs(C2) < e)
+                    theta = 0;
+                else                    
+                    theta = pi/2;
+                end
             end
 
             R_x = [1 0 0; 0 cos(theta) -sin(theta); 0 sin(theta) cos(theta)];
