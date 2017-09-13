@@ -1542,7 +1542,8 @@ calc_variables(handles);
 if handles.Interactive == 1
 handles.latex = [handles.latex, latex];
 guidata(handles.output, handles); 
-if Dimension(2)- Dimension(1) == 3 && handles.istwophases == 0
+if Dimension(2)- Dimension(1) == 3 && handles.istwophases == 0 && ...
+        handles.Method == 1
     set(handles.Mode_geo3D, 'Enable', 'on'); 
     %set(handles.pushbutton_asignall, 'Enable', 'on')
 else
@@ -9456,7 +9457,8 @@ if i < Dimension(1)
             end
 %         end
   elseif all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) >= table_copy(i, 4)) && ...
-      all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) <= table_copy(j, 4)) %#ok<ST2NM>
+      all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) <= table_copy(j, 4)) && ...
+      table_copy(j, 4) >= 0 && table_copy(i, 4) >= 0 %#ok<ST2NM>
          if j==indexset1(Dimension(1)-1)
             points_set_convex{j}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{j}.points;
             set(handles_surf(j), 'Visible', 'off');
@@ -9467,7 +9469,8 @@ if i < Dimension(1)
             handles_norm(j) = quiver3(0, 0, 0, table_copy(j, 1), table_copy(j, 2), table_copy(j, 3), 'Color', 'red');
          end
   elseif all(str2num(rats(points_set_convex{i}.points*table_copy(j, 1:3)')) >= table_copy(j, 4)) && ...
-      all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) <= table_copy(i, 4)) %#ok<ST2NM>
+      all(str2num(rats(points_set_convex{j}.points*table_copy(i, 1:3)')) <= table_copy(i, 4)) && ...
+      table_copy(j, 4) >= 0 && table_copy(i, 4) >= 0 %#ok<ST2NM>
          if j==index
             points_set_convex{i}.points = [0 0 0;0 0 0;0 0 0;0 0 0]; p = points_set_convex{i}.points;
             set(handles_surf(i), 'Visible', 'off');
